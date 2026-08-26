@@ -12,6 +12,14 @@ export default function AuthCallback() {
     let active = true;
 
     async function completeSignIn() {
+      // Supabase can establish an implicit OAuth session before this route renders.
+      // Accept that session first; PKCE returns continue through the code exchange below.
+      const { data: existingSession } = await supabase.auth.getSession();
+      if (existingSession.session) {
+        if (active) setLocation("/portal", { replace: true });
+        return;
+      }
+
       const code = new URLSearchParams(window.location.search).get("code");
       if (!code) {
         if (active) setError("The NIU sign-in response did not include a valid authorization code.");

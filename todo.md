@@ -60,3 +60,5 @@
 - [ ] Provision makealuckspam@gmail.com as an NIU Super Administrator and prepare it as the clean Google OAuth ownership path.
 - [ ] Repair and verify NIU’s post-Google OAuth session return to the role-aware portal.
 - [ ] Add and validate a dedicated NIU OAuth callback route that exchanges the authorization code before redirecting to the portal.
+- [ ] Trace the live Google OAuth return URL and correct any remaining Supabase redirect allow-list fallback that prevents the callback from receiving its authorization code.
+- [ ] Inspect and resolve the live Supabase callback redirect that reaches `/auth/callback` without a usable authorization code after provider exchange.

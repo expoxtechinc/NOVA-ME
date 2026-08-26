@@ -37,6 +37,7 @@ describe("external deployment branding", () => {
     expect(signInPage).toContain("Email sign-in link");
 
     const callbackPage = fs.readFileSync(path.join(root, "client", "src", "pages", "AuthCallback.tsx"), "utf8");
+    expect(callbackPage).toContain("getSession");
     expect(callbackPage).toContain("exchangeCodeForSession");
     expect(callbackPage).toContain('setLocation("/portal"');
     expect(authGate).toContain("before insert on auth.users");
