@@ -13,3 +13,23 @@ NIU uses a burgundy, gold, paper, and ink palette with a circular NIU seal. The 
 The Git-connected Vercel project must define its existing runtime settings in Vercel rather than committing secrets. At minimum, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for browser Supabase access. Set the existing server-side OAuth, cookie, data, and storage variables only from their current secure sources: `VITE_APP_ID`, `JWT_SECRET`, `DATABASE_URL`, `OAUTH_SERVER_URL`, `OWNER_OPEN_ID`, `BUILT_IN_FORGE_API_URL`, and `BUILT_IN_FORGE_API_KEY`.
 
 > Do not copy secrets into the repository. Environment variables must be configured in the Vercel project settings for both Preview and Production as appropriate.
+
+## Manual deployment procedure
+
+1. Sign in to [Vercel](https://vercel.com), select the **expoxtechinc's projects** team, then choose **Add New → Project**.
+2. Select **Import Git Repository**, locate `expoxtechinc/NOVA-ME`, and grant the Vercel GitHub integration access to that repository if Vercel asks for permission.
+3. Keep the repository root as `./`. The committed `vercel.json` supplies the install command, build command, serverless function entry, and application rewrite, so no manual framework override is required.
+4. In **Environment Variables**, add the existing values from their secure source. Add `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for both Preview and Production. Add the existing server/OAuth/storage variables used by NIU—`VITE_APP_ID`, `JWT_SECRET`, `DATABASE_URL`, `OAUTH_SERVER_URL`, `OWNER_OPEN_ID`, `BUILT_IN_FORGE_API_URL`, and `BUILT_IN_FORGE_API_KEY`—to the environments where their related NIU features are required. If analytics is retained, also add `VITE_ANALYTICS_ENDPOINT` and `VITE_ANALYTICS_WEBSITE_ID`.
+5. Select **Deploy**. Vercel will run `pnpm install --frozen-lockfile` followed by `pnpm build` and route public and API requests through `api/index.ts`.
+6. Open the resulting deployment URL and check the homepage, `/programs`, `/courses`, `/verify`, and `/portal`. Confirm that the NIU seal appears in the browser tab and that the public site is shown without draft academic records.
+7. In Supabase, open **Authentication → URL Configuration**. Set the Site URL to the final Vercel or custom-domain URL and add that URL, with `/**`, to Redirect URLs. Repeat this change whenever the production domain changes. Then test Google sign-in with an allowlisted NIU account.
+8. If you add a custom domain in Vercel, make it the production domain first, then update the matching Supabase Site URL and Redirect URL, and redeploy once. Search engines use the committed title, description, icon, and social-preview metadata after they recrawl the deployed domain; indexing timing is controlled by the search engine.
+
+## Deployment verification
+
+| Check | Expected result |
+|---|---|
+| Build | The Vercel build completes using the committed `vercel.json`. |
+| Browser branding | The tab displays the NIU favicon and the page title is “Nova International University \| Certificate Learning”. |
+| Public discovery | `/programs`, `/courses`, and `/verify` load without exposing draft or staff-only records. |
+| Authentication | An allowlisted Google account reaches its assigned NIU dashboard role after Supabase URL settings are updated. |

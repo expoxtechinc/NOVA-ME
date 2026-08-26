@@ -43,5 +43,6 @@
 - [x] Record post-Express-5 public-route, protected-route, and mobile responsive validation evidence for the final release.
 - [x] Inspect the NOVA-ME repository, current NIU browser branding, and Vercel deployment configuration.
 - [x] Add a production browser icon and complete search-preview metadata using the approved NIU branding asset.
-- [ ] Validate the Vercel deployment configuration, production build, and repository history before pushing.
-- [ ] Push the complete branded NIU release to expoxtechinc/NOVA-ME and document the Vercel deployment hand-off.
+- [x] Validate the Vercel deployment configuration, production build, and repository history before pushing.
+- [x] Push the complete branded NIU release to expoxtechinc/NOVA-ME and document the Vercel deployment hand-off.
+- [x] Provide the user with the verified manual Vercel deployment procedure for the pushed NOVA-ME release.
