@@ -10,7 +10,7 @@ NIU uses a burgundy, gold, paper, and ink palette with a circular NIU seal. The 
 
 ## Vercel environment configuration
 
-The Git-connected Vercel project must define its existing runtime settings in Vercel rather than committing secrets. At minimum, set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` for browser Supabase access. Set the existing server-side OAuth, cookie, data, and storage variables only from their current secure sources: `VITE_APP_ID`, `JWT_SECRET`, `DATABASE_URL`, `OAUTH_SERVER_URL`, `OWNER_OPEN_ID`, `BUILT_IN_FORGE_API_URL`, and `BUILT_IN_FORGE_API_KEY`.
+The Git-connected Vercel project must define its existing runtime settings in Vercel rather than committing secrets. NIU now includes a fixed fallback for its Supabase project URL and **publishable** browser key, so the deployed Google sign-in entry can initialize even before Vercel variables are added. Set `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY` in Vercel as the preferred override for future key rotation. Set the existing server-side OAuth, cookie, data, and storage variables only from their current secure sources: `VITE_APP_ID`, `JWT_SECRET`, `DATABASE_URL`, `OAUTH_SERVER_URL`, `OWNER_OPEN_ID`, `BUILT_IN_FORGE_API_URL`, and `BUILT_IN_FORGE_API_KEY`.
 
 > Do not copy secrets into the repository. Environment variables must be configured in the Vercel project settings for both Preview and Production as appropriate.
 

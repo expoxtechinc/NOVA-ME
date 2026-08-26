@@ -19,4 +19,11 @@ describe("external deployment branding", () => {
     expect(config).toContain('"destination": "/index.html"');
     expect(fs.existsSync(path.join(root, "api", "index.ts"))).toBe(true);
   });
+
+  it("keeps the public Supabase client initialized when Vercel Vite variables are absent", () => {
+    const config = fs.readFileSync(path.join(root, "client", "src", "lib", "supabase.ts"), "utf8");
+    expect(config).toContain("fallbackSupabaseUrl");
+    expect(config).toContain("fallbackSupabasePublishableKey");
+    expect(config).toContain("export const supabaseConfigured = true");
+  });
 });
