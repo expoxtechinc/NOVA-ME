@@ -28,3 +28,11 @@ Supabase still reports **Leaked Password Protection** as disabled. This is an Au
 ## Final validation evidence
 
 After the Express 5.2.1 migration, the running development service was verified at both desktop and 375 px mobile widths for the public home page, programme catalogue, course catalogue, credential-verification page, and unauthenticated protected portal. Public routes rendered their approved empty states without exposing draft or restricted records, the credential-verification form remained available, responsive navigation remained usable, and the protected portal stopped at its approved sign-in boundary. The role-specific authenticated workflows remain covered by the passing route and authorization test suite; an interactive role walkthrough requires real approved identities and is listed in the launch checklist.
+
+## Complete production audit — 26 August 2026
+
+The latest audit confirmed that NIU’s public homepage, programme discovery, course discovery, credential verification, sign-in entry, and protected portal entry all render successfully. The local release gate passed its tests, TypeScript check, production build, and production dependency audit with no known production-package vulnerabilities.
+
+The live Google entry now initializes the linked Supabase client and reaches Google OAuth. Google returns `redirect_uri_mismatch` because the OAuth client that begins `1000311073949-` is owned by a Google Cloud project that is not available under either current NIU administrator Google Cloud account. Registering the Supabase callback in that client remains the only sign-in blocker; the exact owner walkthrough is maintained in `docs/VERCEL_DEPLOYMENT.md`.
+
+The current Supabase Security Advisor result contains one deliberately anonymous, privacy-minimised credential-verification function and the authenticated institutional workflow functions for enrolment, progress, grading, role checks, issuance, and status updates. These are the database-enforced interfaces required by the NIU platform, and their exposure is documented in the security model. The remaining Auth leaked-password-protection notice is limited by the linked Supabase Free tier as described above.

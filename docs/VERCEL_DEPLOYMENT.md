@@ -37,3 +37,25 @@ The Git-connected Vercel project must define its existing runtime settings in Ve
 ## Latest external verification
 
 After the Vercel static-output repair, the public deployment at `https://novainternationaluniversity.vercel.app` was checked directly. The homepage rendered the NIU application rather than bundled server source, including the browser seal and external campus image. The `/verify` credential-verification route also rendered its public form correctly. Authentication requires the Vercel and Supabase environment variables and redirect configuration described above.
+
+The Google sign-in client fallback was subsequently pushed in commit `36f2839`. If the sign-in page still reports that the authentication connection is unconfigured, Vercel is still serving the preceding deployment; redeploy or wait for the build associated with that commit before rechecking the button.
+
+## Google OAuth provider completion
+
+The deployed Supabase client is now initialized and its Google provider is enabled. A live OAuth check reached Google and identified the final external configuration: the Google OAuth client must authorize this exact callback URL:
+
+`https://oevgnonkqpvfvjsmovpw.supabase.co/auth/v1/callback`
+
+In the Google Cloud Console that owns NIU’s OAuth client, open **APIs & Services → Credentials → OAuth 2.0 Client IDs**, select the client used by the linked Supabase project, add the callback URL above under **Authorized redirect URIs**, and save. This is a Google-account-level operation and cannot be performed through the NIU application, Supabase database tools, or the connected Vercel integration. After saving, retry **Continue with Google** from the NIU sign-in page. Separately, keep `https://novainternationaluniversity.vercel.app/**` in Supabase Authentication Redirect URLs so Supabase can return the completed session to NIU.
+
+The configured connector inventory was reviewed for Google Cloud administration. It contains Google Ads, Calendar, Gemini, Maps, and Workspace integrations, but no Google Cloud OAuth-credentials connector. The connected Supabase tools expose no Google Cloud client registration operation. This confirms that the callback must be approved by an authenticated owner of the existing Google OAuth client; no NIU source-code or database change can authorize it with Google.
+
+### Owner walkthrough for the remaining Google setting
+
+1. Open [Google Cloud Credentials](https://console.cloud.google.com/apis/credentials) and sign in with the Google account that owns the NIU OAuth client.
+2. At the top of Google Cloud, select the project that contains the OAuth client used for NIU/Supabase Google sign-in. If you are unsure, choose the project where the OAuth client ID begins with `1000311073949-`.
+3. In **APIs & Services → Credentials**, click the OAuth client under **OAuth 2.0 Client IDs**.
+4. In **Authorized redirect URIs**, click **Add URI** and paste exactly: `https://oevgnonkqpvfvjsmovpw.supabase.co/auth/v1/callback`.
+5. Click **Save**. Wait about one minute for Google to apply the change.
+6. Open `https://novainternationaluniversity.vercel.app/signin` and click **Continue with Google** again.
+7. If Google sign-in completes but NIU does not return to the portal, open Supabase **Authentication → URL Configuration**, set **Site URL** to `https://novainternationaluniversity.vercel.app`, and add `https://novainternationaluniversity.vercel.app/**` under **Redirect URLs**.
