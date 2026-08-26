@@ -33,3 +33,7 @@ The Git-connected Vercel project must define its existing runtime settings in Ve
 | Browser branding | The tab displays the NIU favicon and the page title is “Nova International University \| Certificate Learning”. |
 | Public discovery | `/programs`, `/courses`, and `/verify` load without exposing draft or staff-only records. |
 | Authentication | An allowlisted Google account reaches its assigned NIU dashboard role after Supabase URL settings are updated. |
+
+## Latest external verification
+
+After the Vercel static-output repair, the public deployment at `https://novainternationaluniversity.vercel.app` was checked directly. The homepage rendered the NIU application rather than bundled server source, including the browser seal and external campus image. The `/verify` credential-verification route also rendered its public form correctly. Authentication requires the Vercel and Supabase environment variables and redirect configuration described above.

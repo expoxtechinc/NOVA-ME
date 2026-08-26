@@ -47,3 +47,4 @@
 - [x] Push the complete branded NIU release to expoxtechinc/NOVA-ME and document the Vercel deployment hand-off.
 - [x] Provide the user with the verified manual Vercel deployment procedure for the pushed NOVA-ME release.
 - [x] Correct the Vercel TypeScript build failure caused by incompatible Express type resolution and republish the NIU release.
+- [x] Correct the Vercel deployment that responds with bundled server source instead of the NIU website, then republish and verify the repair.
