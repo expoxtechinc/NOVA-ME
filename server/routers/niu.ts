@@ -1,0 +1,51 @@
+import { TRPCError } from "@trpc/server";
+import { createClient } from "@supabase/supabase-js";
+import { z } from "zod";
+import { isNiuCredentialNumber, normalizeCredentialNumber } from "../niuValidation";
+import { publicProcedure, router } from "../_core/trpc";
+
+const requestWindows = new Map<string, { count: number; resetAt: number }>();
+
+function publicSupabaseClient() {
+  const url = process.env.VITE_SUPABASE_URL;
+  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  if (!url || !key) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The NIU public database connection is not configured." });
+  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+}
+
+function enforceVerificationRateLimit(clientAddress: string) {
+  const now = Date.now();
+  const existing = requestWindows.get(clientAddress);
+  if (!existing || existing.resetAt <= now) { requestWindows.set(clientAddress, { count: 1, resetAt: now + 60_000 }); return; }
+  if (existing.count >= 10) throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Please wait a moment before making another verification request." });
+  existing.count += 1;
+}
+
+const catalogInput = z.object({ search: z.string().trim().max(80).optional().default("") });
+
+export const catalogRouter = router({
+  listPrograms: publicProcedure.input(catalogInput).query(async ({ input }) => {
+    const supabase = publicSupabaseClient();
+    const search = input.search.replace(/[%,_()]/g, "");
+    let query = supabase.from("certificate_programs").select("id, code, name, description, duration_hours, difficulty, required_score").eq("status", "published").order("name", { ascending: true }).limit(24);
+    if (search) query = query.or(`name.ilike.%${search}%,code.ilike.%${search}%`);
+    const { data, error } = await query;
+    if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Program discovery is temporarily unavailable." });
+    return data ?? [];
+  }),
+});
+
+export const credentialRouter = router({
+  verify: publicProcedure.input(z.object({ credentialNumber: z.string().trim().min(1).max(32) })).query(async ({ input, ctx }) => {
+    const credentialNumber = normalizeCredentialNumber(input.credentialNumber);
+    if (!isNiuCredentialNumber(credentialNumber)) return { found: false as const, reason: "format" as const };
+    const forwarded = ctx.req.headers["x-forwarded-for"];
+    const clientAddress = Array.isArray(forwarded) ? forwarded[0] ?? "unknown" : forwarded?.split(",")[0]?.trim() || ctx.req.ip || "unknown";
+    enforceVerificationRateLimit(clientAddress);
+    const { data, error } = await publicSupabaseClient().rpc("verify_niu_credential", { lookup_credential: credentialNumber });
+    if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Credential verification is temporarily unavailable." });
+    const record = Array.isArray(data) ? data[0] : data;
+    if (!record) return { found: false as const, reason: "not_found" as const };
+    return { found: true as const, credentialNumber: record.credential_number as string, credentialTitle: record.credential_title as string | null, programName: record.program_name as string | null, recipientName: record.recipient_name as string | null, issuedAt: record.issued_at as string | null, status: record.status as "active" | "revoked" | "superseded" };
+  }),
+});

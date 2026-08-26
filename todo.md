@@ -1,0 +1,22 @@
+# Project TODO
+
+- [x] Define certificate-only role, content, learning-progress, assessment, and credential domain models with degree enrollment explicitly disabled.
+- [x] Extend the database schema with normalized institutional, academic, enrollment, assessment, certificate, notification, and audit-log tables plus integrity constraints and indexes.
+- [ ] Implement server-side authorization helpers, administrator allowlist checks, role-aware protected procedures, input validation, audit capture, and rate-limited public credential lookup.
+- [x] Build public NIU navigation, responsive institutional pages, program and course discovery, search, support resources, policy pages, accessible PWA metadata, and SEO configuration.
+- [x] Build privacy-preserving public credential verification by credential number, including active, revoked, and superseded status states.
+- [ ] Build public program and course detail experiences that disclose certificate-only offerings without unsupported accreditation, recognition, partnership, faculty, or degree claims.
+- [x] Build reusable responsive dashboard foundations and role-specific student, faculty, registrar, and administrator entry points with meaningful empty, loading, and error states.
+- [ ] Build student learning-path views with prerequisite-aware enrollment, server-validated lesson activity completion, protected content entries, personal grades, and certificate eligibility status.
+- [ ] Build administrator and faculty workspace views for schools, departments, certificate programs, courses, modules, lessons, question banks, assignments, announcements, calendar events, content review, versioning, and previews.
+- [ ] Build assessment and grading foundations supporting question banks, quizzes, module tests, final assessments, attempt rules, weighted grading, automatic/manual grading, and immutable submitted attempts.
+- [ ] Build certificate candidate review, administrative approval, unique credential registration, downloadable certificate records, QR verification links, status history, revocation records, and student retrieval history.
+- [ ] Add configurable institutional branding, certificate templates, grading scales, completion rules, and future-ready academic fields while blocking degree enrollment actions.
+- [x] Add privacy, accessibility, responsive design, secure-media, backups guidance, environment example, and deployment-readiness documentation.
+- [ ] Write and run Vitest coverage for authorization, credential verification privacy, certificate-only program rules, learning-progress validation, and credential status transitions.
+- [ ] Verify public, student, faculty, registrar, and administrator flows on desktop and mobile; review server logs and resolve critical errors.
+- [x] Save a final checkpoint with all completed work marked accurately in this tracker.
+- [x] Extend the existing Online University Supabase project only through additive, data-preserving migrations, retaining its existing profiles, allowlist entries, and learning records.
+- [x] Create separate faculty, registrar, and administrator dashboard entry routes with role-specific navigation, empty states, and access gating instead of a generic staff workspace.
+- [x] Add a committed non-secret environment configuration reference documenting all required public-client and server environment keys.
+- [x] Add route checks or tests confirming each role reaches its intended dashboard entry point and cannot access an unauthorised role workspace.
