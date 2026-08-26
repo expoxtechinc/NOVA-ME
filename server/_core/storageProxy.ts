@@ -1,7 +1,7 @@
-import type { Express } from "express";
+import type { Application } from "express";
 import { ENV } from "./env";
 
-export function registerStorageProxy(app: Express) {
+export function registerStorageProxy(app: Application) {
   app.get("/manus-storage/*key", async (req, res) => {
     const rawKey = (req.params as Record<string, string | string[]>).key;
     const key = Array.isArray(rawKey) ? rawKey.join("/") : rawKey;
