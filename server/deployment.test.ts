@@ -29,8 +29,12 @@ describe("external deployment branding", () => {
 
   it("offers a Supabase email-link fallback for deployed access when Google OAuth needs external configuration", () => {
     const signInPage = fs.readFileSync(path.join(root, "client", "src", "pages", "SignIn.tsx"), "utf8");
+    const authGate = fs.readFileSync(path.join(root, "docs", "supabase", "20260826_niu_auth_allowlist_gate.sql"), "utf8");
     expect(signInPage).toContain("signInWithOtp");
     expect(signInPage).toContain("emailRedirectTo");
+    expect(signInPage).toContain("shouldCreateUser: false");
     expect(signInPage).toContain("Email sign-in link");
+    expect(authGate).toContain("before insert on auth.users");
+    expect(authGate).toContain("admin_allowlist");
   });
 });

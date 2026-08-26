@@ -50,7 +50,11 @@ In the Google Cloud Console that owns NIU’s OAuth client, open **APIs & Servic
 
 The configured connector inventory was reviewed for Google Cloud administration. It contains Google Ads, Calendar, Gemini, Maps, and Workspace integrations, but no Google Cloud OAuth-credentials connector. The connected Supabase tools expose no Google Cloud client registration operation. This confirms that the callback must be approved by an authenticated owner of the existing Google OAuth client; no NIU source-code or database change can authorize it with Google.
 
-NIU also provides a Supabase email-link sign-in path. This allows an approved user to enter the same email address used for their NIU access and receive a one-time secure link, avoiding a hard dependency on the Google OAuth callback while the Google Cloud client owner completes the registration. The email link returns to `/portal` through the same Supabase redirect configuration.
+NIU also provides a Supabase email-link sign-in path for **existing approved NIU identities**. It never creates a new account from the email-link form. This allows an approved user to receive a one-time secure link without a hard dependency on the Google OAuth callback while the Google Cloud client owner completes the registration. The email link returns to `/portal` through the same Supabase redirect configuration; new identities remain governed by the database allowlist gate.
+
+The email-link flow was dispatched from the production sign-in page to the existing approved Super Administrator identity, `nassboss231@gmail.com`. The page confirmed the one-time link request. Opening the received link in the same browser remains the final user-inbox step for completing the live session-return check.
+
+The GitHub integration currently reports two Vercel projects. Use `https://novainternationaluniversity.vercel.app` as the NIU public deployment. The separately named `nova-me` deployment returned a Vercel page-load error during the audit and is not the NIU public URL; it should not be used for launch, sign-in links, or Supabase redirect configuration.
 
 ### Owner walkthrough for the remaining Google setting
 
