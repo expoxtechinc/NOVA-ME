@@ -31,3 +31,13 @@
 - [x] Add access-route checks for institutional builder and preview/version-management workspaces.
 - [x] Add integration-style coverage for authorization, credential privacy, progress validation, and credential status transitions.
 - [x] Exercise authenticated student, faculty, registrar, and administrator workflows on desktop and mobile after OAuth role provisioning.
+- [x] Audit the latest NIU release for deploy-blocking configuration, accessibility, security, and workflow gaps.
+- [x] Refine confirmed production-readiness gaps without altering existing academic records, including Express 5 wildcard-route compatibility and maintained runtime upgrade.
+- [x] Re-run public, role-access, responsive, security-advisor, test, type-check, and production-build validation after the Express 5 runtime upgrade.
+- [ ] Save and deliver the final production-readiness release checkpoint.
+- [x] Resolve the compatible Express dependency audit findings through the Express 5.2.1 runtime upgrade and record the zero-vulnerability production audit result.
+- [ ] Enable Supabase leaked-password protection through the NIU project’s Authentication security settings before public launch.
+- [x] Reassess SECURITY DEFINER advisor notices and retain only deliberately exposed, narrow-scope functions required by NIU workflows.
+- [x] Complete all production-readiness actions available through connected project and database tools without requiring user-side configuration work.
+- [x] Document the isolated Supabase Auth setting that remains account-session-only because the connected tools cannot change it safely.
+- [x] Record post-Express-5 public-route, protected-route, and mobile responsive validation evidence for the final release.

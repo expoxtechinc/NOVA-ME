@@ -22,6 +22,12 @@ Server-controlled database functions are used for high-risk actions. Learning ac
 
 Public credential verification is intentionally minimal. It accepts only normalized NIU credential numbers, rate-limits lookups at the application boundary, and returns the current credential status plus only the fields approved for public display. The protected learner credential page can render a print-ready certificate that includes a QR code back to the official verification page.
 
+## Deliberate database-function exposure
+
+NIU uses narrowly scoped `SECURITY DEFINER` functions where an RLS-only table operation cannot safely encode a multi-record academic action. Every such function fixes its `search_path` to `public`. Sensitive functions for enrollment, learning progress, grading, credential issuance and status changes, and role checks are executable only by the Supabase `authenticated` role and perform their own identity and role validation. The public `verify_niu_credential(text)` function is the sole anonymous exception: it exposes only the privacy-minimised verification result needed by the public verification route. The Supabase advisor appropriately reports these callable functions; the warnings document intentional gateways, not blanket access to underlying records.
+
+> Supabase Leaked Password Protection is currently disabled in the linked project. This setting is controlled in an authenticated Supabase account session and cannot be enabled through NIU database migrations or application code. It is recorded in the production release notes as the remaining platform-level hardening action.
+
 ## Audit and records
 
 High-impact changes to schools, departments, certificate programs, course versions, assessments, assignments, candidates, gradebook entries, credentials, and institutional settings are captured in the protected `audit_events` ledger. Credential status history is retained separately. Existing records were preserved through additive migrations only.
