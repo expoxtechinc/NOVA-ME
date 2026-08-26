@@ -57,8 +57,13 @@
 - [ ] Restrict email-link authentication to existing allowlist-governed Auth identities and provide a controlled response for non-approved email attempts.
 - [ ] Correct Supabase email-link redirect settings so NIU authentication returns to the live Vercel portal instead of localhost.
 - [ ] Repair and verify NIU’s primary Google OAuth sign-in redirect configuration for the live Vercel portal.
-- [ ] Provision makealuckspam@gmail.com as an NIU Super Administrator and prepare it as the clean Google OAuth ownership path.
+- [x] Provision makealuckspam@gmail.com as an NIU Super Administrator and prepare it as the clean Google OAuth ownership path.
 - [ ] Repair and verify NIU’s post-Google OAuth session return to the role-aware portal.
 - [ ] Add and validate a dedicated NIU OAuth callback route that exchanges the authorization code before redirecting to the portal.
 - [ ] Trace the live Google OAuth return URL and correct any remaining Supabase redirect allow-list fallback that prevents the callback from receiving its authorization code.
 - [ ] Inspect and resolve the live Supabase callback redirect that reaches `/auth/callback` without a usable authorization code after provider exchange.
+- [x] Audit NIU’s global deployment, browser resilience, authentication continuity, production security, and performance for remaining high-value hardening gaps.
+- [x] Add browser-safe authentication recovery so user navigation, refreshes, and implicit Google OAuth session returns cannot strand a valid NIU session.
+- [ ] Verify the live Google sign-in reaches `/portal` with an active NIU session after the browser-recovery release.
+- [ ] Complete a production-wide validation and push the fully tested global-reliability release to expoxtechinc/NOVA-ME.
+- [x] Add non-destructive covering indexes for the 40 verified unindexed NIU foreign keys identified by the Supabase performance advisor.

@@ -32,24 +32,35 @@ export default function Portal() {
   useEffect(() => {
     if (!supabaseConfigured) { setMessage("The NIU account connection is not configured."); setLoading(false); return; }
     let mounted = true;
-    async function loadWorkspace() {
-      const { data: sessionData } = await supabase.auth.getSession();
+    async function loadWorkspace(knownSession?: Session | null) {
+      setLoading(true);
+      setMessage(null);
+      const { data: sessionData } = knownSession === undefined ? await supabase.auth.getSession() : { data: { session: knownSession } };
       if (!mounted) return;
       setSession(sessionData.session);
+      setProfile(null);
+      setAssignedRoles([]);
       if (!sessionData.session) { setLoading(false); return; }
-      const { data, error } = await supabase.from("profiles").select("display_name, legal_name, role").eq("id", sessionData.session.user.id).maybeSingle();
-      if (!mounted) return;
-      if (error) setMessage("Your account is authenticated, but the NIU profile record could not be loaded.");
-      else if (!data) setMessage("Your account is awaiting institutional profile provisioning. Please contact NIU support.");
-      else {
-        setProfile(data as Profile);
-        const { data: assignments } = await supabase.from("profile_role_assignments").select("institutional_role").eq("profile_id", sessionData.session.user.id);
-        if (mounted) setAssignedRoles((assignments ?? []).map((assignment) => assignment.institutional_role as InstitutionalRole));
+      try {
+        const { data, error } = await supabase.from("profiles").select("display_name, legal_name, role").eq("id", sessionData.session.user.id).maybeSingle();
+        if (!mounted) return;
+        if (error) setMessage("Your account is authenticated, but the NIU profile record could not be loaded. Please refresh and try again.");
+        else if (!data) setMessage("Your account is awaiting institutional profile provisioning. Please contact NIU support.");
+        else {
+          setProfile(data as Profile);
+          const { data: assignments } = await supabase.from("profile_role_assignments").select("institutional_role").eq("profile_id", sessionData.session.user.id);
+          if (mounted) setAssignedRoles((assignments ?? []).map((assignment) => assignment.institutional_role as InstitutionalRole));
+        }
+      } catch {
+        if (mounted) setMessage("NIU could not refresh your workspace. Your protected access remains unchanged; please refresh and try again.");
       }
       if (mounted) setLoading(false);
     }
-    loadWorkspace();
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, nextSession) => setSession(nextSession));
+    void loadWorkspace();
+    const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "SIGNED_OUT") { setSession(null); setProfile(null); setAssignedRoles([]); setMessage(null); setLoading(false); return; }
+      if (nextSession) void loadWorkspace(nextSession);
+    });
     return () => { mounted = false; listener.subscription.unsubscribe(); };
   }, []);
 

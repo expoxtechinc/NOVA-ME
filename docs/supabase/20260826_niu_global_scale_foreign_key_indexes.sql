@@ -1,0 +1,43 @@
+-- Additive production-scale indexes for Supabase performance-advisor findings.
+-- These indexes accelerate joins, foreign-key checks, and role-scoped reads without altering records or policies.
+
+create index if not exists niu_idx_calendar_events_created_by on public.academic_calendar_events (created_by);
+create index if not exists niu_idx_announcements_created_by on public.announcements (created_by);
+create index if not exists niu_idx_assessments_course_id on public.assessments (course_id);
+create index if not exists niu_idx_assessments_created_by on public.assessments (created_by);
+create index if not exists niu_idx_assessments_module_id on public.assessments (module_id);
+create index if not exists niu_idx_submission_graded_by on public.assignment_submissions (graded_by);
+create index if not exists niu_idx_assignments_course_id on public.assignments (course_id);
+create index if not exists niu_idx_assignments_created_by on public.assignments (created_by);
+create index if not exists niu_idx_assignments_module_id on public.assignments (module_id);
+create index if not exists niu_idx_candidates_reviewed_by on public.certificate_candidates (reviewed_by);
+create index if not exists niu_idx_programs_created_by on public.certificate_programs (created_by);
+create index if not exists niu_idx_certificates_approved_by on public.certificates (approved_by);
+create index if not exists niu_idx_certificates_program_id on public.certificates (program_id);
+create index if not exists niu_idx_certificates_revoked_by on public.certificates (revoked_by);
+create index if not exists niu_idx_review_comments_created_by on public.content_review_comments (created_by);
+create index if not exists niu_idx_review_comments_resolved_by on public.content_review_comments (resolved_by);
+create index if not exists niu_idx_course_versions_created_by on public.course_versions (created_by);
+create index if not exists niu_idx_courses_author_id on public.courses (author_id);
+create index if not exists niu_idx_credential_history_changed_by on public.credential_status_history (changed_by);
+create index if not exists niu_idx_departments_head_profile on public.departments (head_profile_id);
+create index if not exists niu_idx_discussion_replies_created_by on public.discussion_replies (created_by);
+create index if not exists niu_idx_discussion_replies_thread_id on public.discussion_replies (thread_id);
+create index if not exists niu_idx_discussion_threads_course_id on public.discussion_threads (course_id);
+create index if not exists niu_idx_discussion_threads_created_by on public.discussion_threads (created_by);
+create index if not exists niu_idx_discussion_threads_lesson_id on public.discussion_threads (lesson_id);
+create index if not exists niu_idx_faculty_profiles_department on public.faculty_profiles (department_id);
+create index if not exists niu_idx_flashcards_lesson_id on public.flashcards (lesson_id);
+create index if not exists niu_idx_gradebook_assessment_id on public.gradebook_entries (assessment_id);
+create index if not exists niu_idx_gradebook_assignment_id on public.gradebook_entries (assignment_id);
+create index if not exists niu_idx_gradebook_course_id on public.gradebook_entries (course_id);
+create index if not exists niu_idx_gradebook_graded_by on public.gradebook_entries (graded_by);
+create index if not exists niu_idx_gradebook_user_id on public.gradebook_entries (user_id);
+create index if not exists niu_idx_institution_settings_updated_by on public.institution_settings (updated_by);
+create index if not exists niu_idx_policy_pages_authored_by on public.policy_pages (authored_by);
+create index if not exists niu_idx_role_assignments_assigned_by on public.profile_role_assignments (assigned_by);
+create index if not exists niu_idx_question_banks_created_by on public.question_banks (created_by);
+create index if not exists niu_idx_question_banks_department on public.question_banks (department_id);
+create index if not exists niu_idx_questions_question_bank on public.questions (question_bank_id);
+create index if not exists niu_idx_schools_created_by on public.schools (created_by);
+create index if not exists niu_idx_support_tickets_assigned_to on public.support_tickets (assigned_to);

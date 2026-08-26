@@ -1,5 +1,4 @@
-import { cn } from "@/lib/utils";
-import { AlertTriangle, RotateCcw } from "lucide-react";
+import { AlertTriangle, Home, RotateCcw } from "lucide-react";
 import { Component, ReactNode } from "react";
 
 interface Props {
@@ -8,48 +7,45 @@ interface Props {
 
 interface State {
   hasError: boolean;
-  error: Error | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+  static getDerivedStateFromError(): State {
+    return { hasError: true };
   }
+
+  componentDidCatch(error: Error) {
+    console.error("NIU client boundary recovered from an application error.", error);
+  }
+
+  retry = () => this.setState({ hasError: false });
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="flex items-center justify-center min-h-screen p-8 bg-background">
-          <div className="flex flex-col items-center w-full max-w-2xl p-8">
+        <div className="flex min-h-screen items-center justify-center bg-canvas p-8 text-ink">
+          <div className="flex w-full max-w-2xl flex-col items-center p-8 text-center">
             <AlertTriangle
               size={48}
-              className="text-destructive mb-6 flex-shrink-0"
+              className="mb-6 shrink-0 text-wine"
             />
 
-            <h2 className="text-xl mb-4">An unexpected error occurred.</h2>
+            <h2 className="font-serif text-3xl">NIU needs a quick refresh.</h2>
 
-            <div className="p-4 w-full rounded bg-muted overflow-auto mb-6">
-              <pre className="text-sm text-muted-foreground whitespace-break-spaces">
-                {this.state.error?.stack}
-              </pre>
-            </div>
+            <p className="mt-3 max-w-xl leading-7 text-ink/65">Your protected learning records and account access have not been changed. You can safely try again or return to the NIU home page.</p>
 
-            <button
-              onClick={() => window.location.reload()}
-              className={cn(
-                "flex items-center gap-2 px-4 py-2 rounded-lg",
-                "bg-primary text-primary-foreground",
-                "hover:opacity-90 cursor-pointer"
-              )}
-            >
+            <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <button onClick={this.retry} className="button-primary">
               <RotateCcw size={16} />
-              Reload Page
+              Try again
             </button>
+            <a href="/" className="button-secondary"><Home size={16} /> Return home</a>
+            </div>
           </div>
         </div>
       );
