@@ -26,7 +26,7 @@ Public credential verification is intentionally minimal. It accepts only normali
 
 NIU uses narrowly scoped `SECURITY DEFINER` functions where an RLS-only table operation cannot safely encode a multi-record academic action. Every such function fixes its `search_path` to `public`. Sensitive functions for enrollment, learning progress, grading, credential issuance and status changes, and role checks are executable only by the Supabase `authenticated` role and perform their own identity and role validation. The public `verify_niu_credential(text)` function is the sole anonymous exception: it exposes only the privacy-minimised verification result needed by the public verification route. The Supabase advisor appropriately reports these callable functions; the warnings document intentional gateways, not blanket access to underlying records.
 
-> Supabase Leaked Password Protection is currently disabled in the linked project. This setting is controlled in an authenticated Supabase account session and cannot be enabled through NIU database migrations or application code. It is recorded in the production release notes as the remaining platform-level hardening action.
+> Supabase Leaked Password Protection is currently disabled in the linked project. The linked Supabase organization is on the Free plan, and Supabase documents the setting as available on Pro and higher plans. This control therefore cannot be enabled through NIU database migrations, application code, the connected tools, or the current vendor tier. It is recorded in the production release notes as the remaining platform-level prerequisite if the vendor subscription and authenticated owner access later permit it.
 
 ## Audit and records
 
