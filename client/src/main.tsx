@@ -6,6 +6,7 @@ import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
 import { startLogin } from "./const";
+import { supabase } from "./lib/supabase";
 import "./index.css";
 
 const queryClient = new QueryClient();
@@ -42,7 +43,7 @@ const trpcClient = trpc.createClient({
     httpBatchLink({
       url: "/api/trpc",
       transformer: superjson,
-      headers() {
+      async headers() {
         // Preview auto-login fallback: when the browser blocks iframe cookies
         // (Safari ITP / private browsing / WebView), the runtime mirrors the
         // session into sessionStorage so we can forward it as a Bearer token.
@@ -54,13 +55,15 @@ const trpcClient = trpc.createClient({
             const pair = raw.split(";").find(s => s.trim().startsWith(prefix));
             const token = pair?.trim().slice(prefix.length);
             if (token) {
-              return { Authorization: `Bearer ${token}` };
+              const { data } = await supabase.auth.getSession();
+              return { Authorization: `Bearer ${token}`, ...(data.session ? { "X-Supabase-Authorization": `Bearer ${data.session.access_token}` } : {}) };
             }
           }
         } catch {
           // sessionStorage unavailable
         }
-        return {};
+        const { data } = await supabase.auth.getSession();
+        return data.session ? { "X-Supabase-Authorization": `Bearer ${data.session.access_token}` } : {};
       },
       fetch(input, init) {
         return globalThis.fetch(input, {

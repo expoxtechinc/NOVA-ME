@@ -11,7 +11,9 @@ const CredentialRegistry = lazy(() => import("./pages/CredentialRegistry"));
 const CredentialHistory = lazy(() => import("./pages/CredentialHistory"));
 const CourseLearning = lazy(() => import("./pages/CourseLearning"));
 const CourseDetails = lazy(() => import("./pages/CourseDetails"));
+const ContentPreview = lazy(() => import("./pages/ContentPreview"));
 const AcademicTools = lazy(() => import("./pages/AcademicTools"));
+const AcademicConfiguration = lazy(() => import("./pages/AcademicConfiguration"));
 const AccessControl = lazy(() => import("./pages/AccessControl"));
 const AssessmentBuilder = lazy(() => import("./pages/AssessmentBuilder"));
 const Grading = lazy(() => import("./pages/Grading"));
@@ -19,6 +21,7 @@ const Learning = lazy(() => import("./pages/Learning"));
 const ProgramDetails = lazy(() => import("./pages/ProgramDetails"));
 const Registrar = lazy(() => import("./pages/Registrar"));
 const InstitutionSettings = lazy(() => import("./pages/InstitutionSettings"));
+const InstitutionalBuilder = lazy(() => import("./pages/InstitutionalBuilder"));
 const RoleDashboard = lazy(() => import("./pages/RoleDashboard"));
 
 const Home = lazy(() => import("./pages/Home"));
@@ -44,10 +47,13 @@ function Router() {
     <Route path="/operations" component={Operations} />
     <Route path="/authoring" component={Authoring} />
     <Route path="/academic-tools" component={AcademicTools} />
+    <Route path="/academic-configuration" component={AcademicConfiguration} />
     <Route path="/assessment-builder" component={AssessmentBuilder} />
     <Route path="/access-control" component={AccessControl} />
     <Route path="/grading" component={Grading} />
     <Route path="/institution-settings" component={InstitutionSettings} />
+    <Route path="/institutional-builder" component={InstitutionalBuilder} />
+    <Route path="/content-preview" component={ContentPreview} />
     <Route path="/registrar" component={Registrar} />
     <Route path="/credential-registry" component={CredentialRegistry} />
     <Route path="/credential-history" component={CredentialHistory} />
