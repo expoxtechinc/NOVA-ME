@@ -5,7 +5,7 @@
 - [ ] Implement server-side authorization helpers, administrator allowlist checks, role-aware protected procedures, input validation, audit capture, and rate-limited public credential lookup.
 - [x] Build public NIU navigation, responsive institutional pages, program and course discovery, search, support resources, policy pages, accessible PWA metadata, and SEO configuration.
 - [x] Build privacy-preserving public credential verification by credential number, including active, revoked, and superseded status states.
-- [ ] Build public program and course detail experiences that disclose certificate-only offerings without unsupported accreditation, recognition, partnership, faculty, or degree claims.
+- [x] Build public program and course detail experiences that disclose certificate-only offerings without unsupported accreditation, recognition, partnership, faculty, or degree claims.
 - [x] Build reusable responsive dashboard foundations and role-specific student, faculty, registrar, and administrator entry points with meaningful empty, loading, and error states.
 - [ ] Build student learning-path views with prerequisite-aware enrollment, server-validated lesson activity completion, protected content entries, personal grades, and certificate eligibility status.
 - [ ] Build administrator and faculty workspace views for schools, departments, certificate programs, courses, modules, lessons, question banks, assignments, announcements, calendar events, content review, versioning, and previews.
@@ -20,3 +20,11 @@
 - [x] Create separate faculty, registrar, and administrator dashboard entry routes with role-specific navigation, empty states, and access gating instead of a generic staff workspace.
 - [x] Add a committed non-secret environment configuration reference documenting all required public-client and server environment keys.
 - [x] Add route checks or tests confirming each role reaches its intended dashboard entry point and cannot access an unauthorised role workspace.
+- [x] Implement and test administrator allowlist enforcement plus role-protected server procedures for staff-only operations.
+- [ ] Add prerequisite-aware enrollment checks and a signed protected-media delivery flow for enrolled learners.
+- [ ] Build department, certificate-program, lesson, content-review, version-management, and preview workflows for authorised staff.
+- [x] Add full assessment lifecycle controls, immutable submissions, grading actions, and released-grade workflows.
+- [x] Add credential revocation management/history and student credential retrieval-history views.
+- [ ] Add configurable certificate templates, grading scales, and completion-rule management.
+- [ ] Add integration-style coverage for authorization, credential privacy, progress validation, and credential status transitions.
+- [ ] Exercise authenticated student, faculty, registrar, and administrator workflows on desktop and mobile after OAuth role provisioning.

@@ -4,7 +4,8 @@ import SiteShell from "@/components/SiteShell";
 import { trpc } from "@/lib/trpc";
 
 export default function Verify() {
-  const [credentialNumber, setCredentialNumber] = useState(""); const [submitted, setSubmitted] = useState("");
+  const initialCredential = new URLSearchParams(window.location.search).get("credential")?.trim() ?? "";
+  const [credentialNumber, setCredentialNumber] = useState(initialCredential); const [submitted, setSubmitted] = useState(initialCredential);
   const result = trpc.credential.verify.useQuery({ credentialNumber: submitted }, { enabled: submitted.length > 0, retry: false });
   function submit(event: React.FormEvent<HTMLFormElement>) { event.preventDefault(); setSubmitted(credentialNumber.trim()); }
   const record = result.data && result.data.found ? result.data : null;
