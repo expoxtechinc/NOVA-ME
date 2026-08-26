@@ -15,6 +15,7 @@ const ContentPreview = lazy(() => import("./pages/ContentPreview"));
 const AcademicTools = lazy(() => import("./pages/AcademicTools"));
 const AcademicConfiguration = lazy(() => import("./pages/AcademicConfiguration"));
 const AccessControl = lazy(() => import("./pages/AccessControl"));
+const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const AssessmentBuilder = lazy(() => import("./pages/AssessmentBuilder"));
 const Grading = lazy(() => import("./pages/Grading"));
 const Learning = lazy(() => import("./pages/Learning"));
@@ -43,6 +44,7 @@ function Router() {
     <Route path="/courses/:slug" component={CourseDetails} />
     <Route path="/verify" component={Verify} />
     <Route path="/signin" component={SignIn} />
+    <Route path="/auth/callback" component={AuthCallback} />
     <Route path="/portal" component={Portal} />
     <Route path="/operations" component={Operations} />
     <Route path="/authoring" component={Authoring} />

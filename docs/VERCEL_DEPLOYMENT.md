@@ -54,6 +54,8 @@ NIU also provides a Supabase email-link sign-in path for **existing approved NIU
 
 The email-link flow was dispatched from the production sign-in page to the existing approved Super Administrator identity, `nassboss231@gmail.com`. The page confirmed the one-time link request. Opening the received link in the same browser remains the final user-inbox step for completing the live session-return check.
 
+The primary Google sign-in flow was rechecked after the NIU Google OAuth client was replaced in Supabase. The live NIU page now reaches Google’s account-selection screen with the new client and the registered `https://oevgnonkqpvfvjsmovpw.supabase.co/auth/v1/callback` URI, rather than returning the former `redirect_uri_mismatch` error. The application then uses `/auth/callback` to exchange the returned authorization code before routing an authenticated user to `/portal`. Google account selection and consent remain user-controlled actions.
+
 The GitHub integration currently reports two Vercel projects. Use `https://novainternationaluniversity.vercel.app` as the NIU public deployment. The separately named `nova-me` deployment returned a Vercel page-load error during the audit and is not the NIU public URL; it should not be used for launch, sign-in links, or Supabase redirect configuration.
 
 ### Owner walkthrough for the remaining Google setting

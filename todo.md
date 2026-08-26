@@ -55,3 +55,8 @@
 - [x] Add and validate a server-enforced email-link sign-in fallback so only approved NIU users can access the platform while Google OAuth callback registration remains pending.
 - [ ] Verify approved-user email-link delivery, return to the portal, and role access without sending access links to non-approved users.
 - [ ] Restrict email-link authentication to existing allowlist-governed Auth identities and provide a controlled response for non-approved email attempts.
+- [ ] Correct Supabase email-link redirect settings so NIU authentication returns to the live Vercel portal instead of localhost.
+- [ ] Repair and verify NIU’s primary Google OAuth sign-in redirect configuration for the live Vercel portal.
+- [ ] Provision makealuckspam@gmail.com as an NIU Super Administrator and prepare it as the clean Google OAuth ownership path.
+- [ ] Repair and verify NIU’s post-Google OAuth session return to the role-aware portal.
+- [ ] Add and validate a dedicated NIU OAuth callback route that exchanges the authorization code before redirecting to the portal.

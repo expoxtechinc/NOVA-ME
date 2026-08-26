@@ -16,7 +16,7 @@ export default function SignIn() {
     setEmailSent(false);
     if (!supabaseConfigured) { setError("The NIU authentication connection has not been configured yet."); return; }
     setGoogleLoading(true);
-    const { error: signInError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/portal` } });
+    const { error: signInError } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: `${window.location.origin}/auth/callback` } });
     if (signInError) { setError(signInError.message); setGoogleLoading(false); }
   }
 

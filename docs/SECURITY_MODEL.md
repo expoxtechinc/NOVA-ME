@@ -28,6 +28,10 @@ NIU uses narrowly scoped `SECURITY DEFINER` functions where an RLS-only table op
 
 > Supabase Leaked Password Protection is currently disabled in the linked project. The linked Supabase organization is on the Free plan, and Supabase documents the setting as available on Pro and higher plans. This control therefore cannot be enabled through NIU database migrations, application code, the connected tools, or the current vendor tier. It is recorded in the production release notes as the remaining platform-level prerequisite if the vendor subscription and authenticated owner access later permit it.
 
+## Authentication admission control
+
+NIU authentication is constrained at two layers. The email-link sign-in screen requests links only for existing Supabase Auth identities, so it never creates a user from browser input. At the database boundary, the `niu_auth_require_allowlisted_email` trigger runs before any `auth.users` insertion and rejects email addresses absent from the protected NIU allowlist. This covers Google OAuth and future identity-provider creation as well as the email-link path. The public interface presents a generic controlled error if an email-link request cannot be issued, avoiding disclosure of individual account eligibility.
+
 ## Audit and records
 
 High-impact changes to schools, departments, certificate programs, course versions, assessments, assignments, candidates, gradebook entries, credentials, and institutional settings are captured in the protected `audit_events` ledger. Credential status history is retained separately. Existing records were preserved through additive migrations only.
