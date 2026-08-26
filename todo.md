@@ -52,3 +52,4 @@
 - [x] Audit all connected-service options for registering NIU’s Google OAuth callback without requiring user-side technical work; only the authenticated Google Cloud OAuth-client owner can register the required callback.
 - [x] Provide the owner-facing step-by-step Google Cloud OAuth callback procedure for completing NIU Google sign-in.
 - [x] Complete a full production audit of NIU’s deployed routes, repository, Vercel build, Supabase integration, and Google sign-in path; remediate all accessible issues. The Google OAuth client callback remains a separate authenticated-owner prerequisite.
+- [ ] Add and validate a Supabase email-link sign-in fallback so allowlisted NIU users can access the platform while Google OAuth callback registration remains pending.

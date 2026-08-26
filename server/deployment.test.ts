@@ -26,4 +26,11 @@ describe("external deployment branding", () => {
     expect(config).toContain("fallbackSupabasePublishableKey");
     expect(config).toContain("export const supabaseConfigured = true");
   });
+
+  it("offers a Supabase email-link fallback for deployed access when Google OAuth needs external configuration", () => {
+    const signInPage = fs.readFileSync(path.join(root, "client", "src", "pages", "SignIn.tsx"), "utf8");
+    expect(signInPage).toContain("signInWithOtp");
+    expect(signInPage).toContain("emailRedirectTo");
+    expect(signInPage).toContain("Email sign-in link");
+  });
 });

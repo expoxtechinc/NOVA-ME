@@ -50,6 +50,8 @@ In the Google Cloud Console that owns NIU’s OAuth client, open **APIs & Servic
 
 The configured connector inventory was reviewed for Google Cloud administration. It contains Google Ads, Calendar, Gemini, Maps, and Workspace integrations, but no Google Cloud OAuth-credentials connector. The connected Supabase tools expose no Google Cloud client registration operation. This confirms that the callback must be approved by an authenticated owner of the existing Google OAuth client; no NIU source-code or database change can authorize it with Google.
 
+NIU also provides a Supabase email-link sign-in path. This allows an approved user to enter the same email address used for their NIU access and receive a one-time secure link, avoiding a hard dependency on the Google OAuth callback while the Google Cloud client owner completes the registration. The email link returns to `/portal` through the same Supabase redirect configuration.
+
 ### Owner walkthrough for the remaining Google setting
 
 1. Open [Google Cloud Credentials](https://console.cloud.google.com/apis/credentials) and sign in with the Google account that owns the NIU OAuth client.
