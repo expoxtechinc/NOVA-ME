@@ -41,3 +41,7 @@
 - [x] Complete all production-readiness actions available through connected project and database tools without requiring user-side configuration work.
 - [x] Document the isolated Supabase Auth setting that remains account-session-only because the connected tools cannot change it safely.
 - [x] Record post-Express-5 public-route, protected-route, and mobile responsive validation evidence for the final release.
+- [x] Inspect the NOVA-ME repository, current NIU browser branding, and Vercel deployment configuration.
+- [x] Add a production browser icon and complete search-preview metadata using the approved NIU branding asset.
+- [ ] Validate the Vercel deployment configuration, production build, and repository history before pushing.
+- [ ] Push the complete branded NIU release to expoxtechinc/NOVA-ME and document the Vercel deployment hand-off.
