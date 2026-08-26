@@ -65,5 +65,6 @@
 - [x] Audit NIU’s global deployment, browser resilience, authentication continuity, production security, and performance for remaining high-value hardening gaps.
 - [x] Add browser-safe authentication recovery so user navigation, refreshes, and implicit Google OAuth session returns cannot strand a valid NIU session.
 - [ ] Verify the live Google sign-in reaches `/portal` with an active NIU session after the browser-recovery release.
+- [ ] Verify and, if needed, complete the protected Super Administrator workflow for uploading and attaching learning notes/documents to NIU course content.
 - [ ] Complete a production-wide validation and push the fully tested global-reliability release to expoxtechinc/NOVA-ME.
 - [x] Add non-destructive covering indexes for the 40 verified unindexed NIU foreign keys identified by the Supabase performance advisor.
