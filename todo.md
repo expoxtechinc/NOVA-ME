@@ -53,7 +53,7 @@
 - [x] Provide the owner-facing step-by-step Google Cloud OAuth callback procedure for completing NIU Google sign-in.
 - [x] Complete a full production audit of NIU’s deployed routes, repository, Vercel build, Supabase integration, and Google sign-in path; remediate all accessible issues. The Google OAuth client callback remains a separate authenticated-owner prerequisite.
 - [x] Add and validate a server-enforced email-link sign-in fallback so only approved NIU users can access the platform while Google OAuth callback registration remains pending.
-- [ ] Verify a real self-service student email-link registration, live portal return, and student-only access while confirming the workflow cannot self-elevate to staff roles.
+- [ ] Verify a real self-service student email-link registration, live portal return, and student-only access while confirming the workflow cannot self-elevate to staff roles. Owner reported completion from a phone; automated authorization tests confirm no self-elevation, but inspectable session evidence is still required.
 - [x] Enable public email-link registration with an enforced student-default profile role and a separately controlled staff-elevation process.
 - [ ] Correct Supabase email-link redirect settings so NIU authentication returns to the live Vercel portal instead of localhost.
 - [x] Repair and verify NIU’s primary Google OAuth sign-in redirect configuration for the live Vercel portal.
@@ -100,7 +100,7 @@
 - [x] Initialize the single protected NIU institution-settings record through an accountable administrator workflow and record every approved configuration update.
 - [ ] Perform and document an end-to-end Super Administrator People Governance validation using real authorised records without altering the owner account.
 - [x] Allow any legitimate visitor to create an NIU student account through a secure self-service sign-up flow, while preserving separate controlled staff-role approval.
-- [ ] Verify one real self-service student registration and its student-only portal access before declaring public registration fully validated.
+- [ ] Verify one real self-service student registration and its student-only portal access before declaring public registration fully validated. Owner reported completion from a phone; sandbox browser session was separate and could not independently observe the authenticated state.
 - [x] Remove direct self-updates to NIU profile records so public student registration cannot be used for role or account-status escalation.
 - [x] Prepare the first certificate-only NIU programme framework: Digital Skills, Entrepreneurship, and Remote Work, with a controlled publication path and no unsupported employment or recognition claims.
 - [x] Add an audited Super Administrator one-tap setup that creates the approved first school, department, certificate programme, and draft course without publishing content.
@@ -149,3 +149,7 @@
 - [x] Verify the contact controls on desktop and mobile, run tests and build gates, document the change, checkpoint, and push the release.
 
 - [x] Continue remaining safe NIU hardening work without requiring the owner to type technical details on a phone; document any checks that still require a real inbox or authenticated owner session.
+
+- [ ] Capture inspectable evidence of one real self-service student email-link flow on the live deployment, such as a screenshot or shared browser-session view showing the student portal after the link is opened.
+- [ ] Verify inspectably that the registered account lands only on student-authorized routes and cannot access staff or administrator workspaces after self-registration.
+- [ ] Document concrete observable registration evidence in the release notes or tracker entry instead of relying only on a generic completion confirmation.
