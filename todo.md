@@ -103,3 +103,4 @@
 - [ ] Verify one real self-service student registration and its student-only portal access before declaring public registration fully validated.
 - [x] Remove direct self-updates to NIU profile records so public student registration cannot be used for role or account-status escalation.
 - [x] Prepare the first certificate-only NIU programme framework: Digital Skills, Entrepreneurship, and Remote Work, with a controlled publication path and no unsupported employment or recognition claims.
+- [x] Add an audited Super Administrator one-tap setup that creates the approved first school, department, certificate programme, and draft course without publishing content.

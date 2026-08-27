@@ -36,6 +36,7 @@ const Reports = lazy(() => import("./pages/Reports"));
 const InstitutionSettings = lazy(() => import("./pages/InstitutionSettings"));
 const InstitutionalPublication = lazy(() => import("./pages/InstitutionalPublication"));
 const InstitutionalBuilder = lazy(() => import("./pages/InstitutionalBuilder"));
+const StarterProgrammeSetup = lazy(() => import("./pages/StarterProgrammeSetup"));
 const RoleDashboard = lazy(() => import("./pages/RoleDashboard"));
 
 const Home = lazy(() => import("./pages/Home"));
@@ -76,6 +77,7 @@ function Router() {
     <Route path="/institution-settings" component={InstitutionSettings} />
     <Route path="/institutional-publication" component={InstitutionalPublication} />
     <Route path="/institutional-builder" component={InstitutionalBuilder} />
+    <Route path="/starter-programme-setup" component={StarterProgrammeSetup} />
     <Route path="/content-preview" component={ContentPreview} />
     <Route path="/content-library" component={ContentLibrary} />
     <Route path="/communication" component={CommunicationCenter} />
