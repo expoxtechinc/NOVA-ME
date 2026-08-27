@@ -76,7 +76,7 @@
 - [x] Complete configurable video, reading, flashcard, question-bank, quiz, assignment, test, and assessment rules without relying solely on client-reported completion.
 - [x] Complete configurable points, grading, attempt, late-rule, completion-rule, and certificate-eligibility management using server-validated outcomes.
 - [ ] Complete protected student, faculty, and administrator record-management controls, including authorised account status and role/assignment management.
-- [ ] Add and validate explicit Super Administrator controls for existing-user role reassignment and scoped staff assignments with record-preserving server authorisation.
+- [x] Add and validate explicit Super Administrator controls for existing-user role reassignment and scoped staff assignments with record-preserving server authorisation.
 - [x] Complete certificate approval, issuance, reissue, revocation, credential verification, transcript retrieval, and automatic eligibility workflow without unsupported recognition claims.
 - [x] Add the approved NIU founder-signature presentation to certificate output using the exact signer text `akinssokpah` and `Akin S. Sokpah — President and Founder`.
 - [x] Complete governed notifications, announcements, reports, audit activity, and CSV/PDF export workflows based only on authorised institutional records.
@@ -102,3 +102,4 @@
 - [x] Allow any legitimate visitor to create an NIU student account through a secure self-service sign-up flow, while preserving separate controlled staff-role approval.
 - [ ] Verify one real self-service student registration and its student-only portal access before declaring public registration fully validated.
 - [x] Remove direct self-updates to NIU profile records so public student registration cannot be used for role or account-status escalation.
+- [x] Prepare the first certificate-only NIU programme framework: Digital Skills, Entrepreneurship, and Remote Work, with a controlled publication path and no unsupported employment or recognition claims.

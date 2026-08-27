@@ -40,6 +40,8 @@ describe("NIU rich module and lesson authoring", () => {
     expect(builder).toContain('from("certificate_programs").insert');
     expect(builder).toContain('department_id: targetId');
     expect(builder).toContain('award_type: "certificate"');
+    expect(builder).toContain("recommendedStarterProgramme");
+    expect(builder).toContain("Use recommended draft framework");
   });
 
   it("keeps people administration record-preserving and available only to Super Administrators", () => {
