@@ -11,8 +11,9 @@ describe("NIU protected starter lesson scaffold", () => {
     expect(migration).toContain("niu_initialize_digital_starter_lessons");
     expect(migration).toContain("role = 'super_admin' and account_status = 'active'");
     expect(migration).toContain("digital_starter_lesson_scaffold_initialized");
-    expect(migration).toContain("'reading'");
-    expect(migration).toContain("'assignment'");
+    expect(migration).toContain("'article'");
+    expect(migration).not.toContain("'reading'");
+    expect(migration).not.toContain("'assignment'");
     expect(migration).toContain("revoke all on function public.niu_initialize_digital_starter_lessons() from public, anon");
     expect(page).toContain('rpc("niu_initialize_digital_starter_lessons")');
     expect(page).toContain("It creates no materials, assessments, learners, or public content.");

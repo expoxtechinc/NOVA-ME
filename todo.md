@@ -107,3 +107,4 @@
 - [x] Repair the starter-programme setup function’s ambiguous `program_id` reference and revalidate the owner-authorised draft creation.
 - [x] Add an audited Super Administrator one-tap setup that creates the recommended ordered starter module outline as draft records for NIU’s first course.
 - [x] Add an audited Super Administrator one-tap setup that creates the recommended draft lesson scaffold for NIU’s first course without adding materials, assessments, learners, or public content.
+- [x] Repair the starter lesson scaffold to use only NIU lesson activity types permitted by the live `lessons_kind_check` constraint, then revalidate owner-authorised creation.
