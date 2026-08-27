@@ -148,4 +148,4 @@
 - [x] Add accessible WhatsApp, email, and Facebook contact controls using the owner-provided contact details.
 - [x] Verify the contact controls on desktop and mobile, run tests and build gates, document the change, checkpoint, and push the release.
 
-- [ ] Continue remaining safe NIU hardening work without requiring the owner to type technical details on a phone; document any checks that still require a real inbox or authenticated owner session.
+- [x] Continue remaining safe NIU hardening work without requiring the owner to type technical details on a phone; document any checks that still require a real inbox or authenticated owner session.
