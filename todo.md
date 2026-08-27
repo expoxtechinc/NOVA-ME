@@ -111,3 +111,6 @@
 - [ ] Add an original NIU Digital Foundations study guide as a private draft resource and attach it to the authorised first lesson without publishing it.
 - [x] Repair NIU’s protected learning-note upload handler so it never writes a lesson type that violates the live `lessons_kind_check` constraint.
 - [x] Enforce an auditable, active-Super-Administrator-only record for the first protected NIU study-guide setup action.
+- [ ] Diagnose and repair the unreadable production response from the protected NIU starter-study-guide action, then verify a real private draft attachment and audit record.
+- [ ] Replace the production-incompatible protected Content Library file path with private Supabase object storage and scoped access controls without exposing learner materials publicly.
+- [x] Add automatic NIU audit capture for protected content-library metadata and lesson-attachment changes made through the production-safe direct workflow.
