@@ -124,3 +124,4 @@
 - [x] Repair the published NIU programme-detail route so the successfully released first certificate programme is discoverable from its public listing.
 - [x] Repair anonymous published programme-course relationship access so programme detail works without exposing staff authorization helpers or protected materials.
 - [x] Correct remaining draft-only language in the authorised first certificate bundle’s published course and module descriptions.
+- [ ] Repair NIU student enrolment so it writes the live `enrollment_status` enum safely, then verify real student enrolment and protected material access.

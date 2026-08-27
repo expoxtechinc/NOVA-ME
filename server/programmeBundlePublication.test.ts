@@ -18,4 +18,13 @@ describe("NIU controlled programme bundle publication", () => {
     expect(publication).toContain('rpc("niu_publish_programme_bundle"');
     expect(publication).toContain("Publish complete bundle");
   });
+
+  it("keeps enrollment limited to active accounts and published courses while using the live enrollment-status enum", () => {
+    const enrollmentRepair = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_enrollment_status_enum_repair.sql"), "utf8");
+    expect(enrollmentRepair).toContain("public.niu_account_is_active()");
+    expect(enrollmentRepair).toContain("status = 'published'");
+    expect(enrollmentRepair).toContain("'active'::public.enrollment_status");
+    expect(enrollmentRepair).toContain("'completed'::public.enrollment_status");
+    expect(enrollmentRepair).toContain("revoke all on function public.niu_enroll_in_course(uuid) from public, anon");
+  });
 });
