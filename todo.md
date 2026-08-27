@@ -104,4 +104,5 @@
 - [x] Remove direct self-updates to NIU profile records so public student registration cannot be used for role or account-status escalation.
 - [x] Prepare the first certificate-only NIU programme framework: Digital Skills, Entrepreneurship, and Remote Work, with a controlled publication path and no unsupported employment or recognition claims.
 - [x] Add an audited Super Administrator one-tap setup that creates the approved first school, department, certificate programme, and draft course without publishing content.
-- [ ] Repair the starter-programme setup function’s ambiguous `program_id` reference and revalidate the owner-authorised draft creation.
+- [x] Repair the starter-programme setup function’s ambiguous `program_id` reference and revalidate the owner-authorised draft creation.
+- [x] Add an audited Super Administrator one-tap setup that creates the recommended ordered starter module outline as draft records for NIU’s first course.
