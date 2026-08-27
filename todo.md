@@ -53,8 +53,8 @@
 - [x] Provide the owner-facing step-by-step Google Cloud OAuth callback procedure for completing NIU Google sign-in.
 - [x] Complete a full production audit of NIU’s deployed routes, repository, Vercel build, Supabase integration, and Google sign-in path; remediate all accessible issues. The Google OAuth client callback remains a separate authenticated-owner prerequisite.
 - [x] Add and validate a server-enforced email-link sign-in fallback so only approved NIU users can access the platform while Google OAuth callback registration remains pending.
-- [ ] Verify approved-user email-link delivery, return to the portal, and role access without sending access links to non-approved users.
-- [x] Restrict email-link authentication to existing allowlist-governed Auth identities and provide a controlled response for non-approved email attempts.
+- [ ] Verify a real self-service student email-link registration, live portal return, and student-only access while confirming the workflow cannot self-elevate to staff roles.
+- [x] Enable public email-link registration with an enforced student-default profile role and a separately controlled staff-elevation process.
 - [ ] Correct Supabase email-link redirect settings so NIU authentication returns to the live Vercel portal instead of localhost.
 - [x] Repair and verify NIU’s primary Google OAuth sign-in redirect configuration for the live Vercel portal.
 - [x] Provision makealuckspam@gmail.com as an NIU Super Administrator and prepare it as the clean Google OAuth ownership path.
@@ -108,3 +108,6 @@
 - [x] Add an audited Super Administrator one-tap setup that creates the recommended ordered starter module outline as draft records for NIU’s first course.
 - [x] Add an audited Super Administrator one-tap setup that creates the recommended draft lesson scaffold for NIU’s first course without adding materials, assessments, learners, or public content.
 - [x] Repair the starter lesson scaffold to use only NIU lesson activity types permitted by the live `lessons_kind_check` constraint, then revalidate owner-authorised creation.
+- [ ] Add an original NIU Digital Foundations study guide as a private draft resource and attach it to the authorised first lesson without publishing it.
+- [x] Repair NIU’s protected learning-note upload handler so it never writes a lesson type that violates the live `lessons_kind_check` constraint.
+- [x] Enforce an auditable, active-Super-Administrator-only record for the first protected NIU study-guide setup action.

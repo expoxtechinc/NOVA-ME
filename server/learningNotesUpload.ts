@@ -55,7 +55,7 @@ export const uploadLearningNote: RequestHandler = async (req, res) => {
 
     const filename = safeFilename(encodedFilename);
     const { key } = await storagePut(`niu-learning-notes/${lessonId}/${filename}`, req.body, contentType);
-    const { error: updateError } = await supabase.from("lessons").update({ kind: "document", media_path: key }).eq("id", lessonId);
+    const { error: updateError } = await supabase.from("lessons").update({ media_path: key }).eq("id", lessonId);
     if (updateError) return res.status(403).json({ error: "The note was stored but could not be attached to this lesson." });
 
     return res.status(201).json({ message: "Learning note uploaded and attached to the protected lesson.", mediaPath: key });

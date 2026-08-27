@@ -18,7 +18,8 @@ describe("protected learning-note uploads", () => {
     expect(upload).toContain("allowedContentTypes");
     expect(upload).toContain("maxBytes");
     expect(upload).toContain("storagePut");
-    expect(upload).toContain('update({ kind: "document", media_path: key })');
+    expect(upload).toContain("update({ media_path: key })");
+    expect(upload).not.toContain('update({ kind: "document", media_path: key })');
   });
 
   it("exposes an academic-staff upload form for supported learning-note file types", () => {
