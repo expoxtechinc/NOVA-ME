@@ -35,6 +35,7 @@ describe("NIU public programme discovery", () => {
   it("keeps first-certificate publication behind four original protected materials and the existing readiness gate", () => {
     const releasePage = fs.readFileSync(path.join(root, "client", "src", "pages", "FirstCertificateRelease.tsx"), "utf8");
     const approval = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_digital_starter_bundle_approval.sql"), "utf8");
+    const courseStatusRepair = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_course_status_approved_value.sql"), "utf8");
     expect(releasePage).toContain("const guides = [");
     expect(releasePage).toContain('supabase.rpc("niu_approve_digital_starter_bundle")');
     expect(releasePage).toContain('supabase.rpc("niu_publish_programme_bundle"');
@@ -44,5 +45,6 @@ describe("NIU public programme discovery", () => {
     expect(approval).toContain("role = 'super_admin'");
     expect(approval).not.toContain("niu_is_active_super_admin");
     expect(approval).toContain("revoke all on function public.niu_approve_digital_starter_bundle() from public, anon");
+    expect(courseStatusRepair).toContain("alter type public.course_status add value if not exists 'approved' after 'review'");
   });
 });
