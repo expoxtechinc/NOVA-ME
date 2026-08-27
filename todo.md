@@ -106,3 +106,4 @@
 - [x] Add an audited Super Administrator one-tap setup that creates the approved first school, department, certificate programme, and draft course without publishing content.
 - [x] Repair the starter-programme setup function’s ambiguous `program_id` reference and revalidate the owner-authorised draft creation.
 - [x] Add an audited Super Administrator one-tap setup that creates the recommended ordered starter module outline as draft records for NIU’s first course.
+- [x] Add an audited Super Administrator one-tap setup that creates the recommended draft lesson scaffold for NIU’s first course without adding materials, assessments, learners, or public content.
