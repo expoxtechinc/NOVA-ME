@@ -29,4 +29,11 @@ describe("NIU content library", () => {
     expect(learning).toContain("createSignedUrl(item.storage_path, 60)");
     expect(learning).not.toContain("contentUtils.media.getContentUrl.fetch");
   });
+
+  it("uses direct signed-link navigation with visible retrieval feedback for mobile learners", () => {
+    const learning = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseLearning.tsx"), "utf8");
+    expect(learning).toContain('setResourceStatus("Opening protected resource…")');
+    expect(learning).toContain("window.location.assign(data.signedUrl)");
+    expect(learning).not.toContain("window.open(data.signedUrl");
+  });
 });
