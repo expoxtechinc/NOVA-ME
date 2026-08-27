@@ -126,3 +126,4 @@
 - [x] Correct remaining draft-only language in the authorised first certificate bundle’s published course and module descriptions.
 - [ ] Repair NIU student enrolment so it writes the live `enrollment_status` enum safely, then verify real student enrolment and protected material access.
 - [x] Replace popup-dependent protected library-resource opening with a direct authenticated signed-link navigation and explicit retrieval feedback for mobile learners.
+- [ ] Repair the malformed punctuation encoding displayed in the published protected Digital Foundations study guide, then revalidate enrolled learner retrieval.

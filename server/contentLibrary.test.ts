@@ -36,4 +36,14 @@ describe("NIU content library", () => {
     expect(learning).toContain("window.location.assign(data.signedUrl)");
     expect(learning).not.toContain("window.open(data.signedUrl");
   });
+
+  it("offers only Super Administrators a record-preserving replacement path for malformed starter-guide text", () => {
+    const page = fs.readFileSync(path.join(root, "client", "src", "pages", "ContentLibrary.tsx"), "utf8");
+    expect(page).toContain("async function repairDigitalStudyGuideEncoding()");
+    expect(page).toContain('role === "super_admin" && <section');
+    expect(page).toContain('from("content_library_items").update({ storage_path: replacementPath }).eq("id", existing.id)');
+    expect(page).toContain("Repair first study guide text");
+    expect(page).not.toContain("â€”");
+    expect(page).not.toContain("â€™");
+  });
 });
