@@ -133,4 +133,11 @@
 - [x] Add a responsive three-pane Course Studio layout with curriculum tree, main editor, and progress/checklist panel, including mobile-safe navigation.
 - [x] Preserve existing NIU certificate-only scope, founder strings, private storage, role authorization, audit capture, versioning, and controlled publication safeguards in Course Studio.
 - [x] Add focused Course Studio regression tests for workspace routing, authorization boundaries, curriculum relationships, critical validation blockers, and non-duplication of existing records.
-- [ ] Validate Course Studio with the full release gates, responsive screenshots, documentation, checkpoint, and repository push.
+- [x] Validate Course Studio with the full release gates, responsive screenshots, documentation, checkpoint, and repository push.
+
+- [x] Change automatic programme-completion handling to create or refresh a server-calculated eligible candidate instead of issuing a certificate without administrator approval.
+- [x] Add administrator-controlled certificate approval and issuance with duplicate prevention, audit attribution, exact founder strings, and certificate-only wording.
+- [ ] Add learner certificate, transcript, and supporting-document retrieval with protected access and explicit legal/recognition disclaimers.
+- [ ] Add lawful recommendation-letter workflow that is administrator-authored and clearly labelled as an NIU institutional letter, not an employment, licensing, accreditation, or universal-recognition guarantee.
+- [x] Add regression tests and run full release validation for certificate eligibility, issuance control, privacy, duplicate prevention, and unsupported-claims safeguards.
+- [ ] Update release notes, save a checkpoint, push the certificate-system release, and complete authorized production validation.

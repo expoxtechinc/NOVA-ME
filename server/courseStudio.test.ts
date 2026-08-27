@@ -36,6 +36,27 @@ describe("NIU Course Studio", () => {
     expect(studio).not.toContain('window.location');
   });
 
+  it("keeps automatic completion eligibility separate from administrator issuance", () => {
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260827_niu_admin_controlled_certificate_eligibility.sql"), "utf8");
+    expect(migration).toContain("'administrator_approval_required', true");
+    expect(migration).toContain("'eligible'");
+    expect(migration).not.toContain("insert into public.certificates");
+    const workflow = fs.readFileSync(path.join(root, "docs/supabase/20260826_niu_credential_workflows.sql"), "utf8");
+    expect(workflow).toContain("if auth.uid() is null or not public.niu_is_registrar()");
+    expect(workflow).toContain("candidate.eligibility_status <> 'approved'");
+  });
+
+  it("keeps learner certificate and transcript artifacts protected and lawfully labelled", () => {
+    const credentials = fs.readFileSync(path.join(root, "client", "src", "pages", "Credentials.tsx"), "utf8");
+    const certificate = fs.readFileSync(path.join(root, "client", "src", "pages", "CertificatePrint.tsx"), "utf8");
+    const transcript = fs.readFileSync(path.join(root, "client", "src", "pages", "Transcript.tsx"), "utf8");
+    expect(credentials).toContain('from("certificate_candidates")');
+    expect(credentials).toContain("does not promise accreditation, government recognition, licensure, transfer credit, or universal acceptance");
+    expect(certificate).toContain("Akin S. Sokpah — President and Founder");
+    expect(certificate).toContain("akinssokpah");
+    expect(transcript).toContain("does not represent a degree transcript or an accreditation claim");
+  });
+
   it("keeps protected content, assessment, preview, and publication as governed Course Studio panels", () => {
     const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
     expect(studio).toContain('step === "content"');
