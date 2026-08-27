@@ -26,6 +26,8 @@ const AssessmentBuilder = lazy(() => import("./pages/AssessmentBuilder"));
 const Grading = lazy(() => import("./pages/Grading"));
 const Learning = lazy(() => import("./pages/Learning"));
 const ProgramDetails = lazy(() => import("./pages/ProgramDetails"));
+const ProgrammePackage = lazy(() => import("./pages/ProgrammePackage"));
+const ProgrammePublication = lazy(() => import("./pages/ProgrammePublication"));
 const Registrar = lazy(() => import("./pages/Registrar"));
 const Reports = lazy(() => import("./pages/Reports"));
 const InstitutionSettings = lazy(() => import("./pages/InstitutionSettings"));
@@ -46,7 +48,9 @@ function Router() {
   return <Switch>
     <Route path="/" component={Home} />
     <Route path="/programs" component={Programs} />
-    <Route path="/programs/:id" component={ProgramDetails} />
+    <Route path="/programs/:slug" component={ProgramDetails} />
+    <Route path="/programme-package" component={ProgrammePackage} />
+    <Route path="/programme-publication" component={ProgrammePublication} />
     <Route path="/courses" component={Courses} />
     <Route path="/courses/:slug" component={CourseDetails} />
     <Route path="/verify" component={Verify} />

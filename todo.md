@@ -79,5 +79,9 @@
 - [x] Complete certificate approval, issuance, reissue, revocation, credential verification, transcript retrieval, and automatic eligibility workflow without unsupported recognition claims.
 - [x] Add the approved NIU founder-signature presentation to certificate output using the exact signer text `akinssokpah` and `Akin S. Sokpah — President and Founder`.
 - [ ] Complete governed notifications, announcements, reports, audit activity, and CSV/PDF export workflows based only on authorised institutional records.
+- [x] Create a dependency-aware NIU programme-package workspace that guides authorised staff through department, certificate programme, course, module, lesson, and protected material setup in order.
+- [x] Show real-record package readiness, missing prerequisites, and context-aware recommended next actions without creating placeholder academic content.
+- [x] Add a server-validated controlled publication action that can release an approved NIU programme bundle only after its contained courses, modules, lessons, and required materials meet readiness rules.
+- [ ] Validate and deploy the guided programme-package authoring and publication workflow.
 - [x] Organise the Super Administrator navigation around the requested institutional, academics, people, records, communication, reporting, and system domains.
 - [x] Add non-destructive covering indexes for the 40 verified unindexed NIU foreign keys identified by the Supabase performance advisor.
