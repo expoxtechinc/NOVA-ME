@@ -142,3 +142,10 @@ The contact controls were checked on the public home and contact routes at deskt
 ## Phone-friendly validation boundary — 27 August 2026
 
 The NIU sign-in route is usable from a phone: it offers Google authentication and a secure email account-link form, and every newly provisioned account is server-defaulted to the student role. Automated source and route checks confirm that self-registration cannot self-elevate to staff access. A real email-link registration still requires opening the one-time message from the test inbox, and People Governance plus protected learning-note maintenance require an authenticated authorised session; those actions are intentionally not simulated or marked as completed without real evidence.
+
+
+## Governed Question Bank — 27 August 2026
+
+NIU’s assessment authoring workspace now provides a private Question Bank workflow. Academic staff can create and edit empty banks and draft questions with multiple-choice answer choices, a selected correct answer, difficulty, topic, learning-objective mapping, points, explanations, and approval status. Registrar, administrator, and Super Administrator roles can approve complete questions; the database rejects invalid multiple-choice keys, non-positive points, unauthorised approval, and assessment attachment of anything other than an approved question.
+
+Question Bank, question, and assessment-attachment mutations remain behind the existing academic-staff RLS boundary and are recorded through the NIU audit ledger. The migration is additive and created no banks, questions, assessments, or programme content. Existing curriculum and assessment records were not modified. The UI includes explicit empty-state guidance and keeps drafts private and unpublished until governed review.

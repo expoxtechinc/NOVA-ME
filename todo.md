@@ -153,3 +153,6 @@
 - [ ] Capture inspectable evidence of one real self-service student email-link flow on the live deployment, such as a screenshot or shared browser-session view showing the student portal after the link is opened.
 - [ ] Verify inspectably that the registered account lands only on student-authorized routes and cannot access staff or administrator workspaces after self-registration.
 - [ ] Document concrete observable registration evidence in the release notes or tracker entry instead of relying only on a generic completion confirmation.
+
+- [x] Add governed Question Bank management with private drafts, protected authoring, question editing, answer/correct-answer controls, difficulty/topic/objective/points metadata, approval status, saved-question attachment, and approved-assessment eligibility without seeding or changing curriculum records.
+- [x] Validate Question Bank authorization, audit preservation, empty states, responsive UI, tests, build, and dependency gates; document, checkpoint, and push the release.
