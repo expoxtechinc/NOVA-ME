@@ -41,9 +41,30 @@ describe("NIU Course Studio", () => {
     expect(migration).toContain("'administrator_approval_required', true");
     expect(migration).toContain("'eligible'");
     expect(migration).not.toContain("insert into public.certificates");
+    const executionRestriction = fs.readFileSync(path.join(root, "docs/supabase/20260827_niu_restrict_automatic_eligibility_execution.sql"), "utf8");
+    expect(executionRestriction).toContain("revoke all on function public.niu_auto_issue_certificate_for_program_enrollment(uuid) from public");
     const workflow = fs.readFileSync(path.join(root, "docs/supabase/20260826_niu_credential_workflows.sql"), "utf8");
+    const review = fs.readFileSync(path.join(root, "docs/supabase/20260827_niu_candidate_review_authorization.sql"), "utf8");
+    const registrar = fs.readFileSync(path.join(root, "client", "src", "pages", "Registrar.tsx"), "utf8");
     expect(workflow).toContain("if auth.uid() is null or not public.niu_is_registrar()");
     expect(workflow).toContain("candidate.eligibility_status <> 'approved'");
+    expect(review).toContain("certificate_candidate_reviewed");
+    expect(review).toContain("grant execute on function public.niu_review_certificate_candidate");
+    expect(registrar).toContain('supabase.rpc("niu_review_certificate_candidate"');
+  });
+
+  it("keeps supporting documents administrator-authored and learner-private", () => {
+    const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
+    const page = fs.readFileSync(path.join(root, "client", "src", "pages", "SupportingDocuments.tsx"), "utf8");
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260827_niu_supporting_documents.sql"), "utf8");
+    expect(app).toContain('const SupportingDocuments = lazy(() => import("./pages/SupportingDocuments"));');
+    expect(app).toContain('<Route path="/supporting-documents" component={SupportingDocuments} />');
+    expect(page).toContain('supabase.rpc("niu_create_supporting_document"');
+    expect(page).toContain('supabase.rpc("niu_issue_supporting_document"');
+    expect(page).toContain('eq("status", "issued")');
+    expect(migration).toContain("recommendation_letter");
+    expect(migration).toContain("public.niu_is_registrar()");
+    expect(migration).toContain("supporting_document_issued");
   });
 
   it("keeps learner certificate and transcript artifacts protected and lawfully labelled", () => {

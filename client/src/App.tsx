@@ -16,6 +16,7 @@ const CourseDetails = lazy(() => import("./pages/CourseDetails"));
 const ContentPreview = lazy(() => import("./pages/ContentPreview"));
 const ContentLibrary = lazy(() => import("./pages/ContentLibrary"));
 const CourseStudio = lazy(() => import("./pages/CourseStudio"));
+const SupportingDocuments = lazy(() => import("./pages/SupportingDocuments"));
 const CommunicationCenter = lazy(() => import("./pages/CommunicationCenter"));
 const AcademicTools = lazy(() => import("./pages/AcademicTools"));
 const AcademicConfiguration = lazy(() => import("./pages/AcademicConfiguration"));
@@ -71,6 +72,7 @@ function Router() {
     <Route path="/operations" component={Operations} />
     <Route path="/authoring" component={Authoring} />
     <Route path="/course-studio" component={CourseStudio} />
+    <Route path="/supporting-documents" component={SupportingDocuments} />
     <Route path="/academic-tools" component={AcademicTools} />
     <Route path="/academic-configuration" component={AcademicConfiguration} />
     <Route path="/assignment-policies" component={AssignmentPolicies} />

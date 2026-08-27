@@ -137,7 +137,7 @@
 
 - [x] Change automatic programme-completion handling to create or refresh a server-calculated eligible candidate instead of issuing a certificate without administrator approval.
 - [x] Add administrator-controlled certificate approval and issuance with duplicate prevention, audit attribution, exact founder strings, and certificate-only wording.
-- [ ] Add learner certificate, transcript, and supporting-document retrieval with protected access and explicit legal/recognition disclaimers.
-- [ ] Add lawful recommendation-letter workflow that is administrator-authored and clearly labelled as an NIU institutional letter, not an employment, licensing, accreditation, or universal-recognition guarantee.
+- [x] Add learner certificate, transcript, and supporting-document retrieval with protected access and explicit legal/recognition disclaimers.
+- [x] Add lawful recommendation-letter workflow that is administrator-authored and clearly labelled as an NIU institutional letter, not an employment, licensing, accreditation, or universal-recognition guarantee.
 - [x] Add regression tests and run full release validation for certificate eligibility, issuance control, privacy, duplicate prevention, and unsupported-claims safeguards.
 - [ ] Update release notes, save a checkpoint, push the certificate-system release, and complete authorized production validation.
