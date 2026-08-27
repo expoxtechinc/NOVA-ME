@@ -48,23 +48,36 @@
 - [x] Provide the user with the verified manual Vercel deployment procedure for the pushed NOVA-ME release.
 - [x] Correct the Vercel TypeScript build failure caused by incompatible Express type resolution and republish the NIU release.
 - [x] Correct the Vercel deployment that responds with bundled server source instead of the NIU website, then republish and verify the repair.
-- [ ] Configure and verify the deployed NIU Google sign-in connection for approved role-aware access.
+- [x] Configure and verify the deployed NIU Google sign-in connection for approved role-aware access.
 - [x] Audit all connected-service options for registering NIU’s Google OAuth callback without requiring user-side technical work; only the authenticated Google Cloud OAuth-client owner can register the required callback.
 - [x] Provide the owner-facing step-by-step Google Cloud OAuth callback procedure for completing NIU Google sign-in.
 - [x] Complete a full production audit of NIU’s deployed routes, repository, Vercel build, Supabase integration, and Google sign-in path; remediate all accessible issues. The Google OAuth client callback remains a separate authenticated-owner prerequisite.
 - [x] Add and validate a server-enforced email-link sign-in fallback so only approved NIU users can access the platform while Google OAuth callback registration remains pending.
 - [ ] Verify approved-user email-link delivery, return to the portal, and role access without sending access links to non-approved users.
-- [ ] Restrict email-link authentication to existing allowlist-governed Auth identities and provide a controlled response for non-approved email attempts.
+- [x] Restrict email-link authentication to existing allowlist-governed Auth identities and provide a controlled response for non-approved email attempts.
 - [ ] Correct Supabase email-link redirect settings so NIU authentication returns to the live Vercel portal instead of localhost.
-- [ ] Repair and verify NIU’s primary Google OAuth sign-in redirect configuration for the live Vercel portal.
+- [x] Repair and verify NIU’s primary Google OAuth sign-in redirect configuration for the live Vercel portal.
 - [x] Provision makealuckspam@gmail.com as an NIU Super Administrator and prepare it as the clean Google OAuth ownership path.
-- [ ] Repair and verify NIU’s post-Google OAuth session return to the role-aware portal.
-- [ ] Add and validate a dedicated NIU OAuth callback route that exchanges the authorization code before redirecting to the portal.
-- [ ] Trace the live Google OAuth return URL and correct any remaining Supabase redirect allow-list fallback that prevents the callback from receiving its authorization code.
-- [ ] Inspect and resolve the live Supabase callback redirect that reaches `/auth/callback` without a usable authorization code after provider exchange.
+- [x] Repair and verify NIU’s post-Google OAuth session return to the role-aware portal.
+- [x] Add and validate a dedicated NIU OAuth callback route that exchanges the authorization code before redirecting to the portal.
+- [x] Trace the live Google OAuth return behavior and repair the verified Google-client secret and client callback session handling that previously prevented a portal session.
+- [x] Inspect and resolve the live Supabase callback redirect that reaches `/auth/callback` without a usable authorization code after provider exchange.
 - [x] Audit NIU’s global deployment, browser resilience, authentication continuity, production security, and performance for remaining high-value hardening gaps.
 - [x] Add browser-safe authentication recovery so user navigation, refreshes, and implicit Google OAuth session returns cannot strand a valid NIU session.
-- [ ] Verify the live Google sign-in reaches `/portal` with an active NIU session after the browser-recovery release.
-- [ ] Verify and, if needed, complete the protected Super Administrator workflow for uploading and attaching learning notes/documents to NIU course content.
-- [ ] Complete a production-wide validation and push the fully tested global-reliability release to expoxtechinc/NOVA-ME.
+- [x] Verify the live Google sign-in reaches `/portal` with an active NIU session after the browser-recovery release.
+- [ ] Run an end-to-end production Super Administrator learning-note upload and confirm protected learner-only retrieval before declaring the workflow fully verified.
+- [ ] Complete the final production-wide validation after the live learning-note upload workflow is verified, then record the pushed global-reliability release.
+- [x] Map every requested NIU administration requirement to an implemented workflow, a safe scope decision, or a documented future phase without leaving unreviewed gaps.
+- [x] Validate the Super Administrator dashboard against the requested real-record metrics, recent activity, alerts, and complete domain navigation.
+- [ ] Complete governed university, school, department, academic calendar, policy, branding, and configuration administration with relevant accountability and publication controls.
+- [ ] Complete course and programme administration fields for outcomes, difficulty, duration, requirements, templates, status, relationships, and supported visual/media references.
+- [x] Complete a reusable protected content library for approved documents, presentations, images, audio, video, research materials, study guides, and external learning references.
+- [x] Complete module and lesson authoring metadata for objectives, estimated time, required status, points, supported materials, captions/transcripts, and governed publication.
+- [x] Complete configurable video, reading, flashcard, question-bank, quiz, assignment, test, and assessment rules without relying solely on client-reported completion.
+- [x] Complete configurable points, grading, attempt, late-rule, completion-rule, and certificate-eligibility management using server-validated outcomes.
+- [ ] Complete protected student, faculty, and administrator record-management controls, including authorised account status and role/assignment management.
+- [x] Complete certificate approval, issuance, reissue, revocation, credential verification, transcript retrieval, and automatic eligibility workflow without unsupported recognition claims.
+- [x] Add the approved NIU founder-signature presentation to certificate output using the exact signer text `akinssokpah` and `Akin S. Sokpah — President and Founder`.
+- [ ] Complete governed notifications, announcements, reports, audit activity, and CSV/PDF export workflows based only on authorised institutional records.
+- [x] Organise the Super Administrator navigation around the requested institutional, academics, people, records, communication, reporting, and system domains.
 - [x] Add non-destructive covering indexes for the 40 verified unindexed NIU foreign keys identified by the Supabase performance advisor.

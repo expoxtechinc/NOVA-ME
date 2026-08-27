@@ -23,4 +23,14 @@ export const mediaRouter = router({
     if (!path) return { url: null as string | null };
     return { url: await storageGetSignedUrl(path) };
   }),
+  getContentUrl: publicProcedure.input(z.object({ contentItemId: z.string().uuid() })).query(async ({ input, ctx }) => {
+    const header = ctx.req.headers["x-supabase-authorization"];
+    const token = Array.isArray(header) ? header[0] : header;
+    if (!token?.startsWith("Bearer ")) throw new TRPCError({ code: "UNAUTHORIZED", message: "Sign in to access protected learning materials." });
+    const supabase = enrolledSupabaseClient(token);
+    const { data, error } = await supabase.from("content_library_items").select("storage_path, category").eq("id", input.contentItemId).maybeSingle();
+    if (error || !data) throw new TRPCError({ code: "FORBIDDEN", message: "Active enrollment is required to access this material." });
+    if (data.category === "external_resource") return { url: data.storage_path };
+    return { url: await storageGetSignedUrl(data.storage_path) };
+  }),
 });

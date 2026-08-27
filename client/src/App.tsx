@@ -9,18 +9,25 @@ const CertificatePrint = lazy(() => import("./pages/CertificatePrint"));
 const Credentials = lazy(() => import("./pages/Credentials"));
 const CredentialRegistry = lazy(() => import("./pages/CredentialRegistry"));
 const CredentialHistory = lazy(() => import("./pages/CredentialHistory"));
+const CredentialReissue = lazy(() => import("./pages/CredentialReissue"));
 const CourseLearning = lazy(() => import("./pages/CourseLearning"));
+const Transcript = lazy(() => import("./pages/Transcript"));
 const CourseDetails = lazy(() => import("./pages/CourseDetails"));
 const ContentPreview = lazy(() => import("./pages/ContentPreview"));
+const ContentLibrary = lazy(() => import("./pages/ContentLibrary"));
+const CommunicationCenter = lazy(() => import("./pages/CommunicationCenter"));
 const AcademicTools = lazy(() => import("./pages/AcademicTools"));
 const AcademicConfiguration = lazy(() => import("./pages/AcademicConfiguration"));
+const AssignmentPolicies = lazy(() => import("./pages/AssignmentPolicies"));
 const AccessControl = lazy(() => import("./pages/AccessControl"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const AssessmentBuilder = lazy(() => import("./pages/AssessmentBuilder"));
 const Grading = lazy(() => import("./pages/Grading"));
 const Learning = lazy(() => import("./pages/Learning"));
 const ProgramDetails = lazy(() => import("./pages/ProgramDetails"));
 const Registrar = lazy(() => import("./pages/Registrar"));
+const Reports = lazy(() => import("./pages/Reports"));
 const InstitutionSettings = lazy(() => import("./pages/InstitutionSettings"));
 const InstitutionalBuilder = lazy(() => import("./pages/InstitutionalBuilder"));
 const RoleDashboard = lazy(() => import("./pages/RoleDashboard"));
@@ -46,21 +53,28 @@ function Router() {
     <Route path="/signin" component={SignIn} />
     <Route path="/auth/callback" component={AuthCallback} />
     <Route path="/portal" component={Portal} />
+    <Route path="/admin" component={AdminDashboard} />
     <Route path="/operations" component={Operations} />
     <Route path="/authoring" component={Authoring} />
     <Route path="/academic-tools" component={AcademicTools} />
     <Route path="/academic-configuration" component={AcademicConfiguration} />
+    <Route path="/assignment-policies" component={AssignmentPolicies} />
     <Route path="/assessment-builder" component={AssessmentBuilder} />
     <Route path="/access-control" component={AccessControl} />
     <Route path="/grading" component={Grading} />
     <Route path="/institution-settings" component={InstitutionSettings} />
     <Route path="/institutional-builder" component={InstitutionalBuilder} />
     <Route path="/content-preview" component={ContentPreview} />
+    <Route path="/content-library" component={ContentLibrary} />
+    <Route path="/communication" component={CommunicationCenter} />
     <Route path="/registrar" component={Registrar} />
+    <Route path="/reports" component={Reports} />
     <Route path="/credential-registry" component={CredentialRegistry} />
     <Route path="/credential-history" component={CredentialHistory} />
+    <Route path="/credential-reissue" component={CredentialReissue} />
     <Route path="/credentials" component={Credentials} />
     <Route path="/credentials/:id" component={CertificatePrint} />
+    <Route path="/transcript" component={Transcript} />
     <Route path="/learning" component={Learning} />
     <Route path="/learn/:courseId" component={CourseLearning} />
     <Route path="/dashboard/:dashboard" component={RoleDashboard} />
