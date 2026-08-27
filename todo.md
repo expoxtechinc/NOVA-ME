@@ -165,3 +165,5 @@
 
 - [x] Build an admin-only Curriculum Import workflow inside the guided academic package flow: approved-document upload, structural analysis, draft-only generation, exact ordering and relationships, supported difficulty validation, missing-information markers, protected materials, activities, knowledge checks, assessments, question banks, final examination, completion rules, and certificate settings.
 - [x] Add import progress, validation errors, review/correction/regeneration controls, duplicate protection, private learner access safeguards, existing publication-gate handoff, tests, responsive verification, documentation, checkpoint, and repository synchronization without modifying existing records or creating demo content.
+
+- [x] Repair-only portion of the student enrollment workflow: `niu_enroll_in_course` now casts `active` and `completed` explicitly to the live `public.enrollment_status` enum, preserves prerequisite and published-course checks, and remains authenticated-only. Real student enrollment and protected-material retrieval evidence remain pending under the existing item above.
