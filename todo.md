@@ -129,7 +129,7 @@
 - [ ] Repair the malformed punctuation encoding displayed in the published protected Digital Foundations study guide, then revalidate enrolled learner retrieval.
 
 - [x] Rebuild the fragmented academic authoring entry point as one unified administrator Course Studio workspace.
-- [ ] Keep programme information, curriculum tree, modules, lessons, protected learning content, assessments, grading, completion rules, certificate settings, preview, validation, review, and publication inside Course Studio without redirect dead ends.
+- [x] Keep programme information, curriculum tree, modules, lessons, protected learning content, assessments, grading, completion rules, certificate settings, preview, validation, review, and publication inside Course Studio without redirect dead ends.
 - [x] Add a responsive three-pane Course Studio layout with curriculum tree, main editor, and progress/checklist panel, including mobile-safe navigation.
 - [x] Preserve existing NIU certificate-only scope, founder strings, private storage, role authorization, audit capture, versioning, and controlled publication safeguards in Course Studio.
 - [x] Add focused Course Studio regression tests for workspace routing, authorization boundaries, curriculum relationships, critical validation blockers, and non-duplication of existing records.

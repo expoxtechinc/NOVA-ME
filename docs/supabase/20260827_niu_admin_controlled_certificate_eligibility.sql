@@ -64,4 +64,4 @@ end;
 $$;
 
 revoke all on function public.niu_auto_issue_certificate_for_program_enrollment(uuid) from public;
-grant execute on function public.niu_auto_issue_certificate_for_program_enrollment(uuid) to authenticated;
+-- The live course-enrollment and grade-release triggers call the replacement recalculation helper; no client grant is required.
