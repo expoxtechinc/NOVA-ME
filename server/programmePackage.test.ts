@@ -10,7 +10,8 @@ describe("NIU guided programme package", () => {
     expect(page).toContain('from("lessons")');
     expect(page).toContain('from("lesson_content_library_items")');
     expect(page).toContain("Recommended next action");
-    expect(page).toContain("never creates sample academic content");
+    expect(page).toContain("Each course can have as many level-aware modules");
+    expect(page).toContain('href="/module-blueprint"');
   });
   it("registers the programme-package workspace as a protected academic administration route", () => {
     const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
