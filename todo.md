@@ -114,3 +114,4 @@
 - [ ] Diagnose and repair the unreadable production response from the protected NIU starter-study-guide action, then verify a real private draft attachment and audit record.
 - [ ] Replace the production-incompatible protected Content Library file path with private Supabase object storage and scoped access controls without exposing learner materials publicly.
 - [x] Add automatic NIU audit capture for protected content-library metadata and lesson-attachment changes made through the production-safe direct workflow.
+- [ ] Repair Vercel’s production TypeScript compilation of NIU server source so the private-storage release can deploy successfully.
