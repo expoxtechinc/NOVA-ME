@@ -30,9 +30,11 @@ const ProgrammePackage = lazy(() => import("./pages/ProgrammePackage"));
 const ProgrammePublication = lazy(() => import("./pages/ProgrammePublication"));
 const ModuleBlueprint = lazy(() => import("./pages/ModuleBlueprint"));
 const PeopleGovernance = lazy(() => import("./pages/PeopleGovernance"));
+const PolicyAdministration = lazy(() => import("./pages/PolicyAdministration"));
 const Registrar = lazy(() => import("./pages/Registrar"));
 const Reports = lazy(() => import("./pages/Reports"));
 const InstitutionSettings = lazy(() => import("./pages/InstitutionSettings"));
+const InstitutionalPublication = lazy(() => import("./pages/InstitutionalPublication"));
 const InstitutionalBuilder = lazy(() => import("./pages/InstitutionalBuilder"));
 const RoleDashboard = lazy(() => import("./pages/RoleDashboard"));
 
@@ -55,6 +57,7 @@ function Router() {
     <Route path="/programme-publication" component={ProgrammePublication} />
     <Route path="/module-blueprint" component={ModuleBlueprint} />
     <Route path="/people-governance" component={PeopleGovernance} />
+    <Route path="/policy-administration" component={PolicyAdministration} />
     <Route path="/courses" component={Courses} />
     <Route path="/courses/:slug" component={CourseDetails} />
     <Route path="/verify" component={Verify} />
@@ -71,6 +74,7 @@ function Router() {
     <Route path="/access-control" component={AccessControl} />
     <Route path="/grading" component={Grading} />
     <Route path="/institution-settings" component={InstitutionSettings} />
+    <Route path="/institutional-publication" component={InstitutionalPublication} />
     <Route path="/institutional-builder" component={InstitutionalBuilder} />
     <Route path="/content-preview" component={ContentPreview} />
     <Route path="/content-library" component={ContentLibrary} />

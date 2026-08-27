@@ -70,7 +70,7 @@
 - [x] Map every requested NIU administration requirement to an implemented workflow, a safe scope decision, or a documented future phase without leaving unreviewed gaps.
 - [x] Validate the Super Administrator dashboard against the requested real-record metrics, recent activity, alerts, and complete domain navigation.
 - [ ] Complete governed university, school, department, academic calendar, policy, branding, and configuration administration with relevant accountability and publication controls.
-- [ ] Complete course and programme administration fields for outcomes, difficulty, duration, requirements, templates, status, relationships, and supported visual/media references.
+- [x] Complete course and programme administration fields for outcomes, difficulty, duration, requirements, templates, status, relationships, and supported visual/media references.
 - [x] Complete a reusable protected content library for approved documents, presentations, images, audio, video, research materials, study guides, and external learning references.
 - [x] Complete module and lesson authoring metadata for objectives, estimated time, required status, points, supported materials, captions/transcripts, and governed publication.
 - [x] Complete configurable video, reading, flashcard, question-bank, quiz, assignment, test, and assessment rules without relying solely on client-reported completion.
@@ -79,7 +79,7 @@
 - [ ] Add and validate explicit Super Administrator controls for existing-user role reassignment and scoped staff assignments with record-preserving server authorisation.
 - [x] Complete certificate approval, issuance, reissue, revocation, credential verification, transcript retrieval, and automatic eligibility workflow without unsupported recognition claims.
 - [x] Add the approved NIU founder-signature presentation to certificate output using the exact signer text `akinssokpah` and `Akin S. Sokpah — President and Founder`.
-- [ ] Complete governed notifications, announcements, reports, audit activity, and CSV/PDF export workflows based only on authorised institutional records.
+- [x] Complete governed notifications, announcements, reports, audit activity, and CSV/PDF export workflows based only on authorised institutional records.
 - [x] Create a dependency-aware NIU programme-package workspace that guides authorised staff through department, certificate programme, course, module, lesson, and protected material setup in order.
 - [x] Show real-record package readiness, missing prerequisites, and context-aware recommended next actions without creating placeholder academic content.
 - [x] Add a server-validated controlled publication action that can release an approved NIU programme bundle only after its contained courses, modules, lessons, and required materials meet readiness rules.
@@ -93,3 +93,9 @@
 - [x] Add non-destructive covering indexes for the 40 verified unindexed NIU foreign keys identified by the Supabase performance advisor.
 - [x] Correct core-role reassignment so it never writes constrained institutional-role values, while retaining auditable approved-identity synchronization.
 - [x] Correct programme-readiness and module-builder content-attachment references to NIU’s protected `lesson_content_items` junction.
+- [x] Implement and verify a protected policy-administration workflow for `policy_pages`, including accountable author/reviewer records and staged publication controls.
+- [x] Extend the protected certificate-programme builder to manage programme objectives/outcomes, difficulty, completion requirements, certificate template, and approved visual/media reference fields.
+- [x] Document and test staged publication or intentional direct-administration safeguards for schools, departments, academic calendar, and institution settings before closing the broader institutional-governance tracker item.
+- [x] Add audited administrator-only publication controls for schools, departments, and academic-calendar records while preserving existing public calendar visibility.
+- [ ] Initialize the single protected NIU institution-settings record through an accountable administrator workflow and record every approved configuration update.
+- [ ] Perform and document an end-to-end Super Administrator People Governance validation using real authorised records without altering the owner account.
