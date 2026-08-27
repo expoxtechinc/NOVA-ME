@@ -127,3 +127,10 @@
 - [ ] Repair NIU student enrolment so it writes the live `enrollment_status` enum safely, then verify real student enrolment and protected material access.
 - [x] Replace popup-dependent protected library-resource opening with a direct authenticated signed-link navigation and explicit retrieval feedback for mobile learners.
 - [ ] Repair the malformed punctuation encoding displayed in the published protected Digital Foundations study guide, then revalidate enrolled learner retrieval.
+
+- [x] Rebuild the fragmented academic authoring entry point as one unified administrator Course Studio workspace.
+- [ ] Keep programme information, curriculum tree, modules, lessons, protected learning content, assessments, grading, completion rules, certificate settings, preview, validation, review, and publication inside Course Studio without redirect dead ends.
+- [x] Add a responsive three-pane Course Studio layout with curriculum tree, main editor, and progress/checklist panel, including mobile-safe navigation.
+- [x] Preserve existing NIU certificate-only scope, founder strings, private storage, role authorization, audit capture, versioning, and controlled publication safeguards in Course Studio.
+- [x] Add focused Course Studio regression tests for workspace routing, authorization boundaries, curriculum relationships, critical validation blockers, and non-duplication of existing records.
+- [ ] Validate Course Studio with the full release gates, responsive screenshots, documentation, checkpoint, and repository push.
