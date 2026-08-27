@@ -7,6 +7,7 @@ const router = fs.readFileSync(path.join(root, "server", "routers", "aiBuilder.t
 const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder.sql"), "utf8");
 const governanceMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_governance.sql"), "utf8");
 const reviewMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_review.sql"), "utf8");
+const generationMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_generation.sql"), "utf8");
 const page = fs.readFileSync(path.join(root, "client", "src", "pages", "AIAcademicBuilder.tsx"), "utf8");
 const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
 const packagePage = fs.readFileSync(path.join(root, "client", "src", "pages", "ProgrammePackage.tsx"), "utf8");
@@ -28,6 +29,13 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain("submitResearchReview");
     expect(reviewMigration).toContain("research_sources");
     expect(reviewMigration).toContain("research notes of at least 20 characters");
+    expect(router).toContain("generateReviewPlans");
+    expect(router).toContain("handoffToCurriculumImport");
+    expect(router).toContain("curriculum_imports");
+    expect(router).toContain("status: \"ready_for_review\"");
+    expect(generationMigration).toContain("assessment_blueprint");
+    expect(generationMigration).toContain("visual_plan");
+    expect(generationMigration).toContain("research_evidence");
   });
 
   it("uses explicit structured planning and never fabricates sources or difficulty values", () => {

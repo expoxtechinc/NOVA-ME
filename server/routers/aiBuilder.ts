@@ -1,5 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { storagePut } from "../storage";
+import { analyzeCurriculumDocument } from "../../shared/curriculumImport";
 import { createClient } from "@supabase/supabase-js";
 import { publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
@@ -58,6 +60,22 @@ const blueprintSchema = {
 
 const sourceSchema = z.object({ title: z.string().trim().min(2).max(240), url: z.string().url().refine(value => value.startsWith("https://"), "Sources must use HTTPS URLs"), sourceType: z.string().trim().min(2).max(120) });
 
+type Blueprint = { programme: { title: string; description: string; difficulty: string; objectives: string[]; learningOutcomes: string[]; entryRequirements: string[]; completionRequirements: string[]; recommendedLearningHours: number }; courses: Array<{ title: string; description: string; difficulty: string; position: number; objectives: string[]; modules: Array<{ title: string; description: string; difficulty: string; position: number; objectives: string[]; lessons: Array<{ title: string; description: string; position: number; objectives: string[]; activityIdeas: string[]; materialNeeds: string[]; assessmentIdeas: string[] }> }> }> };
+
+function blueprintToMarkdown(topic: string, blueprint: Blueprint, sources: Array<{ title: string; url: string; sourceType: string }>, notes: string) {
+  const lines = [`# Department: ${topic.slice(0, 80)} Academic Development`, `# Programme: ${blueprint.programme.title}`, `Description: ${blueprint.programme.description}`, `Difficulty: ${blueprint.programme.difficulty}`, `Learning hours: ${blueprint.programme.recommendedLearningHours}`, `Objectives: ${blueprint.programme.objectives.join("; ")}`, `Learning outcomes: ${blueprint.programme.learningOutcomes.join("; ")}`, `Entry requirements: ${blueprint.programme.entryRequirements.join("; ")}`, `Completion requirements: ${blueprint.programme.completionRequirements.join("; ")}`, "", `Research review: ${notes}`, `Research sources: ${sources.map(source => `${source.title} (${source.sourceType}) — ${source.url}`).join("; ")}`, ""];
+  for (const course of blueprint.courses.slice().sort((a, b) => a.position - b.position)) {
+    lines.push(`## Course: ${course.title}`, `Description: ${course.description}`, `Difficulty: ${course.difficulty}`, `Objective: ${course.objectives.join("; ")}`);
+    for (const module of course.modules.slice().sort((a, b) => a.position - b.position)) {
+      lines.push(`### Module ${module.position}: ${module.title}`, `Description: ${module.description}`, `Difficulty: ${module.difficulty}`, `Objective: ${module.objectives.join("; ")}`);
+      for (const lesson of module.lessons.slice().sort((a, b) => a.position - b.position)) {
+        lines.push(`#### Lesson ${lesson.position}: ${lesson.title}`, `Description: ${lesson.description}`, `Objective: ${lesson.objectives.join("; ")}`, `Activity: ${lesson.activityIdeas.join("; ")}`, `Material: ${lesson.materialNeeds.join("; ")}`, `Assessment: ${lesson.assessmentIdeas.join("; ")}`);
+      }
+    }
+  }
+  return lines.join("\\n");
+}
+
 export const aiBuilderRouter = router({
   listJobs: publicProcedure.query(async ({ ctx }) => {
     const { supabase } = await getStaffSession(ctx.req);
@@ -76,6 +94,38 @@ export const aiBuilderRouter = router({
     const { data, error } = await supabase.from("ai_academic_builder_jobs").update({ research_sources: input.researchSources, research_notes: input.researchNotes, status: "generation_review", reviewed_by: userId, reviewed_at: new Date().toISOString() }).eq("id", input.jobId).eq("status", "research_review").select("id,status,research_sources,research_notes").maybeSingle();
     if (error || !data) throw new TRPCError({ code: "PRECONDITION_FAILED", message: error?.message ?? "Research review is blocked until the saved job is in Research Review status." });
     return data;
+  }),
+  generateReviewPlans: publicProcedure.input(z.object({ jobId: z.string().uuid(), evidence: z.array(z.object({ sourceUrl: z.string().url().refine(value => value.startsWith("https://"), "Evidence sources must use HTTPS URLs"), excerpt: z.string().trim().min(20).max(4000), claimAreas: z.array(z.string().trim().min(2).max(160)).min(1).max(12) })).min(1).max(40) })).mutation(async ({ ctx, input }) => {
+    const { supabase, userId } = await getStaffSession(ctx.req);
+    const { data: job, error: jobError } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,blueprint,research_sources,research_notes").eq("id", input.jobId).eq("status", "generation_review").maybeSingle();
+    if (jobError || !job) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Generation planning is blocked until research review is complete." });
+    const result = await invokeLLM({ model: "gpt-5-mini", messages: [{ role: "system", content: "You are NIU's evidence-bound academic planning assistant. Produce only reviewable plans, never final teaching claims. Use only the supplied blueprint and evidence excerpts. Do not add facts not present in evidence. Every item must include source URLs or an explicit verification label. NIU offers certificate programmes only. Return JSON exactly matching the schema." }, { role: "user", content: JSON.stringify({ topic: job.topic, blueprint: job.blueprint, researchSources: job.research_sources, researchNotes: job.research_notes, evidence: input.evidence }) }], response_format: { type: "json_schema", json_schema: { name: "niu_ai_review_plans", strict: true, schema: { type: "object", additionalProperties: false, properties: { contentPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { section: { type: "string" }, draftPurpose: { type: "string" }, evidenceUrls: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["section", "draftPurpose", "evidenceUrls", "verificationRequired"] } }, visualPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { placement: { type: "string" }, purpose: { type: "string" }, altText: { type: "string" }, accessibilityChecks: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["placement", "purpose", "altText", "accessibilityChecks", "verificationRequired"] } }, assessmentBlueprint: { type: "object", additionalProperties: false, properties: { passingScore: { type: "integer" }, attemptLimit: { type: "integer" }, questions: { type: "array", items: { type: "object", additionalProperties: false, properties: { promptPurpose: { type: "string" }, objective: { type: "string" }, difficulty: { type: "string", enum: ["introductory", "intermediate", "advanced"] }, points: { type: "integer" }, answerKeyStatus: { type: "string" }, verificationRequired: { type: "boolean" } }, required: ["promptPurpose", "objective", "difficulty", "points", "answerKeyStatus", "verificationRequired"] } } }, required: ["passingScore", "attemptLimit", "questions"] }, missingEvidence: { type: "array", items: { type: "string" } } }, required: ["contentPlan", "visualPlan", "assessmentBlueprint", "missingEvidence"] } } }, maxTokens: 10000 });
+    const raw = result.choices[0]?.message.content;
+    if (typeof raw !== "string") throw new TRPCError({ code: "BAD_GATEWAY", message: "The evidence-bound planning engine returned no structured plan." });
+    const plans = JSON.parse(raw);
+    const { error: updateError } = await supabase.from("ai_academic_builder_jobs").update({ research_evidence: input.evidence, content_plan: plans.contentPlan, visual_plan: plans.visualPlan, assessment_blueprint: plans.assessmentBlueprint, missing_information: plans.missingEvidence ?? [], generated_by: userId, generated_at: new Date().toISOString(), status: "ready_for_review" }).eq("id", job.id).eq("status", "generation_review");
+    if (updateError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: updateError.message });
+    return { jobId: job.id, status: "ready_for_review" as const, plans };
+  }),
+  handoffToCurriculumImport: publicProcedure.input(z.object({ jobId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+    const { supabase, userId } = await getStaffSession(ctx.req);
+    const { data: job, error: jobError } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,blueprint,research_sources,research_notes").eq("id", input.jobId).in("status", ["generation_review", "ready_for_review"]).maybeSingle();
+    if (jobError || !job) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Draft handoff is blocked until the AI Builder job has completed research review or evidence-bound generation planning." });
+    const blueprint = job.blueprint as Blueprint | null;
+    const sources = Array.isArray(job.research_sources) ? job.research_sources : [];
+    const notes = typeof job.research_notes === "string" ? job.research_notes : "";
+    if (!blueprint || sources.length < 1 || notes.length < 20) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Draft handoff requires a blueprint, at least one reviewed HTTPS source, and research notes." });
+    const sourceText = blueprintToMarkdown(job.topic, blueprint, sources, notes);
+    const parsed = analyzeCurriculumDocument(sourceText, `ai-builder-${job.id}.md`);
+    if (parsed.validationErrors.length || parsed.missingInformation.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Draft handoff is blocked because the generated source still has validation or missing-information markers." });
+    const uploaded = await storagePut(`ai-builder/${job.id}.md`, sourceText, "text/markdown");
+    const { data: inserted, error: insertError } = await supabase.from("curriculum_imports").insert({ source_file_name: `ai-builder-${job.id}.md`, source_mime_type: "text/markdown", source_storage_path: uploaded.key, status: "uploaded", analysis: parsed, validation_errors: parsed.validationErrors, missing_information: parsed.missingInformation, review_notes: notes, created_by: userId }).select("id,status,source_file_name,analysis,validation_errors,missing_information").single();
+    if (insertError || !inserted) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: insertError?.message ?? "The private AI Builder handoff could not be saved." });
+    const { error: updateError } = await supabase.from("curriculum_imports").update({ status: "generated" }).eq("id", inserted.id);
+    if (updateError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: updateError.message });
+    const { error: jobUpdateError } = await supabase.from("ai_academic_builder_jobs").update({ status: "ready_for_review", draft_artifact: { importId: inserted.id, storagePath: uploaded.key }, generated_at: new Date().toISOString(), generated_by: userId }).eq("id", job.id).eq("status", "generation_review");
+    if (jobUpdateError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: jobUpdateError.message });
+    return { jobId: job.id, importId: inserted.id, status: "ready_for_review" as const };
   }),
   createPlan: publicProcedure.input(z.object({ topic: z.string().trim().min(3).max(240), settings: settingsSchema })).mutation(async ({ ctx, input }) => {
     const { supabase, userId } = await getStaffSession(ctx.req);
