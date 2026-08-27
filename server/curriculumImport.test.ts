@@ -7,6 +7,7 @@ const root = path.resolve(__dirname, "..");
 const page = fs.readFileSync(path.join(root, "client", "src", "pages", "CurriculumImport.tsx"), "utf8");
 const packagePage = fs.readFileSync(path.join(root, "client", "src", "pages", "ProgrammePackage.tsx"), "utf8");
 const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_curriculum_imports.sql"), "utf8");
+const policyRepair = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_curriculum_import_policy_repair.sql"), "utf8");
 
 describe("Curriculum Import", () => {
   it("extracts only explicit curriculum structure in source order", () => {
@@ -31,6 +32,8 @@ describe("Curriculum Import", () => {
     expect(migration).toContain("source_storage_path text not null unique");
     expect(migration).toContain("status text not null default 'uploaded'");
     expect(migration).toContain("niu_capture_audit_event");
+    expect(policyRepair).toContain("status in ('uploaded', 'analyzing', 'generated', 'validation_failed')");
+    expect(policyRepair).toContain("niu_is_academic_staff()");
     expect(page).toContain("Import Complete Curriculum");
     expect(page).toContain("Generate private draft package");
     expect(page).toContain("never publishes or approves generated content");
