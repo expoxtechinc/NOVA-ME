@@ -162,3 +162,6 @@
 
 - [x] Harden future academic workflow governance across question banks, questions, assessments, courses, modules, lessons, learning resources, and certificate templates: draft-first statuses, manual review/approval, authorised publication gates, validation messaging, duplicate prevention, and audit preservation without altering existing content or records.
 - [x] Validate assessment metadata, answer keys, points, passing scores, time limits, attempt limits, completion rules, and Course Studio propagation with tests, builds, responsive checks, documentation, checkpoint, and repository synchronization.
+
+- [x] Build an admin-only Curriculum Import workflow inside the guided academic package flow: approved-document upload, structural analysis, draft-only generation, exact ordering and relationships, supported difficulty validation, missing-information markers, protected materials, activities, knowledge checks, assessments, question banks, final examination, completion rules, and certificate settings.
+- [x] Add import progress, validation errors, review/correction/regeneration controls, duplicate protection, private learner access safeguards, existing publication-gate handoff, tests, responsive verification, documentation, checkpoint, and repository synchronization without modifying existing records or creating demo content.
