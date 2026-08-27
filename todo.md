@@ -108,16 +108,19 @@
 - [x] Add an audited Super Administrator one-tap setup that creates the recommended ordered starter module outline as draft records for NIU’s first course.
 - [x] Add an audited Super Administrator one-tap setup that creates the recommended draft lesson scaffold for NIU’s first course without adding materials, assessments, learners, or public content.
 - [x] Repair the starter lesson scaffold to use only NIU lesson activity types permitted by the live `lessons_kind_check` constraint, then revalidate owner-authorised creation.
-- [ ] Add an original NIU Digital Foundations study guide as a private draft resource and attach it to the authorised first lesson without publishing it.
+- [x] Add an original NIU Digital Foundations study guide as a private draft resource and attach it to the authorised first lesson without publishing it.
 - [x] Repair NIU’s protected learning-note upload handler so it never writes a lesson type that violates the live `lessons_kind_check` constraint.
 - [x] Enforce an auditable, active-Super-Administrator-only record for the first protected NIU study-guide setup action.
-- [ ] Diagnose and repair the unreadable production response from the protected NIU starter-study-guide action, then verify a real private draft attachment and audit record.
-- [ ] Replace the production-incompatible protected Content Library file path with private Supabase object storage and scoped access controls without exposing learner materials publicly.
+- [x] Diagnose and repair the unreadable production response from the protected NIU starter-study-guide action, then verify a real private draft attachment and audit record.
+- [x] Replace the production-incompatible protected Content Library file path with private Supabase object storage and scoped access controls without exposing learner materials publicly.
 - [x] Add automatic NIU audit capture for protected content-library metadata and lesson-attachment changes made through the production-safe direct workflow.
-- [ ] Repair Vercel’s production TypeScript compilation of NIU server source so the private-storage release can deploy successfully.
-- [ ] Repair the reported `record "new" has no field "id"` Content Library audit-trigger error and verify the original private draft study guide is attached.
-- [ ] Remove public NIU programme discovery’s dependency on the unavailable Vercel server endpoint while preserving published-only visibility.
-- [ ] Complete server-validated readiness and controlled publication of the first authorised NIU certificate programme bundle after required content verification.
-- [ ] Repair the missing `niu_is_active_super_admin` function reference in the controlled first-certificate approval workflow and reverify the owner-authorised release action.
-- [ ] Repair the controlled first-certificate approval transition so it uses the live permitted `course_status` values and reverify the owner-authorised release action.
-- [ ] Align NIU programme-bundle readiness and publication functions with the live permitted status model without reducing role or material prerequisites.
+- [x] Repair Vercel’s production TypeScript compilation of NIU server source so the private-storage release can deploy successfully.
+- [x] Repair the reported `record "new" has no field "id"` Content Library audit-trigger error and verify the original private draft study guide is attached.
+- [x] Remove public NIU programme discovery’s dependency on the unavailable Vercel server endpoint while preserving published-only visibility.
+- [x] Complete server-validated readiness and controlled publication of the first authorised NIU certificate programme bundle after required content verification.
+- [x] Repair the missing `niu_is_active_super_admin` function reference in the controlled first-certificate approval workflow and reverify the owner-authorised release action.
+- [x] Repair the controlled first-certificate approval transition so it uses the live permitted `course_status` values and reverify the owner-authorised release action.
+- [x] Align NIU programme-bundle readiness and publication functions with the live permitted status model without reducing role or material prerequisites.
+- [x] Repair the published NIU programme-detail route so the successfully released first certificate programme is discoverable from its public listing.
+- [x] Repair anonymous published programme-course relationship access so programme detail works without exposing staff authorization helpers or protected materials.
+- [x] Correct remaining draft-only language in the authorised first certificate bundle’s published course and module descriptions.
