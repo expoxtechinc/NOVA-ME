@@ -1,0 +1,54 @@
+import { describe, expect, it } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
+
+const root = path.resolve(__dirname, "..");
+const router = fs.readFileSync(path.join(root, "server", "routers", "aiBuilder.ts"), "utf8");
+const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder.sql"), "utf8");
+const governanceMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_governance.sql"), "utf8");
+const reviewMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_review.sql"), "utf8");
+const page = fs.readFileSync(path.join(root, "client", "src", "pages", "AIAcademicBuilder.tsx"), "utf8");
+const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
+const packagePage = fs.readFileSync(path.join(root, "client", "src", "pages", "ProgrammePackage.tsx"), "utf8");
+const dashboard = fs.readFileSync(path.join(root, "client", "src", "pages", "AdminDashboard.tsx"), "utf8");
+
+describe("NIU AI Academic Builder", () => {
+  it("stores only a staff-authorized staged planning job", () => {
+    expect(migration).toContain("create table if not exists public.ai_academic_builder_jobs");
+    expect(migration).toContain("status text not null default 'draft'");
+    expect(migration).toContain("public.niu_is_academic_staff()");
+    expect(migration).toContain("ai_academic_builder_jobs_audit");
+    expect(governanceMigration).toContain("niu_validate_ai_academic_builder_status");
+    expect(governanceMigration).toContain("AI Builder status transition");
+    expect(governanceMigration).toContain("Administrator authorization is required");
+    expect(governanceMigration).toContain("Published AI Builder jobs can only be archived");
+    expect(router).toContain("Academic staff authority is required");
+    expect(router).toContain("No academic records were created");
+    expect(router).toContain("Sources must use HTTPS URLs");
+    expect(router).toContain("submitResearchReview");
+    expect(reviewMigration).toContain("research_sources");
+    expect(reviewMigration).toContain("research notes of at least 20 characters");
+  });
+
+  it("uses explicit structured planning and never fabricates sources or difficulty values", () => {
+    expect(router).toContain("Do not invent references, research findings");
+    expect(router).toContain("introductory",);
+    expect(router).toContain("intermediate");
+    expect(router).toContain("advanced");
+    expect(router).toContain("response_format");
+    expect(router).toContain("researchPlan");
+    expect(router).toContain("missingInformation");
+    expect(router).not.toContain("from(\"courses\")");
+    expect(router).not.toContain("from(\"lessons\")");
+  });
+
+  it("keeps the workspace review-first and reachable from the guided package", () => {
+    expect(app).toContain('const AIAcademicBuilder = lazy(() => import("./pages/AIAcademicBuilder"));');
+    expect(app).toContain('<Route path="/ai-academic-builder" component={AIAcademicBuilder} />');
+    expect(packagePage).toContain('href="/ai-academic-builder"');
+    expect(dashboard).toContain('["NIU AI Academic Builder", "/ai-academic-builder"]');
+    expect(page).toContain("Generate Complete Programme Plan");
+    expect(page).toContain("No course, lesson, question, assessment, material, or certificate record is generated at this stage");
+    expect(page).toContain("Review the research plan");
+  });
+});

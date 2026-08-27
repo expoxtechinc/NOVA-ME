@@ -169,3 +169,15 @@
 - [x] Repair-only portion of the student enrollment workflow: `niu_enroll_in_course` now casts `active` and `completed` explicitly to the live `public.enrollment_status` enum, preserves prerequisite and published-course checks, and remains authenticated-only. Real student enrollment and protected-material retrieval evidence remain pending under the existing item above.
 
 - [x] Prepare a complete phone-friendly guide for uploading one entire NIU course from department/programme setup through student enrollment, learning, assessment, completion, and certificate eligibility without bypassing governance.
+
+- [ ] Build a governed NIU AI Academic Builder for future certificate programmes: administrator topic/settings, staged planning and research, explicit-source content generation, draft-only real-record packaging, protected materials and visuals, assessment blueprint, quality validation, review/edit/regeneration, and manual approval/publication handoff.
+- [ ] Add AI Builder provenance, permissions, no-invention safeguards, supported difficulty validation, privacy controls, audit history, tests, responsive UX, release documentation, checkpoint, and repository synchronization without modifying existing records or creating demo data.
+
+- [x] Add governed AI Builder research-review submission with HTTPS source provenance, minimum review notes, database-enforced transition, and admin UI controls.
+- [ ] Implement the AI Builder draft-generation handoff into private Curriculum Import artifacts without creating or publishing academic records automatically.
+- [ ] Build explicit-source deep research, visual-content planning, and assessment blueprint engines with provenance and missing-information boundaries.
+- [ ] Add administrator edit, regenerate, validation, review, approval, and publication handoff controls for AI-generated sections.
+- [ ] Complete AI Builder full-suite validation, documentation, checkpoint, repository synchronization, and real-user evidence where required.
+
+## AI Builder work history
+- 2026-08-27: Planning stage and governed job lifecycle are functional; research-review submission now requires HTTPS source provenance and review notes. Draft-generation and deep-generation stages remain intentionally pending.

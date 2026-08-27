@@ -30,6 +30,7 @@ const Learning = lazy(() => import("./pages/Learning"));
 const ProgramDetails = lazy(() => import("./pages/ProgramDetails"));
 const ProgrammePackage = lazy(() => import("./pages/ProgrammePackage"));
 const CurriculumImport = lazy(() => import("./pages/CurriculumImport"));
+const AIAcademicBuilder = lazy(() => import("./pages/AIAcademicBuilder"));
 const ProgrammePublication = lazy(() => import("./pages/ProgrammePublication"));
 const ModuleBlueprint = lazy(() => import("./pages/ModuleBlueprint"));
 const PeopleGovernance = lazy(() => import("./pages/PeopleGovernance"));
@@ -60,6 +61,7 @@ function Router() {
     <Route path="/programs/:slug" component={ProgramDetails} />
     <Route path="/programme-package" component={ProgrammePackage} />
     <Route path="/curriculum-import" component={CurriculumImport} />
+    <Route path="/ai-academic-builder" component={AIAcademicBuilder} />
     <Route path="/programme-publication" component={ProgrammePublication} />
     <Route path="/module-blueprint" component={ModuleBlueprint} />
     <Route path="/people-governance" component={PeopleGovernance} />
