@@ -39,10 +39,19 @@ describe("NIU Course Studio", () => {
   it("keeps protected content, assessment, preview, and publication as governed Course Studio panels", () => {
     const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
     expect(studio).toContain('step === "content"');
+    expect(studio).toContain('supabase.storage.from("niu-learning-materials").upload');
+    expect(studio).toContain('from("content_library_items").insert');
+    expect(studio).toContain('from("lesson_content_items").insert');
+    expect(studio).toContain('setNotice("Private learning resource uploaded and attached to the selected lesson. Learners will receive it only through enrolled-course access.")');
     expect(studio).toContain('step === "assessment"');
+    expect(studio).toContain('from("assessments").insert');
+    expect(studio).toContain('assessment_type: assessmentForm.type');
+    expect(studio).toContain('status: "draft"');
+    expect(studio).toContain('async function saveProgrammeRules');
+    expect(studio).toContain('completion_requirements: { ...existing');
+    expect(studio).toContain('certificate_template_key: certificateForm.templateKey.trim()');
     expect(studio).toContain('step === "preview"');
     expect(studio).toContain('href: "/content-library"');
-    expect(studio).toContain('href: "/assessment-builder"');
     expect(studio).toContain('href="/programme-publication"');
     expect(studio).toContain("Protected materials stay in private object storage.");
   });
