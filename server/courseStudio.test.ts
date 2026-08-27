@@ -5,6 +5,15 @@ import { describe, expect, it } from "vitest";
 const root = path.resolve(import.meta.dirname, "..");
 
 describe("NIU Course Studio", () => {
+  it("exposes the owner-provided contact controls with accessible destinations", () => {
+    const shell = fs.readFileSync(path.join(root, "client", "src", "components", "SiteShell.tsx"), "utf8");
+    expect(shell).toContain("https://wa.me/231760030163");
+    expect(shell).toContain("aki.sokpah.link@gmail.com");
+    expect(shell).toContain("https://www.facebook.com/share/1Dj6oYFsdv/");
+    expect(shell).toContain("Contact NIU on WhatsApp at +231 760 030 163");
+    expect(shell).toContain("Email NIU at aki.sokpah.link@gmail.com");
+    expect(shell).toContain("Visit NIU on Facebook");
+  });
   it("is routed as the unified academic-authoring workspace", () => {
     const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
     const dashboard = fs.readFileSync(path.join(root, "client", "src", "pages", "AdminDashboard.tsx"), "utf8");

@@ -144,3 +144,6 @@
 
 - [x] Safely archive or unpublish the unfinished first course and its public programme listing for a fresh start, preserving existing records, audit history, learner records, and reversible administrator control.
 - [x] Verify the public catalogue no longer exposes the unfinished course after the fresh-start archive state is deployed.
+
+- [x] Add accessible WhatsApp, email, and Facebook contact controls using the owner-provided contact details.
+- [x] Verify the contact controls on desktop and mobile, run tests and build gates, document the change, checkpoint, and push the release.
