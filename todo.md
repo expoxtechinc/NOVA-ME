@@ -167,3 +167,5 @@
 - [x] Add import progress, validation errors, review/correction/regeneration controls, duplicate protection, private learner access safeguards, existing publication-gate handoff, tests, responsive verification, documentation, checkpoint, and repository synchronization without modifying existing records or creating demo content.
 
 - [x] Repair-only portion of the student enrollment workflow: `niu_enroll_in_course` now casts `active` and `completed` explicitly to the live `public.enrollment_status` enum, preserves prerequisite and published-course checks, and remains authenticated-only. Real student enrollment and protected-material retrieval evidence remain pending under the existing item above.
+
+- [ ] Prepare a complete phone-friendly guide for uploading one entire NIU course from department/programme setup through student enrollment, learning, assessment, completion, and certificate eligibility without bypassing governance.
