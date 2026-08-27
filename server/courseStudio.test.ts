@@ -43,6 +43,10 @@ describe("NIU Course Studio", () => {
     expect(migration).not.toContain("insert into public.certificates");
     const executionRestriction = fs.readFileSync(path.join(root, "docs/supabase/20260827_niu_restrict_automatic_eligibility_execution.sql"), "utf8");
     expect(executionRestriction).toContain("revoke all on function public.niu_auto_issue_certificate_for_program_enrollment(uuid) from public");
+    const roleRestriction = fs.readFileSync(path.join(root, "docs/supabase/20260827_niu_revoke_internal_eligibility_roles.sql"), "utf8");
+    expect(roleRestriction).toContain("revoke execute on function public.niu_course_enrollment_eligibility_trigger() from anon, authenticated");
+    expect(roleRestriction).toContain("revoke execute on function public.niu_grade_release_eligibility_trigger() from anon, authenticated");
+    expect(roleRestriction).toContain("revoke execute on function public.niu_recalculate_certificate_candidate(uuid, uuid) from anon, authenticated");
     const workflow = fs.readFileSync(path.join(root, "docs/supabase/20260826_niu_credential_workflows.sql"), "utf8");
     const review = fs.readFileSync(path.join(root, "docs/supabase/20260827_niu_candidate_review_authorization.sql"), "utf8");
     const registrar = fs.readFileSync(path.join(root, "client", "src", "pages", "Registrar.tsx"), "utf8");
