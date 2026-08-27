@@ -178,7 +178,7 @@ export default function ContentLibrary() {
       const { error: storageError } = await supabase.storage.from(storageBucket).upload(path, selectedFile, { contentType: selectedFile.type || "application/octet-stream", upsert: false });
       if (storageError) throw new Error(storageError.message);
       const { error: recordError } = await supabase.from("content_library_items").insert({
-        title: title.trim(), category, file_name: fileName, content_type: selectedFile.type || "application/octet-stream", storage_path: path, description: description.trim() || null, created_by: user.id,
+        title: title.trim(), category, file_name: fileName, content_type: selectedFile.type || "application/octet-stream", storage_path: path, description: description.trim() || null, status: "draft", governed_workflow: true, created_by: user.id,
       });
       if (recordError) throw new Error(recordError.message);
       setMessage("Learning resource securely added to NIU’s private content library.");
@@ -217,7 +217,7 @@ export default function ContentLibrary() {
         const { error: storageError } = await supabase.storage.from(storageBucket).upload(path, guideFile, { contentType: "text/markdown", upsert: false });
         if (storageError) throw new Error(storageError.message);
         const { data: created, error: recordError } = await supabase.from("content_library_items").insert({
-          title: starterGuideTitle, category: "study_guide", file_name: starterGuideFilename, content_type: "text/markdown", storage_path: path, description: "Original NIU study guide for the first Digital Foundations module. It remains private until an authorised programme release.", created_by: user.id,
+          title: starterGuideTitle, category: "study_guide", file_name: starterGuideFilename, content_type: "text/markdown", storage_path: path, description: "Original NIU study guide for the first Digital Foundations module. It remains private until an authorised programme release.", status: "draft", governed_workflow: true, created_by: user.id,
         }).select("id").single();
         if (recordError || !created) throw new Error(errorMessage(recordError, "NIU could not register the protected study guide."));
         contentItemId = created.id;
@@ -278,7 +278,7 @@ export default function ContentLibrary() {
     setSaving(true);
     const { data: sessionData } = await supabase.auth.getSession();
     const { error: insertError } = await supabase.from("content_library_items").insert({
-      title: title.trim(), category: "external_resource", file_name: url.hostname, content_type: "text/uri-list", storage_path: url.toString(), description: description.trim() || null, created_by: sessionData.session?.user.id,
+      title: title.trim(), category: "external_resource", file_name: url.hostname, content_type: "text/uri-list", storage_path: url.toString(), description: description.trim() || null, status: "draft", governed_workflow: true, created_by: sessionData.session?.user.id,
     });
     if (insertError) setError(insertError.message);
     else {

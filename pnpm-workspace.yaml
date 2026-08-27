@@ -1,0 +1,4 @@
+packages:
+  - "."
+overrides:
+  tar: 7.5.21

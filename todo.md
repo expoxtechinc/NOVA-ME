@@ -159,3 +159,6 @@
 
 - [x] Repair the Question Bank difficulty constraint mismatch so inline create/edit uses live permitted values, without changing existing question records or governed approval behavior.
 - [x] Validate the difficulty repair with focused tests, type-check, build, audit, responsive UI, documentation, checkpoint, and repository synchronization.
+
+- [x] Harden future academic workflow governance across question banks, questions, assessments, courses, modules, lessons, learning resources, and certificate templates: draft-first statuses, manual review/approval, authorised publication gates, validation messaging, duplicate prevention, and audit preservation without altering existing content or records.
+- [x] Validate assessment metadata, answer keys, points, passing scores, time limits, attempt limits, completion rules, and Course Studio propagation with tests, builds, responsive checks, documentation, checkpoint, and repository synchronization.

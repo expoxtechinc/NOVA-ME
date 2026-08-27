@@ -124,7 +124,7 @@ export default function CourseStudio() {
     event.preventDefault(); clearFeedback();
     if (!userId || !programmeForm.departmentId || programmeForm.name.trim().length < 3 || programmeForm.code.trim().length < 2 || programmeForm.description.trim().length < 30) { setError("Complete the programme name, code, department, and a description of at least 30 characters."); return; }
     setSaving(true);
-    const { data, error: insertError } = await supabase.from("certificate_programs").insert({ department_id: programmeForm.departmentId, name: programmeForm.name.trim(), code: programmeForm.code.trim().toUpperCase(), description: programmeForm.description.trim(), objectives: listItems(programmeForm.objectives), learning_outcomes: listItems(programmeForm.outcomes), duration_hours: Number(programmeForm.hours) || 0, difficulty: programmeForm.difficulty, required_score: Number(programmeForm.score) || 70, completion_requirements: { entry_requirements: listItems(programmeForm.requirements), completion_rules: listItems(programmeForm.completion) }, certificate_template_key: programmeForm.template.trim() || null, image_path: programmeForm.image.trim() || null, award_type: "certificate", status: "draft", created_by: userId }).select("id").single();
+    const { data, error: insertError } = await supabase.from("certificate_programs").insert({ department_id: programmeForm.departmentId, name: programmeForm.name.trim(), code: programmeForm.code.trim().toUpperCase(), description: programmeForm.description.trim(), objectives: listItems(programmeForm.objectives), learning_outcomes: listItems(programmeForm.outcomes), duration_hours: Number(programmeForm.hours) || 0, difficulty: programmeForm.difficulty, required_score: Number(programmeForm.score) || 70, completion_requirements: { entry_requirements: listItems(programmeForm.requirements), completion_rules: listItems(programmeForm.completion) }, certificate_template_key: programmeForm.template.trim() || null, image_path: programmeForm.image.trim() || null, award_type: "certificate", status: "draft", governed_workflow: true, created_by: userId }).select("id").single();
     if (insertError || !data) setError(insertError?.message ?? "The draft certificate programme could not be created.");
     else { setNotice("Draft certificate programme created. Continue inside Course Studio to add its course and curriculum."); await loadStructure(data.id); setStep("curriculum"); }
     setSaving(false);
@@ -134,7 +134,7 @@ export default function CourseStudio() {
     event.preventDefault(); clearFeedback();
     if (!userId || !programmeId || courseForm.title.trim().length < 3 || courseForm.description.trim().length < 30) { setError("Choose a programme and provide a course title plus a description of at least 30 characters."); return; }
     setSaving(true);
-    const payload = { author_id: userId, slug: slugify(courseForm.title), title: courseForm.title.trim(), description: courseForm.description.trim(), category: courseForm.category.trim() || "Professional development", level: courseForm.level, duration_minutes: Number(courseForm.minutes) || 0, certificate_eligible: true, learning_outcomes: listItems(courseForm.outcomes), entry_requirements: listItems(courseForm.requirements), status: "draft" };
+    const payload = { author_id: userId, slug: slugify(courseForm.title), title: courseForm.title.trim(), description: courseForm.description.trim(), category: courseForm.category.trim() || "Professional development", level: courseForm.level, duration_minutes: Number(courseForm.minutes) || 0, certificate_eligible: true, learning_outcomes: listItems(courseForm.outcomes), entry_requirements: listItems(courseForm.requirements), status: "draft", governed_workflow: true };
     const { data: created, error: courseError } = await supabase.from("courses").insert(payload).select("id").single();
     if (courseError || !created) { setError(courseError?.message ?? "The draft course could not be created."); setSaving(false); return; }
     const { error: versionError } = await supabase.from("course_versions").insert({ course_id: created.id, version_number: 1, status: "draft", change_summary: "Initial Course Studio draft", snapshot: payload, created_by: userId });
@@ -149,7 +149,7 @@ export default function CourseStudio() {
     if (!courseId || moduleForm.title.trim().length < 3) { setError("Choose a course and provide a module title."); return; }
     setSaving(true);
     const { data: last } = await supabase.from("course_modules").select("position").eq("course_id", courseId).order("position", { ascending: false }).limit(1);
-    const { data: created, error: insertError } = await supabase.from("course_modules").insert({ course_id: courseId, title: moduleForm.title.trim(), description: moduleForm.description.trim() || null, position: Number(last?.[0]?.position ?? -1) + 1, status: "draft", learning_level: moduleForm.level, estimated_minutes: Number(moduleForm.minutes) || 0, learning_objectives: listItems(moduleForm.objectives), support_guidance: moduleForm.support.trim() || null }).select("id").single();
+    const { data: created, error: insertError } = await supabase.from("course_modules").insert({ course_id: courseId, title: moduleForm.title.trim(), description: moduleForm.description.trim() || null, position: Number(last?.[0]?.position ?? -1) + 1, status: "draft", governed_workflow: true, learning_level: moduleForm.level, estimated_minutes: Number(moduleForm.minutes) || 0, learning_objectives: listItems(moduleForm.objectives), support_guidance: moduleForm.support.trim() || null }).select("id").single();
     if (insertError || !created) setError(insertError?.message ?? "The module could not be created.");
     else { setNotice("Module saved in the curriculum tree. Add its first lesson below."); await loadStructure(programmeId); setModuleId(created.id); setStep("lesson"); }
     setSaving(false);
@@ -165,7 +165,7 @@ export default function CourseStudio() {
     const storagePath = `${userId}/${crypto.randomUUID()}-${safeName}`;
     const { error: uploadError } = await supabase.storage.from("niu-learning-materials").upload(storagePath, resourceFile, { contentType: resourceFile.type || "application/octet-stream", upsert: false });
     if (uploadError) { setError(uploadError.message); setSaving(false); return; }
-    const { data: item, error: itemError } = await supabase.from("content_library_items").insert({ title: resourceTitle.trim(), category: "document", file_name: resourceFile.name, content_type: resourceFile.type || "application/octet-stream", storage_path: storagePath, description: resourceDescription.trim() || null, created_by: userId }).select("id").single();
+    const { data: item, error: itemError } = await supabase.from("content_library_items").insert({ title: resourceTitle.trim(), category: "document", file_name: resourceFile.name, content_type: resourceFile.type || "application/octet-stream", storage_path: storagePath, description: resourceDescription.trim() || null, status: "draft", governed_workflow: true, created_by: userId }).select("id").single();
     if (itemError || !item) { await supabase.storage.from("niu-learning-materials").remove([storagePath]); setError(itemError?.message ?? "The library record could not be created."); setSaving(false); return; }
     const { error: attachmentError } = await supabase.from("lesson_content_items").insert({ lesson_id: targetLessonId, content_item_id: item.id, position: 0, is_required: true });
     if (attachmentError) { await supabase.from("content_library_items").delete().eq("id", item.id); await supabase.storage.from("niu-learning-materials").remove([storagePath]); setError(attachmentError.message); }
@@ -186,11 +186,20 @@ export default function CourseStudio() {
 
   async function createAssessment(event: React.FormEvent) {
     event.preventDefault(); clearFeedback();
-    if (!userId || !courseId || assessmentForm.title.trim().length < 3) { setError("Choose a course and provide an assessment title."); return; }
+    const title = assessmentForm.title.trim(); const passingScore = Number(assessmentForm.passingScore); const attempts = Number(assessmentForm.attempts); const timeLimit = assessmentForm.timeLimit ? Number(assessmentForm.timeLimit) : null; const weight = Number(assessmentForm.weight);
+    if (!userId || !courseId || title.length < 3) { setError("Choose a course and provide an assessment title of at least three characters."); return; }
+    if (!Number.isFinite(passingScore) || passingScore <= 0 || passingScore > 100) { setError("Assessment passing score must be greater than 0 and no more than 100."); return; }
+    if (!Number.isInteger(attempts) || attempts <= 0) { setError("Assessment attempt limit must be a whole number greater than zero."); return; }
+    if (timeLimit !== null && (!Number.isInteger(timeLimit) || timeLimit <= 0)) { setError("Assessment time limit must be a whole number of minutes greater than zero."); return; }
+    if (!Number.isFinite(weight) || weight < 0 || weight > 100) { setError("Assessment weight must be between 0 and 100."); return; }
     setSaving(true);
-    const { error: insertError } = await supabase.from("assessments").insert({ course_id: courseId, module_id: moduleId || null, title: assessmentForm.title.trim(), assessment_type: assessmentForm.type, passing_score: Number(assessmentForm.passingScore) || 70, attempt_limit: assessmentForm.attempts ? Number(assessmentForm.attempts) : null, time_limit_minutes: assessmentForm.timeLimit ? Number(assessmentForm.timeLimit) : null, randomize_questions: true, randomize_answers: true, weight: Number(assessmentForm.weight) || 0, status: "draft", created_by: userId });
-    if (insertError) setError(insertError.message);
-    else { setNotice("Draft assessment saved to the selected course and module. Add questions through the governed question-bank flow before review."); setAssessmentForm({ title: "", type: "knowledge_check", passingScore: "70", attempts: "1", timeLimit: "", weight: "0" }); }
+    const duplicateQuery = supabase.from("assessments").select("id,title,status").eq("course_id", courseId).ilike("title", title).neq("status", "archived");
+    const { data: duplicate, error: duplicateError } = moduleId ? await duplicateQuery.eq("module_id", moduleId).maybeSingle() : await duplicateQuery.is("module_id", null).maybeSingle();
+    if (duplicateError) { setError("NIU could not check for duplicate assessments. Nothing was created; please retry."); setSaving(false); return; }
+    if (duplicate) { setError(`A non-archived assessment named “${duplicate.title}” already exists in this course/module (${duplicate.status}). Edit or reuse that record instead of creating a duplicate.`); setSaving(false); return; }
+    const { error: insertError } = await supabase.from("assessments").insert({ course_id: courseId, module_id: moduleId || null, title, assessment_type: assessmentForm.type, passing_score: passingScore, attempt_limit: attempts, time_limit_minutes: timeLimit, randomize_questions: true, randomize_answers: true, weight, required_completion_rules: { required: true, minimum_score: passingScore, attempt_limit: attempts, time_limit_minutes: timeLimit }, status: "draft", governed_workflow: true, created_by: userId });
+    if (insertError) setError(insertError.message.includes("duplicate") || insertError.code === "23505" ? "This assessment already exists for the selected course/module. Reuse the existing record instead of creating a duplicate." : insertError.message);
+    else { setNotice("Draft assessment saved. It is not published, approved, or review-ready until its questions, completion rules, and validation checks are complete."); setAssessmentForm({ title: "", type: "knowledge_check", passingScore: "70", attempts: "1", timeLimit: "", weight: "0" }); }
     setSaving(false);
   }
 
@@ -199,7 +208,7 @@ export default function CourseStudio() {
     if (!moduleId || lessonForm.title.trim().length < 3) { setError("Choose a module and provide a lesson title."); return; }
     setSaving(true);
     const { data: last } = await supabase.from("lessons").select("position").eq("module_id", moduleId).order("position", { ascending: false }).limit(1);
-    const { error: insertError } = await supabase.from("lessons").insert({ module_id: moduleId, title: lessonForm.title.trim(), kind: lessonForm.kind, description: lessonForm.description.trim() || null, position: Number(last?.[0]?.position ?? -1) + 1, rich_text: lessonForm.kind === "article" ? lessonForm.description.trim() || null : null, is_required: lessonForm.required, learning_objectives: listItems(lessonForm.objectives), estimated_minutes: Number(lessonForm.minutes) || 0, points: Number(lessonForm.points) || 0, caption_text: lessonForm.captions.trim() || null, transcript_text: lessonForm.transcript.trim() || null, status: "draft" });
+    const { error: insertError } = await supabase.from("lessons").insert({ module_id: moduleId, title: lessonForm.title.trim(), kind: lessonForm.kind, description: lessonForm.description.trim() || null, position: Number(last?.[0]?.position ?? -1) + 1, rich_text: lessonForm.kind === "article" ? lessonForm.description.trim() || null : null, is_required: lessonForm.required, learning_objectives: listItems(lessonForm.objectives), estimated_minutes: Number(lessonForm.minutes) || 0, points: Number(lessonForm.points) || 0, governed_workflow: true, caption_text: lessonForm.captions.trim() || null, transcript_text: lessonForm.transcript.trim() || null, status: "draft" });
     if (insertError) setError(insertError.message);
     else { setNotice("Lesson saved in the selected module. Continue with protected content and assessments in this workspace."); await loadStructure(programmeId); setStep("content"); }
     setSaving(false);
@@ -281,6 +290,6 @@ function AssessmentStudioPanel({ form, setForm, onSubmit, saving, disabled }: { 
       <label className="grid gap-2 text-sm font-semibold">Weighted contribution<input type="number" min="0" max="100" value={form.weight} onChange={event => setForm(current => ({ ...current, weight: event.target.value }))} className="border border-wine/20 px-3 py-3 font-normal" /></label>
       <button disabled={saving || disabled} className="button-primary w-fit"><Plus className="h-4 w-4" />{saving ? "Saving assessment…" : "Save draft assessment"}</button>
     </form>
-    <Notice>Draft assessments are not learner-visible. The final programme gate still requires questions, points, completion rules, and an authorised review decision.</Notice>
+    <Notice><strong>Workflow status: Draft.</strong> Saving never publishes or approves an assessment. Before Review, provide a valid passing score (1–100), positive time limit, positive attempt limit, saved completion rules, and approved attached questions. NIU will explain each missing requirement and only an authorised administrator can approve or publish; published assessments cannot be returned to Draft.</Notice>
   </StudioPanel>;
 }
