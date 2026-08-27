@@ -115,3 +115,6 @@
 - [ ] Replace the production-incompatible protected Content Library file path with private Supabase object storage and scoped access controls without exposing learner materials publicly.
 - [x] Add automatic NIU audit capture for protected content-library metadata and lesson-attachment changes made through the production-safe direct workflow.
 - [ ] Repair Vercel’s production TypeScript compilation of NIU server source so the private-storage release can deploy successfully.
+- [ ] Repair the reported `record "new" has no field "id"` Content Library audit-trigger error and verify the original private draft study guide is attached.
+- [ ] Remove public NIU programme discovery’s dependency on the unavailable Vercel server endpoint while preserving published-only visibility.
+- [ ] Complete server-validated readiness and controlled publication of the first authorised NIU certificate programme bundle after required content verification.
