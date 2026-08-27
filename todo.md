@@ -83,5 +83,10 @@
 - [x] Show real-record package readiness, missing prerequisites, and context-aware recommended next actions without creating placeholder academic content.
 - [x] Add a server-validated controlled publication action that can release an approved NIU programme bundle only after its contained courses, modules, lessons, and required materials meet readiness rules.
 - [x] Validate and deploy the guided programme-package authoring and publication workflow.
+- [ ] Add an ordered NIU module blueprint that makes Module 1, Module 2, and onward course structure clear to administrators.
+- [ ] Add context-aware recommendations for each module’s objectives, lessons, protected notes/materials, assessment, learner-support, and review requirements without auto-creating academic content.
+- [ ] Validate and deploy the enhanced module blueprint within the guided programme package workflow.
+- [ ] Support unlimited ordered NIU modules within each course, with a configurable learning level and module-specific objectives, lessons, protected notes, media, assessment, and support requirements.
+- [ ] Validate and deploy the scalable level-aware course-module architecture without changing NIU’s certificate-only academic scope.
 - [x] Organise the Super Administrator navigation around the requested institutional, academics, people, records, communication, reporting, and system domains.
 - [x] Add non-destructive covering indexes for the 40 verified unindexed NIU foreign keys identified by the Supabase performance advisor.

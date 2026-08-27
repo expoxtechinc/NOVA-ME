@@ -28,6 +28,7 @@ const Learning = lazy(() => import("./pages/Learning"));
 const ProgramDetails = lazy(() => import("./pages/ProgramDetails"));
 const ProgrammePackage = lazy(() => import("./pages/ProgrammePackage"));
 const ProgrammePublication = lazy(() => import("./pages/ProgrammePublication"));
+const ModuleBlueprint = lazy(() => import("./pages/ModuleBlueprint"));
 const Registrar = lazy(() => import("./pages/Registrar"));
 const Reports = lazy(() => import("./pages/Reports"));
 const InstitutionSettings = lazy(() => import("./pages/InstitutionSettings"));
@@ -51,6 +52,7 @@ function Router() {
     <Route path="/programs/:slug" component={ProgramDetails} />
     <Route path="/programme-package" component={ProgrammePackage} />
     <Route path="/programme-publication" component={ProgrammePublication} />
+    <Route path="/module-blueprint" component={ModuleBlueprint} />
     <Route path="/courses" component={Courses} />
     <Route path="/courses/:slug" component={CourseDetails} />
     <Route path="/verify" component={Verify} />
