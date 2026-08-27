@@ -156,3 +156,6 @@
 
 - [x] Add governed Question Bank management with private drafts, protected authoring, question editing, answer/correct-answer controls, difficulty/topic/objective/points metadata, approval status, saved-question attachment, and approved-assessment eligibility without seeding or changing curriculum records.
 - [x] Validate Question Bank authorization, audit preservation, empty states, responsive UI, tests, build, and dependency gates; document, checkpoint, and push the release.
+
+- [ ] Repair the Question Bank difficulty constraint mismatch so inline create/edit uses live permitted values, without changing existing question records or governed approval behavior.
+- [ ] Validate the difficulty repair with focused tests, type-check, build, audit, responsive UI, documentation, checkpoint, and repository synchronization.
