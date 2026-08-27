@@ -141,3 +141,6 @@
 - [x] Add lawful recommendation-letter workflow that is administrator-authored and clearly labelled as an NIU institutional letter, not an employment, licensing, accreditation, or universal-recognition guarantee.
 - [x] Add regression tests and run full release validation for certificate eligibility, issuance control, privacy, duplicate prevention, and unsupported-claims safeguards.
 - [ ] Update release notes, save a checkpoint, push the certificate-system release, and complete authorized production validation.
+
+- [x] Safely archive or unpublish the unfinished first course and its public programme listing for a fresh start, preserving existing records, audit history, learner records, and reversible administrator control.
+- [x] Verify the public catalogue no longer exposes the unfinished course after the fresh-start archive state is deployed.
