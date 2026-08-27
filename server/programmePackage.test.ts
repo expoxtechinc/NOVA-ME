@@ -8,7 +8,7 @@ describe("NIU guided programme package", () => {
     expect(page).toContain('from("program_courses")');
     expect(page).toContain('from("course_modules")');
     expect(page).toContain('from("lessons")');
-    expect(page).toContain('from("lesson_content_library_items")');
+    expect(page).toContain('from("lesson_content_items")');
     expect(page).toContain("Recommended next action");
     expect(page).toContain("Each course can have as many level-aware modules");
     expect(page).toContain('href="/module-blueprint"');

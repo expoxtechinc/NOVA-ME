@@ -7,7 +7,7 @@ describe("NIU ordered module blueprint", () => {
     const page = fs.readFileSync(path.join(root, "client", "src", "pages", "ModuleBlueprint.tsx"), "utf8");
     expect(page).toContain('from("course_modules")');
     expect(page).toContain('from("lessons")');
-    expect(page).toContain('from("lesson_content_library_items")');
+    expect(page).toContain('from("lesson_content_items")');
     expect(page).toContain("Module {modules.length + 1} title");
     expect(page).toContain("Module learning level");
     expect(page).toContain("learning_objectives");

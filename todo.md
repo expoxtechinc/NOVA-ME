@@ -91,3 +91,5 @@
 - [x] Validate and deploy the scalable level-aware course-module architecture without changing NIU’s certificate-only academic scope.
 - [x] Organise the Super Administrator navigation around the requested institutional, academics, people, records, communication, reporting, and system domains.
 - [x] Add non-destructive covering indexes for the 40 verified unindexed NIU foreign keys identified by the Supabase performance advisor.
+- [x] Correct core-role reassignment so it never writes constrained institutional-role values, while retaining auditable approved-identity synchronization.
+- [x] Correct programme-readiness and module-builder content-attachment references to NIU’s protected `lesson_content_items` junction.
