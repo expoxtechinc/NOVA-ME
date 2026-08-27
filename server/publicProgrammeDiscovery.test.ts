@@ -40,6 +40,9 @@ describe("NIU public programme discovery", () => {
     expect(releasePage).toContain('supabase.rpc("niu_publish_programme_bundle"');
     expect(approval).toContain("v_module_count <> 4 or v_lesson_count <> 4 or v_material_count <> 4");
     expect(approval).toContain("p.award_type = 'certificate'");
+    expect(approval).toContain("public.niu_account_is_active()");
+    expect(approval).toContain("role = 'super_admin'");
+    expect(approval).not.toContain("niu_is_active_super_admin");
     expect(approval).toContain("revoke all on function public.niu_approve_digital_starter_bundle() from public, anon");
   });
 });

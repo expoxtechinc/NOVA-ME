@@ -118,3 +118,4 @@
 - [ ] Repair the reported `record "new" has no field "id"` Content Library audit-trigger error and verify the original private draft study guide is attached.
 - [ ] Remove public NIU programme discovery’s dependency on the unavailable Vercel server endpoint while preserving published-only visibility.
 - [ ] Complete server-validated readiness and controlled publication of the first authorised NIU certificate programme bundle after required content verification.
+- [ ] Repair the missing `niu_is_active_super_admin` function reference in the controlled first-certificate approval workflow and reverify the owner-authorised release action.
