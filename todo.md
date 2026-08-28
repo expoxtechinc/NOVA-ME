@@ -228,3 +228,11 @@
 - [ ] Verify the new production deployment through the accessible Vercel URL; do not claim the administrator-only blueprint save/research-review step without an authenticated owner session.
 - [x] Document the reproducible production blocker: nova-me-six currently serves an old Vercel function that returns plain-text FUNCTION_INVOCATION_FAILED, while the accessible Vercel project is linked to a different ONLINE-UNIVERSITY repository; administrator production validation remains open.
 - [x] Re-probe and validate the AI Builder production flow specifically on novainternationaluniversity.vercel.app, the user-confirmed live domain. The domain is reachable but still serves the stale FUNCTION_INVOCATION_FAILED deployment.
+- [ ] Re-run the production endpoint and authenticated Digital Marketing blueprint/research-review validation after the user reports the Vercel linkage is complete.
+- [ ] Revalidate novainternationaluniversity.vercel.app after the user saved OPENAI_API_KEY and GEMINI_API_KEY in the owning Vercel project, then run the production Digital Marketing flow if the function is live.
+- [ ] Recheck novainternationaluniversity.vercel.app after the reported redeploy and verify the repaired JSON contract before attempting the live Digital Marketing workflow.
+- [ ] Continue production verification using Android-compatible public checks only; do not require computer takeover or API-key sharing.
+- [ ] Recheck the production endpoint after the latest reported deployment action and verify whether the repaired JSON-safe AI Builder backend is now live.
+- [ ] Continue the autonomous production-repair pass and verify the actual live domain without computer takeover or API-key requests.
+- [ ] Investigate the confirmed Ready NOVA-ME production deployment’s remaining Vercel function failure on novainternationaluniversity.vercel.app and fix the runtime entrypoint/configuration if required.
+- [x] Fix the confirmed Vercel TypeScript errors in server/app.ts and server/routers/aiBuilder.ts so the deployed AI Builder function can initialize successfully.
