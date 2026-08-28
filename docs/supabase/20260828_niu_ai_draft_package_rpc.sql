@@ -31,6 +31,7 @@ declare
   question_position integer;
   material_position integer;
   created_courses jsonb := '[]'::jsonb;
+  created_lessons_json jsonb := '[]'::jsonb;
   created_modules integer := 0;
   created_lessons integer := 0;
   created_questions integer := 0;
@@ -78,6 +79,7 @@ begin
         insert into public.lessons(module_id,kind,title,description,position,rich_text,assessment,is_required,content_json,learning_objectives,estimated_minutes,points,status,governed_workflow)
         values (module_id,coalesce(lesson_item->>'kind','reading'),left(lesson_item->>'title',255),left(coalesce(lesson_item->>'description','Draft lesson; administrator verification required.'),10000),lesson_position,lesson_item->>'draftText',lesson_item->'assessment',true,jsonb_build_object('activities',coalesce(lesson_item->'activities','[]'::jsonb),'accessibility',coalesce(lesson_item->'accessibility','[]'::jsonb),'videoScript',coalesce(lesson_item->>'videoScript','Missing: administrator must author a video script if video is required.'),'transcript',coalesce(lesson_item->>'transcript','Missing: administrator must author or verify a transcript.'),'diagrams',coalesce(lesson_item->'diagrams','[]'::jsonb),'references',coalesce(lesson_item->'references','[]'::jsonb),'assignment',coalesce(lesson_item->'assignment','Missing: administrator must define an assignment if required.'),'rubric',coalesce(lesson_item->'rubric','Missing: administrator must define and approve a rubric if required.'),'verificationRequired',true),coalesce(lesson_item->'objectives','[]'::jsonb),greatest(0,coalesce((lesson_item->>'estimatedMinutes')::integer,0)),greatest(0,coalesce((lesson_item->>'points')::numeric,0)),'draft',true)
         returning id into lesson_id;
+        created_lessons_json := created_lessons_json || jsonb_build_object('lessonId',lesson_id,'moduleId',module_id,'courseId',course_id,'title',lesson_item->>'title','position',lesson_position);
         created_lessons := created_lessons + 1;
         material_position := 0;
       for material_item in select value from jsonb_array_elements(coalesce(lesson_item->'materials','[]'::jsonb)) loop
@@ -107,8 +109,8 @@ begin
     end loop;
     course_position := course_position + 1;
   end loop;
-  update public.ai_academic_builder_jobs set status='ready_for_review',generated_record_ids=jsonb_build_object('schoolId',school_id,'departmentId',department_id,'programId',program_id,'courses',created_courses,'counts',jsonb_build_object('modules',created_modules,'lessons',created_lessons,'questions',created_questions,'assessments',created_assessments)) where id=p_job_id;
-  return jsonb_build_object('schoolId',school_id,'departmentId',department_id,'programId',program_id,'courses',created_courses,'counts',jsonb_build_object('modules',created_modules,'lessons',created_lessons,'questions',created_questions,'assessments',created_assessments));
+  update public.ai_academic_builder_jobs set status='ready_for_review',generated_record_ids=jsonb_build_object('schoolId',school_id,'departmentId',department_id,'programId',program_id,'courses',created_courses,'lessons',created_lessons_json,'counts',jsonb_build_object('modules',created_modules,'lessons',created_lessons,'questions',created_questions,'assessments',created_assessments)) where id=p_job_id;
+  return jsonb_build_object('schoolId',school_id,'departmentId',department_id,'programId',program_id,'courses',created_courses,'lessons',created_lessons_json,'counts',jsonb_build_object('modules',created_modules,'lessons',created_lessons,'questions',created_questions,'assessments',created_assessments));
 end;
 $niu_ai_package$;
 

@@ -189,3 +189,28 @@
 - [x] Add complete-package AI editing while keeping every edit private and draft-only.
 - [x] Add comprehensive quality-gate results, read-only learner preview without answer keys or admin controls, final package review, and explicit human publication confirmation.
 - [ ] Test the full Digital Marketing workflow with real database relationships only in an isolated draft job and without publishing or modifying existing academic records.
+
+## AI visual engine and multi-provider correction requirements
+- [x] Add server-only multi-provider AI orchestration with configurable OpenAI and Gemini model settings, without exposing provider keys or hardcoding stale model names.
+- [x] Add evidence-bound visual analysis and structured visual specifications that decide when a lesson needs a diagram, flowchart, illustration, process map, or other learning-support visual.
+- [x] Add protected visual generation, lesson placement, captions, alt text, detailed accessibility descriptions, provenance, versioning, review status, and no decorative-only generation. Cost controls and retry handling remain separately tracked.
+- [ ] Add lesson study-material and video visual-plan metadata plus assessment-visual metadata, keeping answer keys private and review-only.
+- [ ] Add administrator visual inspect/edit/regenerate/replace/remove controls and publication blocking for missing or unreviewed required visuals.
+- [ ] Add long-running orchestration stages, continuation-safe retries, provider error handling, rate/cost controls, and auditable status transitions without automatic approval or publication.
+- [ ] Validate the multi-provider visual workflow, secrets boundary, migrations, tests, mobile UI, build, deployment, and documentation without modifying existing academic records or creating demo data.
+
+- [x] Apply additive protected AI visual asset schema with versioning, RLS, audit triggers, draft-first review status, and learner enrollment-gated reads.
+- [x] Add server-only Gemini-backed evidence-bound visual specifications with explicit learning purpose, accuracy requirements, alt text, and accessibility requirements.
+- [x] Add administrator-triggered original visual generation using the existing protected image service, private object storage, exact lesson/module links, provenance metadata, version records, and duplicate protection; generated visuals remain draft-only.
+- [x] Extend the AI draft-package RPC to return exact lesson/module/course identifiers for safe visual placement without title-based guessing.
+- [x] Add phone-friendly AI Builder controls for visual analysis and linked visual draft generation with clear review-only messaging.
+- [x] Add regression assertions and run focused tests, TypeScript validation, and production build for the visual engine release.
+
+## AI visual engine work history
+- 2026-08-28: Applied the protected versioned visual-asset schema to the Online University Supabase project. Added evidence-bound Gemini visual specifications and server-side draft visual generation with private storage, accessibility metadata, provenance, exact lesson links, RLS, audit capture, and duplicate protection. No existing academic records were modified and no visual was approved or published.
+
+## AI visual engine remaining validation
+- [ ] Add administrator inspect/edit/regenerate/replace/remove controls for persisted visual versions and publication blocking for required unreviewed visuals.
+- [ ] Add continuation-safe long-running visual jobs, retry/cost controls, and provider fallback telemetry without automatic approval or publication.
+- [ ] Complete isolated real Digital Marketing visual generation and authenticated owner-session validation without modifying existing records.
+- [ ] Complete final release documentation, full-suite validation, checkpoint, repository synchronization, and live-user evidence for the visual engine.

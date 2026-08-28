@@ -9,6 +9,7 @@ const governanceMigration = fs.readFileSync(path.join(root, "docs", "supabase", 
 const reviewMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_review.sql"), "utf8");
 const generationMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_generation.sql"), "utf8");
 const packageMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260828_niu_ai_draft_package_rpc.sql"), "utf8");
+const visualMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260828_niu_ai_visual_assets.sql"), "utf8");
 const page = fs.readFileSync(path.join(root, "client", "src", "pages", "AIAcademicBuilder.tsx"), "utf8");
 const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
 const packagePage = fs.readFileSync(path.join(root, "client", "src", "pages", "ProgrammePackage.tsx"), "utf8");
@@ -69,6 +70,26 @@ describe("NIU AI Academic Builder", () => {
     expect(page).toContain("Answer keys and administrator controls are intentionally excluded");
     expect(page).toContain("Run complete-package quality gate");
     expect(page).toContain("Open read-only learner preview");
+  });
+
+  it("keeps generated visuals private, accessible, versioned, and linked to exact lessons", () => {
+    expect(visualMigration).toContain("create table if not exists public.ai_visual_asset_versions");
+    expect(visualMigration).toContain("alt_text text not null");
+    expect(visualMigration).toContain("review_status text not null default 'draft'");
+    expect(visualMigration).toContain("enable row level security");
+    expect(router).toContain("generateVisualSpecifications");
+    expect(router).toContain("generateVisualAssets");
+    expect(router).toContain("is_generated_visual: true");
+    expect(router).toContain('status: "draft"');
+    expect(router).toContain("contains(\"visual_metadata\"");
+    expect(router).toContain("lesson_content_items");
+    expect(router).toContain("Academic and accessibility review is required");
+    expect(router).toContain("updateVisualAssetVersion");
+    expect(router).toContain("Published or archived visual versions are immutable");
+    expect(packageMigration).toContain("created_lessons_json");
+    expect(page).toContain("Analyse purposeful lesson visuals");
+    expect(page).toContain("Generate linked visual drafts");
+    expect(page).toContain("Alt text:");
   });
 
   it("keeps the workspace review-first and reachable from the guided package", () => {

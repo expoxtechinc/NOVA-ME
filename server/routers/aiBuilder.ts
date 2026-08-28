@@ -5,6 +5,8 @@ import { analyzeCurriculumDocument } from "../../shared/curriculumImport";
 import { createClient } from "@supabase/supabase-js";
 import { publicProcedure, router } from "../_core/trpc";
 import { invokeLLM } from "../_core/llm";
+import { runStructuredAI } from "../aiOrchestrator";
+import { generateImage } from "../_core/imageGeneration";
 
 const settingsSchema = z.object({
   department: z.string().trim().max(160).optional(),
@@ -59,6 +61,7 @@ const blueprintSchema = {
 };
 
 const sourceSchema = z.object({ title: z.string().trim().min(2).max(240), url: z.string().url().refine(value => value.startsWith("https://"), "Sources must use HTTPS URLs"), sourceType: z.string().trim().min(2).max(120) });
+const visualSpecSchema = { type: "object", additionalProperties: false, properties: { lessonTitle: { type: "string" }, shouldGenerate: { type: "boolean" }, visualType: { type: "string" }, concept: { type: "string" }, learningObjective: { type: "string" }, requiredStructures: { type: "array", items: { type: "string" } }, requiredLabels: { type: "array", items: { type: "string" } }, layout: { type: "string" }, orientation: { type: "string" }, educationalPurpose: { type: "string" }, altText: { type: "string" }, accuracyRequirements: { type: "array", items: { type: "string" } }, accessibilityRequirements: { type: "array", items: { type: "string" } }, reviewStatus: { type: "string", enum: ["draft", "needs_review"] } }, required: ["lessonTitle", "shouldGenerate", "visualType", "concept", "learningObjective", "requiredStructures", "requiredLabels", "layout", "orientation", "educationalPurpose", "altText", "accuracyRequirements", "accessibilityRequirements", "reviewStatus"] };
 
 type Blueprint = { programme: { title: string; description: string; difficulty: string; objectives: string[]; learningOutcomes: string[]; entryRequirements: string[]; completionRequirements: string[]; recommendedLearningHours: number }; courses: Array<{ title: string; description: string; difficulty: string; position: number; objectives: string[]; modules: Array<{ title: string; description: string; difficulty: string; position: number; objectives: string[]; lessons: Array<{ title: string; description: string; position: number; objectives: string[]; activityIdeas: string[]; materialNeeds: string[]; assessmentIdeas: string[] }> }> }> };
 
@@ -183,6 +186,58 @@ export const aiBuilderRouter = router({
     const { error: updateError } = await supabase.from("ai_academic_builder_jobs").update({ research_evidence: input.evidence, content_plan: plans.contentPlan, visual_plan: plans.visualPlan, assessment_blueprint: plans.assessmentBlueprint, missing_information: plans.missingEvidence ?? [], generated_by: userId, generated_at: new Date().toISOString(), status: "ready_for_review" }).eq("id", job.id).eq("status", "generation_review");
     if (updateError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: updateError.message });
     return { jobId: job.id, status: "ready_for_review" as const, plans };
+  }),
+  generateVisualSpecifications: publicProcedure.input(z.object({ jobId: z.string().uuid(), lessons: z.array(z.object({ lessonTitle: z.string().trim().min(2).max(240), lessonDescription: z.string().trim().min(2).max(4000), learningObjective: z.string().trim().min(2).max(500), evidenceUrls: z.array(z.string().url().refine(value => value.startsWith("https://"), "Visual evidence URLs must use HTTPS")).max(12) })).min(1).max(120) })).mutation(async ({ ctx, input }) => {
+    const { supabase, userId } = await getStaffSession(ctx.req);
+    const { data: job, error } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,visual_plan").eq("id", input.jobId).in("status", ["generation_review", "ready_for_review"]).maybeSingle();
+    if (error || !job) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Visual planning is available only for a reviewed private AI Builder job." });
+    const result = await runStructuredAI<{ specifications: Array<Record<string, unknown>> }>({
+      provider: "gemini",
+      system: "You are NIU's evidence-bound visual learning architect. Decide whether each lesson benefits from a learning-support visual. Do not invent factual labels, sources, measurements, anatomy, scientific structures, or claims. If evidence is insufficient, set shouldGenerate false and explain the missing evidence. Prefer deterministic diagrams or flowcharts for exact relationships and mark every specification needs_review. Return JSON only.",
+      prompt: JSON.stringify({ topic: job.topic, lessons: input.lessons }),
+      schema: { type: "object", additionalProperties: false, properties: { specifications: { type: "array", items: visualSpecSchema } }, required: ["specifications"] },
+    });
+    const specifications = result.value.specifications;
+    const { error: updateError } = await supabase.from("ai_academic_builder_jobs").update({ visual_plan: specifications, generated_by: userId, generated_at: new Date().toISOString() }).eq("id", job.id).in("status", ["generation_review", "ready_for_review"]);
+    if (updateError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Visual specifications could not be saved." });
+    return { jobId: job.id, provider: result.provider, model: result.model, specifications, status: job.status };
+  }),
+  generateVisualAssets: publicProcedure.input(z.object({ jobId: z.string().uuid(), assets: z.array(z.object({ lessonId: z.string().uuid(), moduleId: z.string().uuid(), programmeId: z.string().uuid().nullable().optional(), lessonTitle: z.string().trim().min(2).max(240), specification: z.object({ shouldGenerate: z.boolean(), visualType: z.string(), concept: z.string(), learningObjective: z.string(), requiredStructures: z.array(z.string()), requiredLabels: z.array(z.string()), layout: z.string(), orientation: z.string(), educationalPurpose: z.string(), altText: z.string(), accuracyRequirements: z.array(z.string()), accessibilityRequirements: z.array(z.string()), reviewStatus: z.enum(["draft", "needs_review"]) }) })).min(1).max(120) })).mutation(async ({ ctx, input }) => {
+    const { supabase, userId } = await getStaffSession(ctx.req);
+    const { data: job, error: jobError } = await supabase.from("ai_academic_builder_jobs").select("id,status,topic").eq("id", input.jobId).in("status", ["generation_review", "ready_for_review"]).maybeSingle();
+    if (jobError || !job) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Visual generation is available only for a private reviewed AI Builder job." });
+    const created: Array<{ lessonId: string; contentItemId: string; visualVersionId: string; status: string }> = [];
+    for (const asset of input.assets) {
+      if (!asset.specification.shouldGenerate) continue;
+      const { data: existing } = await supabase.from("content_library_items").select("id,visual_metadata").eq("is_generated_visual", true).contains("visual_metadata", { jobId: input.jobId, lessonId: asset.lessonId }).limit(1);
+      if (existing?.[0]) {
+        const { data: existingVersion } = await supabase.from("ai_visual_asset_versions").select("id,review_status").eq("content_item_id", existing[0].id).order("version", { ascending: false }).limit(1).maybeSingle();
+        if (existingVersion) created.push({ lessonId: asset.lessonId, contentItemId: existing[0].id, visualVersionId: existingVersion.id, status: existingVersion.review_status });
+        continue;
+      }
+      const prompt = `Original educational ${asset.specification.visualType} for the NIU lesson "${asset.lessonTitle}". Purpose: ${asset.specification.educationalPurpose}. Concept: ${asset.specification.concept}. Learning objective: ${asset.specification.learningObjective}. Required structures: ${asset.specification.requiredStructures.join(", ") || "Missing: administrator must confirm structures."}. Required labels: ${asset.specification.requiredLabels.join(", ") || "Missing: administrator must confirm labels."}. Layout: ${asset.specification.layout}. Orientation: ${asset.specification.orientation}. Accuracy requirements: ${asset.specification.accuracyRequirements.join("; ")}. Do not invent facts or labels. Use no decorative imagery. Keep any text large and minimal; the administrator will verify all content before publication.`;
+      const image = await generateImage({ prompt, model: "MODEL_GPT_IMAGE_2", quality: "medium" });
+      if (!image.key || !image.url) throw new TRPCError({ code: "BAD_GATEWAY", message: `Visual generation returned no stored image for ${asset.lessonTitle}.` });
+      const metadata = { ...asset.specification, jobId: input.jobId, lessonId: asset.lessonId, moduleId: asset.moduleId, source: "NIU AI Visual Learning Engine", generatedBy: userId, generatedAt: new Date().toISOString(), generationPrompt: prompt, storageKey: image.key, storageUrl: image.url };
+      const { data: item, error: itemError } = await supabase.from("content_library_items").insert({ title: `${asset.lessonTitle} learning visual`, category: "image", file_name: `${asset.lessonId}-ai-visual.png`, content_type: image.mimeType ?? "image/png", storage_path: image.key, description: asset.specification.educationalPurpose, status: "draft", governed_workflow: true, is_generated_visual: true, visual_metadata: metadata, created_by: userId }).select("id").single();
+      if (itemError || !item) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: itemError?.message ?? "The private visual record could not be created." });
+      const { error: linkError } = await supabase.from("lesson_content_items").insert({ lesson_id: asset.lessonId, content_item_id: item.id, position: 999, is_required: false });
+      if (linkError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: linkError.message });
+      const { data: version, error: versionError } = await supabase.from("ai_visual_asset_versions").insert({ content_item_id: item.id, lesson_id: asset.lessonId, module_id: asset.moduleId, programme_id: asset.programmeId ?? null, title: `${asset.lessonTitle} learning visual`, caption: asset.specification.educationalPurpose, alt_text: asset.specification.altText, accessibility_description: asset.specification.accessibilityRequirements.join("; "), educational_purpose: asset.specification.educationalPurpose, generation_model: "MODEL_GPT_IMAGE_2", generation_prompt: prompt, version: 1, change_summary: "Initial AI-generated educational visual draft", review_status: "draft", created_by: userId }).select("id,review_status").single();
+      if (versionError || !version) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: versionError?.message ?? "The visual version record could not be created." });
+      created.push({ lessonId: asset.lessonId, contentItemId: item.id, visualVersionId: version.id, status: version.review_status });
+    }
+    return { jobId: job.id, topic: job.topic, created, status: "draft" as const, message: "Generated visuals are private drafts. Academic and accessibility review is required before any approval or publication." };
+  }),
+  updateVisualAssetVersion: publicProcedure.input(z.object({ versionId: z.string().uuid(), caption: z.string().trim().min(3).max(1000).optional(), altText: z.string().trim().min(3).max(1000).optional(), accessibilityDescription: z.string().trim().min(3).max(4000).optional(), educationalPurpose: z.string().trim().min(3).max(2000).optional(), reviewStatus: z.enum(["draft", "review", "approved"]).optional() })).mutation(async ({ ctx, input }) => {
+    const { supabase, userId } = await getStaffSession(ctx.req);
+    const { data: current, error: currentError } = await supabase.from("ai_visual_asset_versions").select("id,review_status").eq("id", input.versionId).maybeSingle();
+    if (currentError || !current) throw new TRPCError({ code: "NOT_FOUND", message: "The visual version is not available." });
+    if (["published", "archived"].includes(current.review_status)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Published or archived visual versions are immutable." });
+    const patch = { ...(input.caption ? { caption: input.caption } : {}), ...(input.altText ? { alt_text: input.altText } : {}), ...(input.accessibilityDescription ? { accessibility_description: input.accessibilityDescription } : {}), ...(input.educationalPurpose ? { educational_purpose: input.educationalPurpose } : {}), ...(input.reviewStatus ? { review_status: input.reviewStatus } : {}), reviewed_by: input.reviewStatus === "approved" ? userId : null };
+    const { data, error } = await supabase.from("ai_visual_asset_versions").update(patch).eq("id", input.versionId).in("review_status", ["draft", "review"]).select("id,review_status,caption,alt_text,accessibility_description,educational_purpose,reviewed_by").single();
+    if (error || !data) throw new TRPCError({ code: "PRECONDITION_FAILED", message: error?.message ?? "The visual version could not be updated. Check its current governed status." });
+    return data;
   }),
   handoffToCurriculumImport: publicProcedure.input(z.object({ jobId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
     const { supabase, userId } = await getStaffSession(ctx.req);
