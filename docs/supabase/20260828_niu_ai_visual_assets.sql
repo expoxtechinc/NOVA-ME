@@ -32,6 +32,10 @@ create table if not exists public.ai_visual_asset_versions (
   unique (content_item_id, version)
 );
 
+alter table public.ai_academic_builder_jobs add column if not exists visual_generation_status text not null default 'not_started' check (visual_generation_status in ('not_started', 'running', 'paused', 'completed', 'failed'));
+alter table public.ai_academic_builder_jobs add column if not exists visual_generation_cursor integer not null default 0 check (visual_generation_cursor >= 0);
+alter table public.ai_academic_builder_jobs add column if not exists visual_generation_error text;
+
 create index if not exists niu_idx_ai_visual_versions_lesson on public.ai_visual_asset_versions(lesson_id, version desc);
 create index if not exists niu_idx_ai_visual_versions_content on public.ai_visual_asset_versions(content_item_id, review_status);
 

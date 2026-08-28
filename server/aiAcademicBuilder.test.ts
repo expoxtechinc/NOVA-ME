@@ -94,6 +94,10 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain("Generate at most 12 visual drafts per administrator action");
     expect(router).toContain("generation_attempts: 1");
     expect(visualMigration).toContain("generation_attempts integer not null default 0");
+    expect(visualMigration).toContain("visual_generation_status text not null default 'not_started'");
+    expect(visualMigration).toContain("visual_generation_cursor integer not null default 0");
+    expect(router).toContain("visual_generation_status: \"running\"");
+    expect(router).toContain("visual_generation_cursor: assetIndex + 1");
     expect(router).toContain("Only generated visual drafts can be removed here.");
     expect(router).toContain("Published or archived visual versions are immutable");
     expect(router).toContain("Required visuals are approved before publication");

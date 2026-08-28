@@ -206,12 +206,14 @@ export const aiBuilderRouter = router({
   }),
   generateVisualAssets: publicProcedure.input(z.object({ jobId: z.string().uuid(), assets: z.array(z.object({ lessonId: z.string().uuid(), moduleId: z.string().uuid(), programmeId: z.string().uuid().nullable().optional(), lessonTitle: z.string().trim().min(2).max(240), specification: z.object({ shouldGenerate: z.boolean(), visualType: z.string(), concept: z.string(), learningObjective: z.string(), requiredStructures: z.array(z.string()), requiredLabels: z.array(z.string()), layout: z.string(), orientation: z.string(), educationalPurpose: z.string(), altText: z.string(), accuracyRequirements: z.array(z.string()), accessibilityRequirements: z.array(z.string()), reviewStatus: z.enum(["draft", "needs_review"]) }) })).min(1).max(120) })).mutation(async ({ ctx, input }) => {
     const { supabase, userId } = await getStaffSession(ctx.req);
-    const { data: job, error: jobError } = await supabase.from("ai_academic_builder_jobs").select("id,status,topic").eq("id", input.jobId).in("status", ["generation_review", "ready_for_review"]).maybeSingle();
+    const { data: job, error: jobError } = await supabase.from("ai_academic_builder_jobs").select("id,status,topic,visual_generation_cursor,visual_generation_status").eq("id", input.jobId).in("status", ["generation_review", "ready_for_review"]).maybeSingle();
     if (jobError || !job) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Visual generation is available only for a private reviewed AI Builder job." });
     const requestedAssets = input.assets.filter(asset => asset.specification.shouldGenerate);
     if (requestedAssets.length > 12) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Generate at most 12 visual drafts per administrator action. Continue with the remaining lessons after this batch is reviewed." });
     const created: Array<{ lessonId: string; contentItemId: string; visualVersionId: string; status: string }> = [];
-    for (const asset of input.assets) {
+    await supabase.from("ai_academic_builder_jobs").update({ visual_generation_status: "running", visual_generation_error: null }).eq("id", input.jobId);
+    for (let assetIndex = 0; assetIndex < input.assets.length; assetIndex += 1) {
+      const asset = input.assets[assetIndex];
       if (!asset.specification.shouldGenerate) continue;
       const { data: existing } = await supabase.from("content_library_items").select("id,visual_metadata").eq("is_generated_visual", true).contains("visual_metadata", { jobId: input.jobId, lessonId: asset.lessonId }).limit(1);
       if (existing?.[0]) {
@@ -230,7 +232,9 @@ export const aiBuilderRouter = router({
       const { data: version, error: versionError } = await supabase.from("ai_visual_asset_versions").insert({ content_item_id: item.id, lesson_id: asset.lessonId, module_id: asset.moduleId, programme_id: asset.programmeId ?? null, title: `${asset.lessonTitle} learning visual`, caption: asset.specification.educationalPurpose, alt_text: asset.specification.altText, accessibility_description: asset.specification.accessibilityRequirements.join("; "), educational_purpose: asset.specification.educationalPurpose, generation_model: "MODEL_GPT_IMAGE_2", generation_prompt: prompt, version: 1, change_summary: "Initial AI-generated educational visual draft", review_status: "draft", generation_attempts: 1, created_by: userId }).select("id,review_status").single();
       if (versionError || !version) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: versionError?.message ?? "The visual version record could not be created." });
       created.push({ lessonId: asset.lessonId, contentItemId: item.id, visualVersionId: version.id, status: version.review_status });
+      await supabase.from("ai_academic_builder_jobs").update({ visual_generation_cursor: assetIndex + 1 }).eq("id", input.jobId);
     }
+    await supabase.from("ai_academic_builder_jobs").update({ visual_generation_status: "completed", visual_generation_cursor: input.assets.length }).eq("id", input.jobId);
     return { jobId: job.id, topic: job.topic, created, status: "draft" as const, message: "Generated visuals are private drafts. Academic and accessibility review is required before any approval or publication." };
   }),
   listVisualAssets: publicProcedure.input(z.object({ jobId: z.string().uuid() })).query(async ({ ctx, input }) => {
