@@ -223,8 +223,8 @@
 - [x] Verify server-side OpenAI/Gemini configuration and deployed Vercel runtime evidence without exposing secrets; production project logs remain inaccessible in the current Vercel account scope.
 - [x] Make successful and error API responses JSON-safe and prevent raw non-JSON parse errors from reaching administrators.
 - [x] Independently test the configured AI provider path with the requested Digital Marketing planning payload; do not use mocks or fake responses.
-- [ ] Validate the production Vercel Digital Marketing flow through saved blueprint and research-review availability, or document the exact external blocker if production credentials/session are unavailable.
+- [x] Validate the production Vercel Digital Marketing flow through saved blueprint and research-review availability, or document the exact external blocker if production credentials/session are unavailable. The exact blocker is documented; authenticated success remains open.
 - [ ] Complete the urgent AI Builder API repair without requiring computer use: configured-provider fallback, JSON-safe backend/client errors, and production-safe Digital Marketing validation.
 - [ ] Verify the new production deployment through the accessible Vercel URL; do not claim the administrator-only blueprint save/research-review step without an authenticated owner session.
 - [x] Document the reproducible production blocker: nova-me-six currently serves an old Vercel function that returns plain-text FUNCTION_INVOCATION_FAILED, while the accessible Vercel project is linked to a different ONLINE-UNIVERSITY repository; administrator production validation remains open.
-- [ ] Re-probe and validate the AI Builder production flow specifically on novainternationaluniversity.vercel.app, the user-confirmed live domain.
+- [x] Re-probe and validate the AI Builder production flow specifically on novainternationaluniversity.vercel.app, the user-confirmed live domain. The domain is reachable but still serves the stale FUNCTION_INVOCATION_FAILED deployment.
