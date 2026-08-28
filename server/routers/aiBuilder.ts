@@ -35,15 +35,16 @@ const settingsSchema = z.object({
 
 type StaffSession = { supabase: ReturnType<typeof createClient<any>>; userId: string };
 
-async function getStaffSession(req: { headers: Record<string, string | string[] | undefined> }): Promise<StaffSession> {
-  const raw = req.headers["x-supabase-authorization"];
+async function getStaffSession(req: { headers?: Record<string, string | string[] | undefined> }): Promise<StaffSession> {
+  const headers = req.headers ?? {};
+  const raw = headers["x-supabase-authorization"];
   const token = Array.isArray(raw) ? raw[0] : raw;
   if (!token?.startsWith("Bearer ")) throw new TRPCError({ code: "UNAUTHORIZED", message: "Sign in to NIU." });
   const url = process.env.VITE_SUPABASE_URL;
   const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
   if (!url || !key) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "NIU identity service is not configured." });
   const supabase = createClient<any>(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
-  const { data: identity } = await supabase.auth.getUser();
+  const { data: identity } = await (supabase.auth as any).getUser();
   if (!identity.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "NIU session is not valid." });
   const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", identity.user.id).maybeSingle();
   if (error || !profile || !["instructor", "administrator", "super_admin"].includes(profile.role)) throw new TRPCError({ code: "FORBIDDEN", message: "Academic staff authority is required." });
@@ -263,7 +264,7 @@ export const aiBuilderRouter = router({
     const { supabase } = await getStaffSession(ctx.req);
     const { data: items, error } = await supabase.from("content_library_items").select("id,title,file_name,content_type,storage_path,status,visual_metadata,created_at").eq("is_generated_visual", true).contains("visual_metadata", { jobId: input.jobId }).order("created_at", { ascending: false }).limit(120);
     if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "NIU could not load generated visual drafts." });
-    const ids = (items ?? []).map(item => item.id);
+    const ids = (items ?? []).map((item: { id: string }) => item.id);
     const { data: versions } = ids.length ? await supabase.from("ai_visual_asset_versions").select("id,content_item_id,lesson_id,module_id,programme_id,title,caption,alt_text,accessibility_description,educational_purpose,generation_prompt,generation_model,version,review_status,reviewed_by,created_at").in("content_item_id", ids).order("version", { ascending: false }).limit(240) : { data: [] };
     return { items: items ?? [], versions: versions ?? [] };
   }),

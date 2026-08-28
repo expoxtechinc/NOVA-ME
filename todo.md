@@ -234,5 +234,6 @@
 - [ ] Continue production verification using Android-compatible public checks only; do not require computer takeover or API-key sharing.
 - [ ] Recheck the production endpoint after the latest reported deployment action and verify whether the repaired JSON-safe AI Builder backend is now live.
 - [ ] Continue the autonomous production-repair pass and verify the actual live domain without computer takeover or API-key requests.
-- [ ] Investigate the confirmed Ready NOVA-ME production deployment’s remaining Vercel function failure on novainternationaluniversity.vercel.app and fix the runtime entrypoint/configuration if required.
+- [x] Investigate the confirmed Ready NOVA-ME production deployment’s remaining Vercel function failure on novainternationaluniversity.vercel.app and fix the runtime entrypoint/configuration if required. Removed unresolved server/storage and @shared runtime aliases, added guarded dynamic bootstrap import, and passed a fresh Vercel-style source check.
 - [x] Fix the confirmed Vercel TypeScript errors in server/app.ts and server/routers/aiBuilder.ts so the deployed AI Builder function can initialize successfully.
+- [ ] Verify the Vercel deployment built from commit 85ce2f2 is serving novainternationaluniversity.vercel.app and run the live Digital Marketing AI Builder checks.
