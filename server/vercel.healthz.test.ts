@@ -13,7 +13,7 @@ describe("vercel health endpoint", () => {
     expect(res.status).toHaveBeenCalledWith(200);
     expect(json).toHaveBeenCalledWith({
       success: true,
-      service: "niu-api",
+      service: "niu-healthz",
       runtime: "vercel",
       build: "unknown",
     });

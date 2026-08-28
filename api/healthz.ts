@@ -5,7 +5,7 @@ type HealthResponse = {
 export default function handler(_req: unknown, res: HealthResponse) {
   return res.status(200).json({
     success: true,
-    service: "niu-api",
+    service: "niu-healthz",
     runtime: "vercel",
     build: process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown",
   });
