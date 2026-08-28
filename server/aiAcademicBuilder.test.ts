@@ -87,12 +87,16 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain("updateVisualAssetVersion");
     expect(router).toContain("listVisualAssets");
     expect(router).toContain("removeVisualDraft");
+    expect(router).toContain("regenerateVisualAsset");
+    expect(router).toContain("Regenerated from visual version");
     expect(router).toContain("Only generated visual drafts can be removed here.");
     expect(router).toContain("Published or archived visual versions are immutable");
     expect(packageMigration).toContain("created_lessons_json");
     expect(page).toContain("Analyse purposeful lesson visuals");
     expect(page).toContain("Generate linked visual drafts");
     expect(page).toContain("Alt text:");
+    expect(page).toContain("Save metadata");
+    expect(page).toContain("Regenerate draft");
   });
 
   it("keeps the workspace review-first and reachable from the guided package", () => {
