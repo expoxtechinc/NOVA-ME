@@ -76,16 +76,78 @@ function blueprintToMarkdown(topic: string, blueprint: Blueprint, sources: Array
   return lines.join("\\n");
 }
 
+function compileCompleteDraftPackage(topic: string, blueprint: Blueprint, reviewPlans: any, storagePaths: Array<{ fileName: string; storagePath: string }>) {
+  let materialIndex = 0;
+  const courses = (blueprint.courses ?? []).slice().sort((a, b) => a.position - b.position).map((course, courseIndex) => ({
+    title: course.title,
+    description: course.description,
+    difficulty: course.difficulty,
+    durationMinutes: Math.max(30, Math.round((blueprint.programme?.recommendedLearningHours ?? 1) * 60 / Math.max(1, blueprint.courses?.length ?? 1))),
+    objectives: course.objectives,
+    learningOutcomes: course.objectives,
+    requirements: blueprint.programme?.entryRequirements ?? [],
+    modules: course.modules.slice().sort((a, b) => a.position - b.position).map((module, moduleIndex) => ({
+      title: module.title,
+      description: module.description,
+      difficulty: module.difficulty,
+      estimatedMinutes: Math.max(15, Math.round(blueprint.programme?.recommendedLearningHours ? blueprint.programme.recommendedLearningHours * 60 / Math.max(1, course.modules.length) : 60)),
+      objectives: module.objectives,
+      supportGuidance: "Administrator must verify inclusive support, device access, language, and accommodation guidance before approval.",
+      lessons: module.lessons.slice().sort((a, b) => a.position - b.position).map((lesson) => {
+        const file = storagePaths[materialIndex++];
+        const evidenceLabel = reviewPlans?.contentPlan?.find((item: any) => String(item.section).toLowerCase().includes(lesson.title.toLowerCase()))?.evidenceUrls ?? [];
+        return {
+          kind: "reading",
+          title: lesson.title,
+          description: lesson.description,
+          draftText: `DRAFT LEARNING MATERIAL — ${lesson.title}\\n\\nThis lesson is an administrator-review draft for ${topic}. Use only verified evidence before approval.\\n\\nLearning objectives\\n${lesson.objectives.map(item => `- ${item}`).join("\\n")}\\n\\nSource evidence to verify\\n${evidenceLabel.length ? evidenceLabel.join("\\n") : "Missing evidence: administrator must attach authoritative sources."}`,
+          objectives: lesson.objectives,
+          activities: lesson.activityIdeas,
+          accessibility: ["Provide an accessible text alternative.", "Verify headings, contrast, captions/transcripts, and keyboard access."],
+          materials: file ? [{ title: `${lesson.title} draft study guide`, fileName: file.fileName, storagePath: file.storagePath, description: "Private AI Builder draft study guide; administrator must verify and edit before approval." }] : [],
+          assessment: { assessmentIdeas: lesson.assessmentIdeas, verificationRequired: true },
+          estimatedMinutes: 30,
+          points: 10,
+        };
+      }),
+      assessments: [{
+        title: `${module.title} knowledge check`,
+        type: "knowledge_check",
+        instructions: "Draft assessment blueprint. Administrator must review every item, answer key, points, and objective mapping before approval.",
+        passingScore: reviewPlans?.assessmentBlueprint?.passingScore ?? 70,
+        attemptLimit: reviewPlans?.assessmentBlueprint?.attemptLimit ?? 2,
+        questionBankTitle: `${module.title} Question Bank`,
+        questions: (reviewPlans?.assessmentBlueprint?.questions ?? []).slice(0, 5).map((item: any, questionIndex: number) => ({
+          prompt: `Draft question purpose: ${item.promptPurpose}. Administrator must author and verify the final question before approval.`,
+          choices: ["Draft option pending authoring", "Draft option pending authoring", "Draft option pending authoring", "Draft option pending authoring"],
+          answerKey: { status: "pending_administrator_verification" },
+          explanation: "Answer key intentionally withheld pending authorised academic review.",
+          difficulty: item.difficulty,
+          topic: module.title,
+          objective: item.objective,
+          points: Math.max(1, item.points ?? 1),
+        }))
+      }],
+    })),
+  }));
+  return {
+    school: { name: "NIU Academic Development" },
+    department: { name: blueprint.programme?.title ? `${blueprint.programme.title} Academic Development` : `${topic} Academic Development` },
+    programme: { title: blueprint.programme?.title ?? topic, description: blueprint.programme?.description ?? "Draft certificate programme; administrator verification required.", difficulty: blueprint.programme?.difficulty ?? "intermediate", objectives: blueprint.programme?.objectives ?? [], learningOutcomes: blueprint.programme?.learningOutcomes ?? [], learningHours: blueprint.programme?.recommendedLearningHours ?? 0, completionRequirements: blueprint.programme?.completionRequirements ?? [], certificateTemplateKey: "administrator_review_required" },
+    courses,
+  };
+}
+
 export const aiBuilderRouter = router({
   listJobs: publicProcedure.query(async ({ ctx }) => {
     const { supabase } = await getStaffSession(ctx.req);
-    const { data, error } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,settings,blueprint,research_plan,validation_errors,missing_information,created_at,updated_at").order("updated_at", { ascending: false }).limit(20);
+    const { data, error } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,settings,blueprint,research_plan,validation_errors,missing_information,generated_record_ids,created_at,updated_at").order("updated_at", { ascending: false }).limit(20);
     if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "NIU could not load saved AI Builder planning jobs." });
     return data ?? [];
   }),
   getJob: publicProcedure.input(z.object({ jobId: z.string().uuid() })).query(async ({ ctx, input }) => {
     const { supabase } = await getStaffSession(ctx.req);
-    const { data, error } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,settings,blueprint,research_plan,validation_errors,missing_information,created_at,updated_at").eq("id", input.jobId).maybeSingle();
+    const { data, error } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,settings,blueprint,research_plan,validation_errors,missing_information,generated_record_ids,created_at,updated_at").eq("id", input.jobId).maybeSingle();
     if (error || !data) throw new TRPCError({ code: "NOT_FOUND", message: "That AI Builder planning job is not available." });
     return data;
   }),
@@ -135,6 +197,67 @@ export const aiBuilderRouter = router({
     const { error: jobUpdateError } = await supabase.from("ai_academic_builder_jobs").update({ status: "ready_for_review", draft_artifact: { importId: inserted.id, storagePath: uploaded.key }, generated_at: new Date().toISOString(), generated_by: userId }).eq("id", job.id).in("status", ["generation_review", "ready_for_review"]);
     if (jobUpdateError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: jobUpdateError.message });
     return { jobId: job.id, importId: inserted.id, status: "ready_for_review" as const };
+  }),
+  generateCompletePackage: publicProcedure.input(z.object({ jobId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+    const { supabase, userId } = await getStaffSession(ctx.req);
+    const { data: job, error } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,blueprint,content_plan,visual_plan,assessment_blueprint,research_evidence,research_notes,generated_record_ids").eq("id", input.jobId).in("status", ["generation_review", "ready_for_review"]).maybeSingle();
+    if (error || !job) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Complete package generation requires a reviewed AI Builder job." });
+    if (job.generated_record_ids && Object.keys(job.generated_record_ids).length) throw new TRPCError({ code: "CONFLICT", message: "This AI Builder job already has a generated draft package." });
+    const blueprint = job.blueprint as Blueprint | null;
+    if (!blueprint?.programme || !blueprint.courses?.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "A complete package requires a saved programme blueprint and at least one course." });
+    if (!Array.isArray(job.research_evidence) || job.research_evidence.length < 1 || String(job.research_notes ?? "").trim().length < 20) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Complete package generation requires administrator research review and source evidence first." });
+    const storagePaths: Array<{ fileName: string; storagePath: string }> = [];
+    let materialIndex = 0;
+    for (const course of blueprint.courses) for (const module of course.modules) for (const lesson of module.lessons) {
+      const fileName = `ai-builder-${job.id}-${materialIndex}.md`;
+      const body = `# Draft study guide: ${lesson.title}\\n\\nStatus: private NIU AI Builder draft.\\n\\nThis material is a structured authoring draft for administrator review. It makes no factual claim without verified source evidence.\\n\\n## Learning objectives\\n${lesson.objectives.map(item => `- ${item}`).join("\\n")}\\n\\n## Activities to author\\n${lesson.activityIdeas.map(item => `- ${item}`).join("\\n") || "- Administrator must author an activity."}\\n\\n## Evidence boundary\\nAdministrator must attach and verify authoritative sources before approval.`;
+      const uploaded = await storagePut(`ai-builder/${job.id}/materials/${fileName}`, body, "text/markdown");
+      storagePaths.push({ fileName, storagePath: uploaded.key });
+      materialIndex += 1;
+    }
+    const packagePayload = compileCompleteDraftPackage(job.topic, blueprint, { contentPlan: job.content_plan, assessmentBlueprint: job.assessment_blueprint }, storagePaths);
+    const { data: created, error: rpcError } = await supabase.rpc("niu_create_ai_draft_package", { p_job_id: input.jobId, p_package: packagePayload });
+    if (rpcError || !created) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: rpcError?.message ?? "The governed draft-package generator could not create its private records." });
+    return { jobId: input.jobId, status: "ready_for_review" as const, generated: created, createdBy: userId };
+  }),
+  runQualityGate: publicProcedure.input(z.object({ jobId: z.string().uuid() })).query(async ({ ctx, input }) => {
+    const { supabase } = await getStaffSession(ctx.req);
+    const { data: job, error } = await supabase.from("ai_academic_builder_jobs").select("id,status,generated_record_ids").eq("id", input.jobId).maybeSingle();
+    const ids = job?.generated_record_ids as { programId?: string; departmentId?: string; courses?: Array<{ courseId: string }> } | null;
+    if (error || !job || !ids?.programId || !ids.courses?.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Quality gate is available after a complete private draft package has been generated." });
+    const courseIds = ids.courses.map(course => course.courseId);
+    const { data: links } = await supabase.from("program_courses").select("course_id").eq("program_id", ids.programId).in("course_id", courseIds);
+    const { data: courseRows } = await supabase.from("courses").select("id,status,governed_workflow").in("id", courseIds);
+    const { data: modules } = await supabase.from("course_modules").select("id,course_id,status,governed_workflow").in("course_id", courseIds);
+    const moduleIds = (modules ?? []).map((module: any) => module.id);
+    const { data: lessons } = moduleIds.length ? await supabase.from("lessons").select("id,module_id,status,governed_workflow").in("module_id", moduleIds) : { data: [] };
+    const lessonIds = (lessons ?? []).map((lesson: any) => lesson.id);
+    const { data: materials } = lessonIds.length ? await supabase.from("lesson_content_items").select("lesson_id,content_item_id").in("lesson_id", lessonIds) : { data: [] };
+    const { data: assessments } = await supabase.from("assessments").select("id,course_id,status").in("course_id", courseIds);
+    const assessmentIds = (assessments ?? []).map((assessment: any) => assessment.id);
+    const { data: assessmentQuestions } = assessmentIds.length ? await supabase.from("assessment_questions").select("assessment_id,question_id").in("assessment_id", assessmentIds) : { data: [] };
+    const checks = [
+      { key: "programme-course-links", label: "Programme/course relationships", passed: (links ?? []).length === courseIds.length },
+      { key: "courses-draft", label: "Courses remain draft", passed: (courseRows ?? []).length === courseIds.length && (courseRows ?? []).every((row: any) => row.status === "draft" && row.governed_workflow) },
+      { key: "modules-draft", label: "Ordered modules remain draft", passed: moduleIds.length > 0 && (modules ?? []).every((row: any) => row.status === "draft" && row.governed_workflow) },
+      { key: "lessons-draft", label: "Lessons remain draft", passed: lessonIds.length > 0 && (lessons ?? []).every((row: any) => row.status === "draft" && row.governed_workflow) },
+      { key: "protected-material-links", label: "Protected material links exist", passed: materials?.length === lessonIds.length && lessonIds.length > 0 },
+      { key: "assessments-draft", label: "Assessments and question mappings exist as drafts", passed: (assessments ?? []).length > 0 && (assessments ?? []).every((row: any) => row.status === "draft") && (assessmentQuestions ?? []).length > 0 },
+      { key: "publication-boundary", label: "Publication boundary remains closed", passed: job.status === "ready_for_review" },
+    ];
+    return { jobId: input.jobId, checks, passed: checks.every(check => check.passed), generated: { courses: courseIds.length, modules: moduleIds.length, lessons: lessonIds.length, materials: materials?.length ?? 0, assessments: assessments?.length ?? 0, questions: assessmentQuestions?.length ?? 0 } };
+  }),
+  learnerPreview: publicProcedure.input(z.object({ jobId: z.string().uuid() })).query(async ({ ctx, input }) => {
+    const { supabase } = await getStaffSession(ctx.req);
+    const { data: job, error } = await supabase.from("ai_academic_builder_jobs").select("id,status,generated_record_ids").eq("id", input.jobId).maybeSingle();
+    const ids = job?.generated_record_ids as { courses?: Array<{ courseId: string }> } | null;
+    if (error || !job || !ids?.courses?.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Learner preview is available after a complete private draft package has been generated." });
+    const courseIds = ids.courses.map(course => course.courseId);
+    const { data: courseRows } = await supabase.from("courses").select("id,title,description,level,duration_minutes,learning_objectives,requirements,status").in("id", courseIds);
+    const { data: modules } = await supabase.from("course_modules").select("id,course_id,title,description,position,learning_level,learning_objectives,estimated_minutes,status").in("course_id", courseIds).order("position");
+    const moduleIds = (modules ?? []).map((module: any) => module.id);
+    const { data: lessons } = moduleIds.length ? await supabase.from("lessons").select("id,module_id,kind,title,description,position,estimated_minutes,points,status").in("module_id", moduleIds).order("position") : { data: [] };
+    return { jobId: input.jobId, status: job.status, courses: (courseRows ?? []).map((course: any) => ({ ...course, modules: (modules ?? []).filter((module: any) => module.course_id === course.id).map((module: any) => ({ ...module, lessons: (lessons ?? []).filter((lesson: any) => lesson.module_id === module.id) })) })) };
   }),
   createPlan: publicProcedure.input(z.object({ topic: z.string().trim().min(3).max(240), settings: settingsSchema })).mutation(async ({ ctx, input }) => {
     const { supabase, userId } = await getStaffSession(ctx.req);

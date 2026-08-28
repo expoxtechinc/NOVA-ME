@@ -8,6 +8,7 @@ const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_
 const governanceMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_governance.sql"), "utf8");
 const reviewMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_review.sql"), "utf8");
 const generationMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_generation.sql"), "utf8");
+const packageMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260828_niu_ai_draft_package_rpc.sql"), "utf8");
 const page = fs.readFileSync(path.join(root, "client", "src", "pages", "AIAcademicBuilder.tsx"), "utf8");
 const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
 const packagePage = fs.readFileSync(path.join(root, "client", "src", "pages", "ProgrammePackage.tsx"), "utf8");
@@ -36,6 +37,13 @@ describe("NIU AI Academic Builder", () => {
     expect(generationMigration).toContain("assessment_blueprint");
     expect(generationMigration).toContain("visual_plan");
     expect(generationMigration).toContain("research_evidence");
+    expect(packageMigration).toContain("niu_create_ai_draft_package");
+    expect(packageMigration).toContain("'draft',actor");
+    expect(packageMigration).toContain("lesson_content_items");
+    expect(packageMigration).toContain("assessment_questions");
+    expect(packageMigration).toContain("generated_record_ids");
+    expect(router).toContain("generateCompletePackage");
+    expect(router).toContain("governed draft-package generator");
   });
 
   it("uses explicit structured planning and never fabricates sources or difficulty values", () => {
@@ -46,8 +54,12 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain("response_format");
     expect(router).toContain("researchPlan");
     expect(router).toContain("missingInformation");
-    expect(router).not.toContain("from(\"courses\")");
-    expect(router).not.toContain("from(\"lessons\")");
+    expect(router).toContain("runQualityGate");
+    expect(router).toContain("publication-boundary");
+    expect(router).toContain("learnerPreview");
+    expect(page).toContain("Answer keys and administrator controls are intentionally excluded");
+    expect(page).toContain("Run complete-package quality gate");
+    expect(page).toContain("Open read-only learner preview");
   });
 
   it("keeps the workspace review-first and reachable from the guided package", () => {
@@ -58,5 +70,7 @@ describe("NIU AI Academic Builder", () => {
     expect(page).toContain("Generate Complete Programme Plan");
     expect(page).toContain("No course, lesson, question, assessment, material, or certificate record is generated at this stage");
     expect(page).toContain("Review the research plan");
+    expect(page).toContain("Generate Complete Academic Package");
+    expect(page).toContain("never approves or publishes them");
   });
 });

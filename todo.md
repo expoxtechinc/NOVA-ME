@@ -182,3 +182,10 @@
 ## AI Builder work history
 - 2026-08-27: Planning stage and governed job lifecycle are functional; research-review submission now requires HTTPS source provenance and review notes. Draft-generation and deep-generation stages remain intentionally pending.
 - 2026-08-28: Deep research mode now requires three distinct HTTPS evidence excerpts; private blueprint edits and post-plan Curriculum Import handoff remain review-only and draft-first. Repaired the handoff status update for both generation-review and ready-for-review jobs; no duplicate academic records are created by this fix.
+
+## AI Builder correction requirements
+- [x] Extend AI Builder beyond planning into a complete governed draft-package generation action for Digital Marketing and future certificate topics.
+- [x] Generate linked private draft programme, courses, versions, modules, lessons, objectives, materials metadata, activities, question banks/questions, assessments, answer-key metadata, references, accessibility metadata, and certificate configuration using existing NIU schemas.
+- [x] Add complete-package AI editing while keeping every edit private and draft-only.
+- [x] Add comprehensive quality-gate results, read-only learner preview without answer keys or admin controls, final package review, and explicit human publication confirmation.
+- [ ] Test the full Digital Marketing workflow with real database relationships only in an isolated draft job and without publishing or modifying existing academic records.
