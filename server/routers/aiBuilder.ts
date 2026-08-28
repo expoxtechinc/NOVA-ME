@@ -132,7 +132,7 @@ export const aiBuilderRouter = router({
     if (insertError || !inserted) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: insertError?.message ?? "The private AI Builder handoff could not be saved." });
     const { error: updateError } = await supabase.from("curriculum_imports").update({ status: "generated" }).eq("id", inserted.id);
     if (updateError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: updateError.message });
-    const { error: jobUpdateError } = await supabase.from("ai_academic_builder_jobs").update({ status: "ready_for_review", draft_artifact: { importId: inserted.id, storagePath: uploaded.key }, generated_at: new Date().toISOString(), generated_by: userId }).eq("id", job.id).eq("status", "generation_review");
+    const { error: jobUpdateError } = await supabase.from("ai_academic_builder_jobs").update({ status: "ready_for_review", draft_artifact: { importId: inserted.id, storagePath: uploaded.key }, generated_at: new Date().toISOString(), generated_by: userId }).eq("id", job.id).in("status", ["generation_review", "ready_for_review"]);
     if (jobUpdateError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: jobUpdateError.message });
     return { jobId: job.id, importId: inserted.id, status: "ready_for_review" as const };
   }),

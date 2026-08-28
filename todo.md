@@ -181,3 +181,4 @@
 
 ## AI Builder work history
 - 2026-08-27: Planning stage and governed job lifecycle are functional; research-review submission now requires HTTPS source provenance and review notes. Draft-generation and deep-generation stages remain intentionally pending.
+- 2026-08-28: Deep research mode now requires three distinct HTTPS evidence excerpts; private blueprint edits and post-plan Curriculum Import handoff remain review-only and draft-first. Repaired the handoff status update for both generation-review and ready-for-review jobs; no duplicate academic records are created by this fix.
