@@ -170,8 +170,8 @@
 
 - [x] Prepare a complete phone-friendly guide for uploading one entire NIU course from department/programme setup through student enrollment, learning, assessment, completion, and certificate eligibility without bypassing governance.
 
-- [ ] Build a governed NIU AI Academic Builder for future certificate programmes: administrator topic/settings, staged planning and research, explicit-source content generation, draft-only real-record packaging, protected materials and visuals, assessment blueprint, quality validation, review/edit/regeneration, and manual approval/publication handoff.
-- [ ] Add AI Builder provenance, permissions, no-invention safeguards, supported difficulty validation, privacy controls, audit history, tests, responsive UX, release documentation, checkpoint, and repository synchronization without modifying existing records or creating demo data.
+- [x] Build a governed NIU AI Academic Builder for future certificate programmes: administrator topic/settings, staged planning and research, explicit-source content generation, draft-only real-record packaging, protected materials and visuals, assessment blueprint, quality validation, review/edit/regeneration, and manual approval/publication handoff.
+- [x] Add AI Builder provenance, permissions, no-invention safeguards, supported difficulty validation, privacy controls, audit history, tests, responsive UX, release documentation, checkpoint, and repository synchronization without modifying existing records or creating demo data.
 
 - [x] Add governed AI Builder research-review submission with HTTPS source provenance, minimum review notes, database-enforced transition, and admin UI controls.
 - [x] Implement the AI Builder draft-generation handoff into private Curriculum Import artifacts without creating or publishing academic records automatically.
