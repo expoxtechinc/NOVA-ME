@@ -57,8 +57,16 @@ export default function AIAcademicBuilder() {
 
   const staff = role !== null && staffRoles.includes(role);
   const jobsQuery = trpc.aiBuilder.listJobs.useQuery(undefined, { enabled: staff });
+  const jobQuery = trpc.aiBuilder.getJob.useQuery({ jobId: jobId ?? "00000000-0000-0000-0000-000000000000" }, { enabled: staff && Boolean(jobId) });
   const qualityGateQuery = trpc.aiBuilder.runQualityGate.useQuery({ jobId: jobId ?? "00000000-0000-0000-0000-000000000000" }, { enabled: staff && qualityGateRequested && Boolean(jobId) });
   const previewQuery = trpc.aiBuilder.learnerPreview.useQuery({ jobId: jobId ?? "00000000-0000-0000-0000-000000000000" }, { enabled: staff && previewRequested && Boolean(jobId) });
+
+  useEffect(() => {
+    const job = jobQuery.data as any;
+    if (!job) return;
+    if (job.content_plan && job.assessment_blueprint) setReviewPlans({ contentPlan: job.content_plan, visualPlan: job.visual_plan ?? [], assessmentBlueprint: job.assessment_blueprint, missingEvidence: job.missing_information ?? [] });
+    if (job.generated_record_ids && Object.keys(job.generated_record_ids).length) setGeneratedPackage(job.generated_record_ids);
+  }, [jobQuery.data]);
 
   const planMutation = trpc.aiBuilder.createPlan.useMutation({
     onSuccess(result) {
@@ -139,7 +147,7 @@ export default function AIAcademicBuilder() {
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault();
-    setNotice(null); setError(null); setBlueprint(null); setReviewPlans(null); setJobId(null);
+    setNotice(null); setError(null); setBlueprint(null); setReviewPlans(null); setGeneratedPackage(null); setQualityGateRequested(false); setPreviewRequested(false); setJobId(null);
     planMutation.mutate({ topic, settings: { department: department || undefined, difficulty, learningHours: Number(hours), academicDepth: depth, targetLearner: learner || undefined, numberOfCourses: Number(courses), researchDepth, visualGeneration: visuals, assessmentGeneration: assessments, referenceRequirements: references || undefined } });
   };
 
