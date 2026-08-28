@@ -65,10 +65,25 @@ const trpcClient = trpc.createClient({
         const { data } = await supabase.auth.getSession();
         return data.session ? { "X-Supabase-Authorization": `Bearer ${data.session.access_token}` } : {};
       },
-      fetch(input, init) {
-        return globalThis.fetch(input, {
+      async fetch(input, init) {
+        const response = await globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
+        });
+        const contentType = response.headers.get("content-type") ?? "";
+        if (contentType.includes("application/json")) return response;
+        const text = await response.text().catch(() => "");
+        const lower = text.toLowerCase();
+        const safeMessage = lower.includes("not configured") || lower.includes("api key")
+          ? "AI provider is not configured."
+          : lower.includes("invalid") || lower.includes("malformed") || lower.includes("json")
+            ? "AI returned invalid structured data."
+            : response.status >= 500
+              ? "AI provider request failed."
+              : "NIU server request failed.";
+        return new Response(JSON.stringify([{ error: { json: { message: safeMessage, code: -32603, data: { code: "INTERNAL_SERVER_ERROR", httpStatus: response.status, success: false, error: safeMessage } } } }]), {
+          status: response.status,
+          headers: { "content-type": "application/json" },
         });
       },
     }),

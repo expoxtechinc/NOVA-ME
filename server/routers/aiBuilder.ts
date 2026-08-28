@@ -4,9 +4,21 @@ import { storagePut } from "../storage";
 import { analyzeCurriculumDocument } from "../../shared/curriculumImport";
 import { createClient } from "@supabase/supabase-js";
 import { publicProcedure, router } from "../_core/trpc";
-import { invokeLLM } from "../_core/llm";
-import { runStructuredAI } from "../aiOrchestrator";
+import { runStructuredAI, runStructuredAIWithFallback } from "../aiOrchestrator";
 import { generateImage } from "../_core/imageGeneration";
+
+function aiProviderError(stage: string, error: unknown): TRPCError {
+  const rawMessage = error instanceof Error ? error.message : "unknown AI failure";
+  const safeDetail = rawMessage.replace(/(api[_-]?key|authorization|bearer)\\s*[:=]\\s*\\S+/gi, "$1=[REDACTED]").slice(0, 240);
+  console.error(`[AI Builder:${stage}] ${safeDetail}`);
+  if (/not configured|missing.*key|api key/i.test(rawMessage)) {
+    return new TRPCError({ code: "PRECONDITION_FAILED", message: "AI provider is not configured. No academic records were created." });
+  }
+  if (/malformed|no usable|structured output|invalid.*json/i.test(rawMessage)) {
+    return new TRPCError({ code: "BAD_GATEWAY", message: "AI returned invalid structured data. No academic records were created." });
+  }
+  return new TRPCError({ code: "BAD_GATEWAY", message: "AI provider request failed. No academic records were created." });
+}
 
 const settingsSchema = z.object({
   department: z.string().trim().max(160).optional(),
@@ -38,7 +50,7 @@ async function getStaffSession(req: { headers: Record<string, string | string[] 
   return { supabase, userId: identity.user.id };
 }
 
-const blueprintSchema = {
+export const blueprintSchema = {
   type: "object",
   additionalProperties: false,
   properties: {
@@ -181,10 +193,20 @@ export const aiBuilderRouter = router({
     const settings = (job.settings ?? {}) as { researchDepth?: string };
     const uniqueSources = new Set(input.evidence.map(item => item.sourceUrl));
     if (settings.researchDepth === "deep" && (input.evidence.length < 3 || uniqueSources.size < 3)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Deep research planning requires at least three distinct HTTPS evidence sources with excerpts." });
-    const result = await invokeLLM({ model: "gpt-5-mini", messages: [{ role: "system", content: "You are NIU's evidence-bound academic planning assistant. Produce only reviewable plans, never final teaching claims. Use only the supplied blueprint and evidence excerpts. Do not add facts not present in evidence. Every item must include source URLs or an explicit verification label. NIU offers certificate programmes only. Return JSON exactly matching the schema." }, { role: "user", content: JSON.stringify({ topic: job.topic, blueprint: job.blueprint, researchSources: job.research_sources, researchNotes: job.research_notes, evidence: input.evidence }) }], response_format: { type: "json_schema", json_schema: { name: "niu_ai_review_plans", strict: true, schema: { type: "object", additionalProperties: false, properties: { contentPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { section: { type: "string" }, draftPurpose: { type: "string" }, evidenceUrls: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["section", "draftPurpose", "evidenceUrls", "verificationRequired"] } }, visualPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { placement: { type: "string" }, purpose: { type: "string" }, altText: { type: "string" }, accessibilityChecks: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["placement", "purpose", "altText", "accessibilityChecks", "verificationRequired"] } }, assessmentBlueprint: { type: "object", additionalProperties: false, properties: { passingScore: { type: "integer" }, attemptLimit: { type: "integer" }, questions: { type: "array", items: { type: "object", additionalProperties: false, properties: { promptPurpose: { type: "string" }, objective: { type: "string" }, difficulty: { type: "string", enum: ["introductory", "intermediate", "advanced"] }, points: { type: "integer" }, answerKeyStatus: { type: "string" }, verificationRequired: { type: "boolean" } }, required: ["promptPurpose", "objective", "difficulty", "points", "answerKeyStatus", "verificationRequired"] } } }, required: ["passingScore", "attemptLimit", "questions"] }, missingEvidence: { type: "array", items: { type: "string" } } }, required: ["contentPlan", "visualPlan", "assessmentBlueprint", "missingEvidence"] } } }, maxTokens: 10000 });
-    const raw = result.choices[0]?.message.content;
-    if (typeof raw !== "string") throw new TRPCError({ code: "BAD_GATEWAY", message: "The evidence-bound planning engine returned no structured plan." });
-    const plans = JSON.parse(raw);
+    let plans: { contentPlan: unknown[]; visualPlan: unknown[]; assessmentBlueprint: Record<string, unknown>; missingEvidence: string[] };
+    try {
+      const result = await runStructuredAIWithFallback<typeof plans>({
+        provider: "openai",
+        model: process.env.OPENAI_MODEL || "gpt-5-mini",
+        system: "You are NIU's evidence-bound academic planning assistant. Produce only reviewable plans, never final teaching claims. Use only the supplied blueprint and evidence excerpts. Do not add facts not present in evidence. Every item must include source URLs or an explicit verification label. NIU offers certificate programmes only. Return JSON exactly matching the schema.",
+        prompt: JSON.stringify({ topic: job.topic, blueprint: job.blueprint, researchSources: job.research_sources, researchNotes: job.research_notes, evidence: input.evidence }),
+        schema: { type: "object", additionalProperties: false, properties: { contentPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { section: { type: "string" }, draftPurpose: { type: "string" }, evidenceUrls: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["section", "draftPurpose", "evidenceUrls", "verificationRequired"] } }, visualPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { placement: { type: "string" }, purpose: { type: "string" }, altText: { type: "string" }, accessibilityChecks: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["placement", "purpose", "altText", "accessibilityChecks", "verificationRequired"] } }, assessmentBlueprint: { type: "object", additionalProperties: false, properties: { passingScore: { type: "integer" }, attemptLimit: { type: "integer" }, questions: { type: "array", items: { type: "object", additionalProperties: false, properties: { promptPurpose: { type: "string" }, objective: { type: "string" }, difficulty: { type: "string", enum: ["introductory", "intermediate", "advanced"] }, points: { type: "integer" }, answerKeyStatus: { type: "string" }, verificationRequired: { type: "boolean" } }, required: ["promptPurpose", "objective", "difficulty", "points", "answerKeyStatus", "verificationRequired"] } } }, required: ["passingScore", "attemptLimit", "questions"] }, missingEvidence: { type: "array", items: { type: "string" } } }, required: ["contentPlan", "visualPlan", "assessmentBlueprint", "missingEvidence"] },
+      }, "gemini");
+      plans = result.value;
+      if (!plans || !Array.isArray(plans.contentPlan) || !Array.isArray(plans.visualPlan) || !plans.assessmentBlueprint || !Array.isArray(plans.missingEvidence)) throw new Error("AI returned invalid structured data.");
+    } catch (error) {
+      throw aiProviderError("generateReviewPlans", error);
+    }
     const { error: updateError } = await supabase.from("ai_academic_builder_jobs").update({ research_evidence: input.evidence, content_plan: plans.contentPlan, visual_plan: plans.visualPlan, assessment_blueprint: plans.assessmentBlueprint, missing_information: plans.missingEvidence ?? [], generated_by: userId, generated_at: new Date().toISOString(), status: "ready_for_review" }).eq("id", job.id).eq("status", "generation_review");
     if (updateError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: updateError.message });
     return { jobId: job.id, status: "ready_for_review" as const, plans };
@@ -389,24 +411,22 @@ export const aiBuilderRouter = router({
     const { data: job, error: jobError } = await supabase.from("ai_academic_builder_jobs").insert({ topic: input.topic, settings: input.settings, status: "planning", created_by: userId }).select("id").single() as { data: { id: string } | null; error: Error | null };
     if (jobError || !job) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "The AI Builder planning job could not be started." });
     try {
-      const result = await invokeLLM({
-        model: "gpt-5-mini",
-        messages: [
-          { role: "system", content: "You are NIU's curriculum architect. NIU offers certificate programmes only. Create a planning blueprint, not publishable academic records. Use only the topic and explicit settings. Do not invent references, research findings, accreditation, licensing, employment, or recognition claims. When evidence is needed, create a research plan and mark it as required before writing. Use only introductory, intermediate, or advanced difficulty. Return JSON matching the schema exactly." },
-          { role: "user", content: `Programme topic: ${input.topic}\nSettings: ${JSON.stringify(input.settings)}\nDesign a coherent progression from foundation to assessment. Choose course/module/lesson counts based on subject complexity. Mark missing information rather than guessing. Keep all generated content clearly a draft blueprint for administrator review.` },
-        ],
-        response_format: { type: "json_schema", json_schema: { name: "niu_ai_academic_blueprint", strict: true, schema: blueprintSchema } },
-        maxTokens: 12000,
-      });
-      const raw = result.choices[0]?.message.content;
-      if (typeof raw !== "string") throw new Error("The AI Builder returned no structured blueprint.");
-      const blueprint = JSON.parse(raw) as Record<string, unknown>;
+      const result = await runStructuredAIWithFallback<Record<string, unknown>>({
+        provider: "openai",
+        model: process.env.OPENAI_MODEL || "gpt-5-mini",
+        system: "You are NIU's curriculum architect. NIU offers certificate programmes only. Create a planning blueprint, not publishable academic records. Use only the topic and explicit settings. Do not invent references, research findings, accreditation, licensing, employment, or recognition claims. When evidence is needed, create a research plan and mark it as required before writing. Use only introductory, intermediate, or advanced difficulty. Return JSON matching the schema exactly.",
+        prompt: `Programme topic: ${input.topic}\nSettings: ${JSON.stringify(input.settings)}\nDesign a coherent progression from foundation to assessment. Choose course/module/lesson counts based on subject complexity. Mark missing information rather than guessing. Keep all generated content clearly a draft blueprint for administrator review.`,
+        schema: blueprintSchema,
+      }, "gemini");
+      const blueprint = result.value;
+      if (!blueprint || typeof blueprint !== "object") throw new Error("AI returned invalid structured data.");
       const { error: updateError } = await supabase.from("ai_academic_builder_jobs").update({ status: "research_review", blueprint, research_plan: blueprint.researchPlan ?? [], missing_information: blueprint.missingInformation ?? [], validation_errors: [], reviewed_at: null, reviewed_by: null }).eq("id", job.id) as { error: Error | null };
       if (updateError) throw updateError;
       return { jobId: job.id, status: "research_review" as const, blueprint };
     } catch (error) {
-      await supabase.from("ai_academic_builder_jobs").update({ status: "failed", validation_errors: [{ message: error instanceof Error ? error.message : "The AI Builder could not complete planning." }] }).eq("id", job.id);
-      throw new TRPCError({ code: "BAD_GATEWAY", message: "NIU could not complete the AI planning stage. No academic records were created." });
+      const safeError = aiProviderError("createPlan", error);
+      await supabase.from("ai_academic_builder_jobs").update({ status: "failed", validation_errors: [{ message: safeError.message }] }).eq("id", job.id);
+      throw safeError;
     }
   }),
 });

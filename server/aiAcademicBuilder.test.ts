@@ -11,6 +11,7 @@ const generationMigration = fs.readFileSync(path.join(root, "docs", "supabase", 
 const packageMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260828_niu_ai_draft_package_rpc.sql"), "utf8");
 const visualMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260828_niu_ai_visual_assets.sql"), "utf8");
 const page = fs.readFileSync(path.join(root, "client", "src", "pages", "AIAcademicBuilder.tsx"), "utf8");
+const clientMain = fs.readFileSync(path.join(root, "client", "src", "main.tsx"), "utf8");
 const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
 const packagePage = fs.readFileSync(path.join(root, "client", "src", "pages", "ProgrammePackage.tsx"), "utf8");
 const dashboard = fs.readFileSync(path.join(root, "client", "src", "pages", "AdminDashboard.tsx"), "utf8");
@@ -56,7 +57,13 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain("introductory",);
     expect(router).toContain("intermediate");
     expect(router).toContain("advanced");
-    expect(router).toContain("response_format");
+    expect(router).toContain('provider: "openai"');
+    expect(router).toContain("runStructuredAIWithFallback");
+    expect(router).not.toContain("invokeLLM");
+    expect(router).toContain("schema: blueprintSchema");
+    expect(router).toContain("AI provider is not configured.");
+    expect(router).toContain("AI provider request failed.");
+    expect(router).toContain("AI returned invalid structured data.");
     expect(router).toContain("researchPlan");
     expect(router).toContain("missingInformation");
     expect(router).toContain("runQualityGate");
@@ -108,6 +115,9 @@ describe("NIU AI Academic Builder", () => {
     expect(page).toContain("Alt text:");
     expect(page).toContain("Save metadata");
     expect(page).toContain("Regenerate draft");
+    expect(clientMain).toContain("content-type");
+    expect(clientMain).toContain("AI provider request failed.");
+    expect(clientMain).toContain("new Response(JSON.stringify");
   });
 
   it("keeps the workspace review-first and reachable from the guided package", () => {

@@ -30,5 +30,15 @@ export function createApp() {
     }),
   );
 
+  // Keep every unexpected server failure machine-readable for the tRPC client.
+  // tRPC handles its own errors; this boundary covers parser/runtime failures
+  // that would otherwise become a Vercel plain-text response.
+  app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    if (res.headersSent) return;
+    const status = typeof error === "object" && error !== null && "status" in error && typeof error.status === "number" ? error.status : 500;
+    const message = status === 413 ? "Request is too large." : "NIU server request failed.";
+    res.status(status).type("application/json").json({ success: false, error: message });
+  });
+
   return app;
 }

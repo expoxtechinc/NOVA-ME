@@ -31,6 +31,21 @@ const parseJson = <T>(content: string): T => {
   }
 };
 
+const toGeminiSchema = (schema: Record<string, unknown>): Record<string, unknown> => {
+  const converted: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(schema)) {
+    if (key === "additionalProperties") continue;
+    if (key === "properties" && value && typeof value === "object") {
+      converted[key] = Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([name, child]) => [name, child && typeof child === "object" ? toGeminiSchema(child as Record<string, unknown>) : child]));
+    } else if (key === "items" && value && typeof value === "object") {
+      converted[key] = toGeminiSchema(value as Record<string, unknown>);
+    } else {
+      converted[key] = value;
+    }
+  }
+  return converted;
+};
+
 const safeProviderError = async (response: Response, provider: AIProvider) => {
   const detail = await response.text().catch(() => "");
   let reason = "request failed";
@@ -64,11 +79,14 @@ export async function listProviderModels(provider: AIProvider): Promise<string[]
 const chooseModel = async (provider: AIProvider, requested?: string) => {
   if (requested) return requested;
   const configured = provider === "openai" ? ENV.openAiModel : ENV.geminiModel;
-  if (configured) return configured;
+  if (provider === "openai" && configured) return configured;
   const models = await listProviderModels(provider);
+  if (provider === "gemini" && configured && models.includes(configured)) return configured;
   const preferred = provider === "openai"
     ? models.find(model => /^gpt-/.test(model) && !model.includes("audio"))
-    : models.find(model => /gemini/i.test(model));
+    : models.find(model => /gemini-3\\.6-flash/i.test(model))
+      ?? models.find(model => /gemini-3/i.test(model))
+      ?? models.find(model => /gemini/i.test(model));
   if (!preferred) throw new Error(`No compatible ${provider} structured-output model is available.`);
   return preferred;
 };
@@ -99,7 +117,7 @@ export async function runStructuredAI<T>(request: OrchestrationRequest): Promise
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       contents: [{ role: "user", parts: [{ text: `${request.system}\n\n${request.prompt}` }] }],
-      generationConfig: { temperature: request.temperature ?? 0.1, ...(request.schema ? { responseMimeType: "application/json", responseSchema: request.schema } : {}) },
+      generationConfig: { temperature: request.temperature ?? 0.1, ...(request.schema ? { responseMimeType: "application/json", responseSchema: toGeminiSchema(request.schema) } : {}) },
     }),
   });
   if (!response.ok) throw new Error(await safeProviderError(response, request.provider));
@@ -107,6 +125,16 @@ export async function runStructuredAI<T>(request: OrchestrationRequest): Promise
   const content = body.candidates?.[0]?.content?.parts?.map(part => part.text ?? "").join("").trim();
   if (!content) throw new Error("Gemini returned no usable content.");
   return { provider: request.provider, model, value: request.schema ? parseJson<T>(content) : content as T };
+}
+
+export async function runStructuredAIWithFallback<T>(request: OrchestrationRequest, fallbackProvider?: AIProvider): Promise<OrchestrationResult<T>> {
+  try {
+    return await runStructuredAI(request);
+  } catch (primaryError) {
+    if (!fallbackProvider || fallbackProvider === request.provider) throw primaryError;
+    console.warn(`AI provider ${request.provider} failed; attempting configured ${fallbackProvider} fallback.`);
+    return runStructuredAI({ ...request, provider: fallbackProvider, model: undefined });
+  }
 }
 
 export function providerConfigurationStatus() {
