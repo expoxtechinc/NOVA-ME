@@ -98,7 +98,8 @@ function compileCompleteDraftPackage(topic: string, blueprint: Blueprint, review
       supportGuidance: "Administrator must verify inclusive support, device access, language, and accommodation guidance before approval.",
       lessons: module.lessons.slice().sort((a, b) => a.position - b.position).map((lesson) => {
         const file = storagePaths[materialIndex++];
-        const evidenceLabel = reviewPlans?.contentPlan?.find((item: any) => String(item.section).toLowerCase().includes(lesson.title.toLowerCase()))?.evidenceUrls ?? [];
+          const evidenceLabel = reviewPlans?.contentPlan?.find((item: any) => String(item.section).toLowerCase().includes(lesson.title.toLowerCase()))?.evidenceUrls ?? [];
+        const visualPlan = reviewPlans?.visualPlan?.filter((item: any) => String(item.placement).toLowerCase().includes(lesson.title.toLowerCase()) || String(item.placement).toLowerCase().includes(module.title.toLowerCase())) ?? [];
         return {
           kind: "reading",
           title: lesson.title,
@@ -109,7 +110,7 @@ function compileCompleteDraftPackage(topic: string, blueprint: Blueprint, review
           accessibility: ["Provide an accessible text alternative.", "Verify headings, contrast, captions/transcripts, and keyboard access."],
           videoScript: "Missing: administrator must author a video script if video is required.",
           transcript: "Missing: administrator must author or verify a transcript.",
-          diagrams: [],
+          diagrams: visualPlan.length ? visualPlan : [{ placement: lesson.title, purpose: "Missing: administrator must confirm whether a learning visual is required.", altText: "Missing: administrator must provide alt text if a visual is approved.", accessibilityChecks: ["Missing: administrator must define an accessible alternative."], verificationRequired: true }],
           references: evidenceLabel,
           assignment: "Missing: administrator must define an assignment if required.",
           rubric: "Missing: administrator must define and approve a rubric if required.",
@@ -126,6 +127,7 @@ function compileCompleteDraftPackage(topic: string, blueprint: Blueprint, review
         passingScore: reviewPlans?.assessmentBlueprint?.passingScore ?? 70,
         attemptLimit: reviewPlans?.assessmentBlueprint?.attemptLimit ?? 2,
         questionBankTitle: `${module.title} Question Bank`,
+        visualRequirements: reviewPlans?.visualPlan?.filter((item: any) => String(item.placement).toLowerCase().includes(module.title.toLowerCase())) ?? [],
         questions: (reviewPlans?.assessmentBlueprint?.questions ?? []).slice(0, 5).map((item: any, questionIndex: number) => ({
           prompt: `Draft question purpose: ${item.promptPurpose}. Administrator must author and verify the final question before approval.`,
           choices: ["Draft option pending authoring", "Draft option pending authoring", "Draft option pending authoring", "Draft option pending authoring"],
@@ -318,7 +320,7 @@ export const aiBuilderRouter = router({
       storagePaths.push({ fileName, storagePath: uploaded.key });
       materialIndex += 1;
     }
-    const packagePayload = compileCompleteDraftPackage(job.topic, blueprint, { contentPlan: job.content_plan, assessmentBlueprint: job.assessment_blueprint }, storagePaths);
+    const packagePayload = compileCompleteDraftPackage(job.topic, blueprint, { contentPlan: job.content_plan, visualPlan: job.visual_plan, assessmentBlueprint: job.assessment_blueprint }, storagePaths);
     const { data: created, error: rpcError } = await supabase.rpc("niu_create_ai_draft_package", { p_job_id: input.jobId, p_package: packagePayload });
     if (rpcError || !created) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: rpcError?.message ?? "The governed draft-package generator could not create its private records." });
     return { jobId: input.jobId, status: "ready_for_review" as const, generated: created, createdBy: userId };
@@ -339,6 +341,11 @@ export const aiBuilderRouter = router({
     const { data: assessments } = await supabase.from("assessments").select("id,course_id,status").in("course_id", courseIds);
     const assessmentIds = (assessments ?? []).map((assessment: any) => assessment.id);
     const { data: assessmentQuestions } = assessmentIds.length ? await supabase.from("assessment_questions").select("assessment_id,question_id").in("assessment_id", assessmentIds) : { data: [] };
+    const { data: visualItems } = await supabase.from("content_library_items").select("id").eq("is_generated_visual", true).contains("visual_metadata", { jobId: input.jobId }).limit(120);
+    const visualItemIds = (visualItems ?? []).map((item: any) => item.id);
+    const { data: visualVersions } = visualItemIds.length ? await supabase.from("ai_visual_asset_versions").select("content_item_id,review_status").in("content_item_id", visualItemIds).limit(240) : { data: [] };
+    const requiredVisuals = Array.isArray(job.visual_plan) ? job.visual_plan.filter((item: any) => item?.shouldGenerate === true).length : 0;
+    const approvedVisuals = (visualVersions ?? []).filter((item: any) => item.review_status === "approved").length;
     const courseTitles = (courseRows ?? []).map((row: any) => String(row.title ?? "").trim().toLowerCase()).filter(Boolean);
     const evidenceRecords = Array.isArray(job.research_evidence) ? job.research_evidence : Object.values(job.research_evidence ?? {});
     const checks = [
@@ -346,6 +353,7 @@ export const aiBuilderRouter = router({
       { key: "curriculum-completeness", label: "Curriculum has courses, modules, lessons, and objectives", passed: courseIds.length > 0 && moduleIds.length > 0 && lessonIds.length > 0 && (lessons ?? []).every((row: any) => Array.isArray(row.learning_objectives) && row.learning_objectives.length > 0) },
       { key: "duplicate-content", label: "Course titles contain no duplicates", passed: new Set(courseTitles).size === courseTitles.length },
       { key: "visual-plan", label: "Visual requirements are explicitly planned", passed: Array.isArray(job.visual_plan) },
+      { key: "visual-review", label: "Required visuals are approved before publication", passed: approvedVisuals >= requiredVisuals },
       { key: "accessibility", label: "Accessibility metadata is present", passed: lessonIds.length > 0 && (lessons ?? []).every((row: any) => Array.isArray(row.content_json?.accessibility) && row.content_json.accessibility.length > 0) },
       { key: "programme-course-links", label: "Programme/course relationships", passed: (links ?? []).length === courseIds.length },
       { key: "courses-draft", label: "Courses remain draft", passed: (courseRows ?? []).length === courseIds.length && (courseRows ?? []).every((row: any) => row.status === "draft" && row.governed_workflow) },

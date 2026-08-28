@@ -94,6 +94,8 @@ describe("NIU AI Academic Builder", () => {
     expect(visualMigration).toContain("generation_attempts integer not null default 0");
     expect(router).toContain("Only generated visual drafts can be removed here.");
     expect(router).toContain("Published or archived visual versions are immutable");
+    expect(router).toContain("Required visuals are approved before publication");
+    expect(router).toContain("approvedVisuals >= requiredVisuals");
     expect(packageMigration).toContain("created_lessons_json");
     expect(page).toContain("Analyse purposeful lesson visuals");
     expect(page).toContain("Generate linked visual drafts");

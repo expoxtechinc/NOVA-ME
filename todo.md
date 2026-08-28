@@ -194,8 +194,8 @@
 - [x] Add server-only multi-provider AI orchestration with configurable OpenAI and Gemini model settings, without exposing provider keys or hardcoding stale model names.
 - [x] Add evidence-bound visual analysis and structured visual specifications that decide when a lesson needs a diagram, flowchart, illustration, process map, or other learning-support visual.
 - [x] Add protected visual generation, lesson placement, captions, alt text, detailed accessibility descriptions, provenance, versioning, review status, and no decorative-only generation. Cost controls and retry handling remain separately tracked.
-- [ ] Add lesson study-material and video visual-plan metadata plus assessment-visual metadata, keeping answer keys private and review-only.
-- [ ] Add administrator visual inspect/edit/regenerate/replace/remove controls and publication blocking for missing or unreviewed required visuals.
+- [x] Add lesson study-material and video visual-plan metadata plus assessment-visual metadata, keeping answer keys private and review-only.
+- [x] Add administrator visual inspect/edit/regenerate/replace/remove controls and publication blocking for missing or unreviewed required visuals.
 - [ ] Add long-running orchestration stages, continuation-safe retries, provider error handling, rate/cost controls, and auditable status transitions without automatic approval or publication.
 - [ ] Validate the multi-provider visual workflow, secrets boundary, migrations, tests, mobile UI, build, deployment, and documentation without modifying existing academic records or creating demo data.
 
@@ -210,7 +210,7 @@
 - 2026-08-28: Applied the protected versioned visual-asset schema to the Online University Supabase project. Added evidence-bound Gemini visual specifications and server-side draft visual generation with private storage, accessibility metadata, provenance, exact lesson links, RLS, audit capture, and duplicate protection. No existing academic records were modified and no visual was approved or published.
 
 ## AI visual engine remaining validation
-- [ ] Add administrator inspect/edit/regenerate/replace/remove controls for persisted visual versions and publication blocking for required unreviewed visuals.
+- [x] Add administrator inspect/edit/regenerate/replace/remove controls for persisted visual versions and publication blocking for required unreviewed visuals.
 - [ ] Add continuation-safe long-running visual jobs, retry/cost controls, and provider fallback telemetry without automatic approval or publication.
 - [ ] Complete isolated real Digital Marketing visual generation and authenticated owner-session validation without modifying existing records.
 - [ ] Complete final release documentation, full-suite validation, checkpoint, repository synchronization, and live-user evidence for the visual engine.
