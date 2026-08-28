@@ -85,6 +85,9 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain("lesson_content_items");
     expect(router).toContain("Academic and accessibility review is required");
     expect(router).toContain("updateVisualAssetVersion");
+    expect(router).toContain("listVisualAssets");
+    expect(router).toContain("removeVisualDraft");
+    expect(router).toContain("Only generated visual drafts can be removed here.");
     expect(router).toContain("Published or archived visual versions are immutable");
     expect(packageMigration).toContain("created_lessons_json");
     expect(page).toContain("Analyse purposeful lesson visuals");

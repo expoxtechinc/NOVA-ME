@@ -229,6 +229,23 @@ export const aiBuilderRouter = router({
     }
     return { jobId: job.id, topic: job.topic, created, status: "draft" as const, message: "Generated visuals are private drafts. Academic and accessibility review is required before any approval or publication." };
   }),
+  listVisualAssets: publicProcedure.input(z.object({ jobId: z.string().uuid() })).query(async ({ ctx, input }) => {
+    const { supabase } = await getStaffSession(ctx.req);
+    const { data: items, error } = await supabase.from("content_library_items").select("id,title,file_name,content_type,storage_path,status,visual_metadata,created_at").eq("is_generated_visual", true).contains("visual_metadata", { jobId: input.jobId }).order("created_at", { ascending: false }).limit(120);
+    if (error) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "NIU could not load generated visual drafts." });
+    const ids = (items ?? []).map(item => item.id);
+    const { data: versions } = ids.length ? await supabase.from("ai_visual_asset_versions").select("id,content_item_id,lesson_id,title,caption,alt_text,accessibility_description,educational_purpose,version,review_status,reviewed_by,created_at").in("content_item_id", ids).order("version", { ascending: false }).limit(240) : { data: [] };
+    return { items: items ?? [], versions: versions ?? [] };
+  }),
+  removeVisualDraft: publicProcedure.input(z.object({ contentItemId: z.string().uuid() })).mutation(async ({ ctx, input }) => {
+    const { supabase } = await getStaffSession(ctx.req);
+    const { data: item, error: itemError } = await supabase.from("content_library_items").select("id,status,is_generated_visual").eq("id", input.contentItemId).maybeSingle();
+    if (itemError || !item || !item.is_generated_visual) throw new TRPCError({ code: "NOT_FOUND", message: "Only generated visual drafts can be removed here." });
+    if (["published", "archived"].includes(item.status)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Published or archived visuals cannot be removed." });
+    const { error } = await supabase.from("content_library_items").delete().eq("id", input.contentItemId).eq("is_generated_visual", true).in("status", ["draft", "review"]);
+    if (error) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The visual draft could not be removed." });
+    return { removed: true, contentItemId: input.contentItemId };
+  }),
   updateVisualAssetVersion: publicProcedure.input(z.object({ versionId: z.string().uuid(), caption: z.string().trim().min(3).max(1000).optional(), altText: z.string().trim().min(3).max(1000).optional(), accessibilityDescription: z.string().trim().min(3).max(4000).optional(), educationalPurpose: z.string().trim().min(3).max(2000).optional(), reviewStatus: z.enum(["draft", "review", "approved"]).optional() })).mutation(async ({ ctx, input }) => {
     const { supabase, userId } = await getStaffSession(ctx.req);
     const { data: current, error: currentError } = await supabase.from("ai_visual_asset_versions").select("id,review_status").eq("id", input.versionId).maybeSingle();
