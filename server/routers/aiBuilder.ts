@@ -239,18 +239,26 @@ export const aiBuilderRouter = router({
   }),
   regenerateVisualAsset: publicProcedure.input(z.object({ versionId: z.string().uuid(), promptAdjustment: z.string().trim().max(2000).optional() })).mutation(async ({ ctx, input }) => {
     const { supabase, userId } = await getStaffSession(ctx.req);
-    const { data: current, error: currentError } = await supabase.from("ai_visual_asset_versions").select("id,content_item_id,lesson_id,module_id,programme_id,title,caption,alt_text,accessibility_description,educational_purpose,generation_prompt,generation_model,version,review_status").eq("id", input.versionId).maybeSingle();
+    const { data: current, error: currentError } = await supabase.from("ai_visual_asset_versions").select("id,content_item_id,lesson_id,module_id,programme_id,title,caption,alt_text,accessibility_description,educational_purpose,generation_prompt,generation_model,generation_attempts,version,review_status").eq("id", input.versionId).maybeSingle();
     if (currentError || !current) throw new TRPCError({ code: "NOT_FOUND", message: "The visual version is not available for regeneration." });
     if (["published", "archived"].includes(current.review_status)) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Published or archived visual versions cannot be regenerated." });
+    if ((current.generation_attempts ?? 0) >= 3) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "This visual has reached the maximum of three generation attempts. Edit the specification or create a new governed draft." });
     const prompt = `${current.generation_prompt} Revised draft request: ${input.promptAdjustment || "Improve clarity while preserving the verified educational concept, labels, and accessibility intent."} Do not invent facts. Return a learning-support visual, not decorative media.`;
-    const image = await generateImage({ prompt, model: current.generation_model || "MODEL_GPT_IMAGE_2", quality: "medium" });
+    let image;
+    try {
+      image = await generateImage({ prompt, model: current.generation_model || "MODEL_GPT_IMAGE_2", quality: "medium" });
+    } catch (error) {
+      const safeError = error instanceof Error ? error.message.slice(0, 500) : "Unknown provider error";
+      await supabase.from("ai_visual_asset_versions").update({ generation_attempts: (current.generation_attempts ?? 0) + 1, last_generation_error: safeError }).eq("id", current.id);
+      throw new TRPCError({ code: "BAD_GATEWAY", message: "Visual regeneration failed. The provider error was recorded; retry remains bounded." });
+    }
     if (!image.key || !image.url) throw new TRPCError({ code: "BAD_GATEWAY", message: "Visual regeneration returned no stored image." });
     const metadata = { regeneratedFromVersionId: current.id, storageKey: image.key, storageUrl: image.url, generatedBy: userId, generatedAt: new Date().toISOString(), generationPrompt: prompt };
     const { data: item, error: itemError } = await supabase.from("content_library_items").insert({ title: current.title, category: "image", file_name: `${current.lesson_id}-ai-visual-v${current.version + 1}.png`, content_type: image.mimeType ?? "image/png", storage_path: image.key, description: current.educational_purpose, status: "draft", governed_workflow: true, is_generated_visual: true, visual_metadata: metadata, created_by: userId }).select("id").single();
     if (itemError || !item) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: itemError?.message ?? "The regenerated visual draft could not be registered." });
     const { error: linkError } = await supabase.from("lesson_content_items").insert({ lesson_id: current.lesson_id, content_item_id: item.id, position: 999, is_required: false });
     if (linkError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: linkError.message });
-    const { data: version, error: versionError } = await supabase.from("ai_visual_asset_versions").insert({ content_item_id: item.id, lesson_id: current.lesson_id, module_id: current.module_id, programme_id: current.programme_id, title: current.title, caption: current.caption, alt_text: current.alt_text, accessibility_description: current.accessibility_description, educational_purpose: current.educational_purpose, generation_model: current.generation_model || "MODEL_GPT_IMAGE_2", generation_prompt: prompt, version: current.version + 1, change_summary: `Regenerated from visual version ${current.version}`, review_status: "draft", created_by: userId }).select("id,review_status,version").single();
+    const { data: version, error: versionError } = await supabase.from("ai_visual_asset_versions").insert({ content_item_id: item.id, lesson_id: current.lesson_id, module_id: current.module_id, programme_id: current.programme_id, title: current.title, caption: current.caption, alt_text: current.alt_text, accessibility_description: current.accessibility_description, educational_purpose: current.educational_purpose, generation_model: current.generation_model || "MODEL_GPT_IMAGE_2", generation_prompt: prompt, generation_attempts: (current.generation_attempts ?? 0) + 1, version: current.version + 1, change_summary: `Regenerated from visual version ${current.version}`, review_status: "draft", created_by: userId }).select("id,review_status,version").single();
     if (versionError || !version) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: versionError?.message ?? "The regenerated visual version could not be created." });
     return { contentItemId: item.id, visualVersionId: version.id, version: version.version, status: version.review_status };
   }),

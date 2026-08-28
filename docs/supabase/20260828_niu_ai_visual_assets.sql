@@ -27,6 +27,8 @@ create table if not exists public.ai_visual_asset_versions (
   created_by uuid not null references public.profiles(id) on delete restrict,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  generation_attempts integer not null default 0 check (generation_attempts >= 0 and generation_attempts <= 3),
+  last_generation_error text,
   unique (content_item_id, version)
 );
 

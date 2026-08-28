@@ -214,3 +214,4 @@
 - [ ] Add continuation-safe long-running visual jobs, retry/cost controls, and provider fallback telemetry without automatic approval or publication.
 - [ ] Complete isolated real Digital Marketing visual generation and authenticated owner-session validation without modifying existing records.
 - [ ] Complete final release documentation, full-suite validation, checkpoint, repository synchronization, and live-user evidence for the visual engine.
+- [x] Add bounded visual-generation attempts and persisted provider-error telemetry without exposing provider keys or approving content automatically.
