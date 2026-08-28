@@ -228,28 +228,36 @@ export const aiBuilderRouter = router({
   }),
   runQualityGate: publicProcedure.input(z.object({ jobId: z.string().uuid() })).query(async ({ ctx, input }) => {
     const { supabase } = await getStaffSession(ctx.req);
-    const { data: job, error } = await supabase.from("ai_academic_builder_jobs").select("id,status,generated_record_ids").eq("id", input.jobId).maybeSingle();
+    const { data: job, error } = await supabase.from("ai_academic_builder_jobs").select("id,status,blueprint,content_plan,visual_plan,research_evidence,generated_record_ids").eq("id", input.jobId).maybeSingle();
     const ids = job?.generated_record_ids as { programId?: string; departmentId?: string; courses?: Array<{ courseId: string }> } | null;
     if (error || !job || !ids?.programId || !ids.courses?.length) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Quality gate is available after a complete private draft package has been generated." });
     const courseIds = ids.courses.map(course => course.courseId);
     const { data: links } = await supabase.from("program_courses").select("course_id").eq("program_id", ids.programId).in("course_id", courseIds);
-    const { data: courseRows } = await supabase.from("courses").select("id,status,governed_workflow").in("id", courseIds);
+    const { data: courseRows } = await supabase.from("courses").select("id,title,status,governed_workflow").in("id", courseIds);
     const { data: modules } = await supabase.from("course_modules").select("id,course_id,status,governed_workflow").in("course_id", courseIds);
     const moduleIds = (modules ?? []).map((module: any) => module.id);
-    const { data: lessons } = moduleIds.length ? await supabase.from("lessons").select("id,module_id,status,governed_workflow").in("module_id", moduleIds) : { data: [] };
+    const { data: lessons } = moduleIds.length ? await supabase.from("lessons").select("id,module_id,status,governed_workflow,content_json,learning_objectives").in("module_id", moduleIds) : { data: [] };
     const lessonIds = (lessons ?? []).map((lesson: any) => lesson.id);
     const { data: materials } = lessonIds.length ? await supabase.from("lesson_content_items").select("lesson_id,content_item_id").in("lesson_id", lessonIds) : { data: [] };
     const { data: assessments } = await supabase.from("assessments").select("id,course_id,status").in("course_id", courseIds);
     const assessmentIds = (assessments ?? []).map((assessment: any) => assessment.id);
     const { data: assessmentQuestions } = assessmentIds.length ? await supabase.from("assessment_questions").select("assessment_id,question_id").in("assessment_id", assessmentIds) : { data: [] };
+    const courseTitles = (courseRows ?? []).map((row: any) => String(row.title ?? "").trim().toLowerCase()).filter(Boolean);
+    const evidenceRecords = Array.isArray(job.research_evidence) ? job.research_evidence : Object.values(job.research_evidence ?? {});
     const checks = [
+      { key: "source-provenance", label: "Source provenance is recorded", passed: evidenceRecords.length > 0 },
+      { key: "curriculum-completeness", label: "Curriculum has courses, modules, lessons, and objectives", passed: courseIds.length > 0 && moduleIds.length > 0 && lessonIds.length > 0 && (lessons ?? []).every((row: any) => Array.isArray(row.learning_objectives) && row.learning_objectives.length > 0) },
+      { key: "duplicate-content", label: "Course titles contain no duplicates", passed: new Set(courseTitles).size === courseTitles.length },
+      { key: "visual-plan", label: "Visual requirements are explicitly planned", passed: Array.isArray(job.visual_plan) },
+      { key: "accessibility", label: "Accessibility metadata is present", passed: lessonIds.length > 0 && (lessons ?? []).every((row: any) => Array.isArray(row.content_json?.accessibility) && row.content_json.accessibility.length > 0) },
       { key: "programme-course-links", label: "Programme/course relationships", passed: (links ?? []).length === courseIds.length },
       { key: "courses-draft", label: "Courses remain draft", passed: (courseRows ?? []).length === courseIds.length && (courseRows ?? []).every((row: any) => row.status === "draft" && row.governed_workflow) },
       { key: "modules-draft", label: "Ordered modules remain draft", passed: moduleIds.length > 0 && (modules ?? []).every((row: any) => row.status === "draft" && row.governed_workflow) },
       { key: "lessons-draft", label: "Lessons remain draft", passed: lessonIds.length > 0 && (lessons ?? []).every((row: any) => row.status === "draft" && row.governed_workflow) },
       { key: "protected-material-links", label: "Protected material links exist", passed: materials?.length === lessonIds.length && lessonIds.length > 0 },
       { key: "assessments-draft", label: "Assessments and question mappings exist as drafts", passed: (assessments ?? []).length > 0 && (assessments ?? []).every((row: any) => row.status === "draft") && (assessmentQuestions ?? []).length > 0 },
-      { key: "publication-boundary", label: "Publication boundary remains closed", passed: job.status === "ready_for_review" },
+      { key: "certificate-configuration", label: "Certificate configuration remains reviewable", passed: Boolean((job.blueprint as any)?.programme?.certificateSettings || (job.blueprint as any)?.certificateSettings || (job.content_plan as any)?.certificateSettings) },
+      { key: "publication-boundary", label: "Publication boundary remains closed", passed: ["ready_for_review", "generation_review"].includes(job.status) },
     ];
     return { jobId: input.jobId, checks, passed: checks.every(check => check.passed), generated: { courses: courseIds.length, modules: moduleIds.length, lessons: lessonIds.length, materials: materials?.length ?? 0, assessments: assessments?.length ?? 0, questions: assessmentQuestions?.length ?? 0 } };
   }),

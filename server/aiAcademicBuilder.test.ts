@@ -59,6 +59,11 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain("researchPlan");
     expect(router).toContain("missingInformation");
     expect(router).toContain("runQualityGate");
+    expect(router).toContain("source-provenance");
+    expect(router).toContain("curriculum-completeness");
+    expect(router).toContain("duplicate-content");
+    expect(router).toContain("accessibility");
+    expect(router).toContain("certificate-configuration");
     expect(router).toContain("publication-boundary");
     expect(router).toContain("learnerPreview");
     expect(page).toContain("Answer keys and administrator controls are intentionally excluded");
