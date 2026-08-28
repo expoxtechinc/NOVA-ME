@@ -91,6 +91,8 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain("Regenerated from visual version");
     expect(router).toContain("maximum of three generation attempts");
     expect(router).toContain("last_generation_error");
+    expect(router).toContain("Generate at most 12 visual drafts per administrator action");
+    expect(router).toContain("generation_attempts: 1");
     expect(visualMigration).toContain("generation_attempts integer not null default 0");
     expect(router).toContain("Only generated visual drafts can be removed here.");
     expect(router).toContain("Published or archived visual versions are immutable");

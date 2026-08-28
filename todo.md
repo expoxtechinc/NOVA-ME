@@ -215,3 +215,4 @@
 - [ ] Complete isolated real Digital Marketing visual generation and authenticated owner-session validation without modifying existing records.
 - [ ] Complete final release documentation, full-suite validation, checkpoint, repository synchronization, and live-user evidence for the visual engine.
 - [x] Add bounded visual-generation attempts and persisted provider-error telemetry without exposing provider keys or approving content automatically.
+- [x] Add a bounded twelve-visual batch guard and initial-attempt telemetry to prevent runaway generation actions.

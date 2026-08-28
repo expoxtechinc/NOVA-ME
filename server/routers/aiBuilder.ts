@@ -208,6 +208,8 @@ export const aiBuilderRouter = router({
     const { supabase, userId } = await getStaffSession(ctx.req);
     const { data: job, error: jobError } = await supabase.from("ai_academic_builder_jobs").select("id,status,topic").eq("id", input.jobId).in("status", ["generation_review", "ready_for_review"]).maybeSingle();
     if (jobError || !job) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Visual generation is available only for a private reviewed AI Builder job." });
+    const requestedAssets = input.assets.filter(asset => asset.specification.shouldGenerate);
+    if (requestedAssets.length > 12) throw new TRPCError({ code: "PAYLOAD_TOO_LARGE", message: "Generate at most 12 visual drafts per administrator action. Continue with the remaining lessons after this batch is reviewed." });
     const created: Array<{ lessonId: string; contentItemId: string; visualVersionId: string; status: string }> = [];
     for (const asset of input.assets) {
       if (!asset.specification.shouldGenerate) continue;
@@ -225,7 +227,7 @@ export const aiBuilderRouter = router({
       if (itemError || !item) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: itemError?.message ?? "The private visual record could not be created." });
       const { error: linkError } = await supabase.from("lesson_content_items").insert({ lesson_id: asset.lessonId, content_item_id: item.id, position: 999, is_required: false });
       if (linkError) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: linkError.message });
-      const { data: version, error: versionError } = await supabase.from("ai_visual_asset_versions").insert({ content_item_id: item.id, lesson_id: asset.lessonId, module_id: asset.moduleId, programme_id: asset.programmeId ?? null, title: `${asset.lessonTitle} learning visual`, caption: asset.specification.educationalPurpose, alt_text: asset.specification.altText, accessibility_description: asset.specification.accessibilityRequirements.join("; "), educational_purpose: asset.specification.educationalPurpose, generation_model: "MODEL_GPT_IMAGE_2", generation_prompt: prompt, version: 1, change_summary: "Initial AI-generated educational visual draft", review_status: "draft", created_by: userId }).select("id,review_status").single();
+      const { data: version, error: versionError } = await supabase.from("ai_visual_asset_versions").insert({ content_item_id: item.id, lesson_id: asset.lessonId, module_id: asset.moduleId, programme_id: asset.programmeId ?? null, title: `${asset.lessonTitle} learning visual`, caption: asset.specification.educationalPurpose, alt_text: asset.specification.altText, accessibility_description: asset.specification.accessibilityRequirements.join("; "), educational_purpose: asset.specification.educationalPurpose, generation_model: "MODEL_GPT_IMAGE_2", generation_prompt: prompt, version: 1, change_summary: "Initial AI-generated educational visual draft", review_status: "draft", generation_attempts: 1, created_by: userId }).select("id,review_status").single();
       if (versionError || !version) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: versionError?.message ?? "The visual version record could not be created." });
       created.push({ lessonId: asset.lessonId, contentItemId: item.id, visualVersionId: version.id, status: version.review_status });
     }
