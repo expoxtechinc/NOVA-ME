@@ -219,10 +219,10 @@
 - [x] Add auditable visual batch status, cursor progress, and a bounded per-action limit for safe continuation between administrator actions.
 
 ## Urgent AI Builder API connection repair
-- [ ] Trace the Generate Complete Programme Plan route from browser request through tRPC/server and identify the exact failing backend response.
-- [ ] Verify server-side OpenAI/Gemini configuration and deployed Vercel runtime evidence without exposing secrets.
-- [ ] Make successful and error API responses JSON-safe and prevent raw non-JSON parse errors from reaching administrators.
-- [ ] Independently test the configured AI provider path with the requested Digital Marketing planning payload; do not use mocks or fake responses.
+- [x] Trace the Generate Complete Programme Plan route from browser request through tRPC/server and identify the exact failing backend response.
+- [x] Verify server-side OpenAI/Gemini configuration and deployed Vercel runtime evidence without exposing secrets; production project logs remain inaccessible in the current Vercel account scope.
+- [x] Make successful and error API responses JSON-safe and prevent raw non-JSON parse errors from reaching administrators.
+- [x] Independently test the configured AI provider path with the requested Digital Marketing planning payload; do not use mocks or fake responses.
 - [ ] Validate the production Vercel Digital Marketing flow through saved blueprint and research-review availability, or document the exact external blocker if production credentials/session are unavailable.
 - [ ] Complete the urgent AI Builder API repair without requiring computer use: configured-provider fallback, JSON-safe backend/client errors, and production-safe Digital Marketing validation.
 - [ ] Verify the new production deployment through the accessible Vercel URL; do not claim the administrator-only blueprint save/research-review step without an authenticated owner session.
