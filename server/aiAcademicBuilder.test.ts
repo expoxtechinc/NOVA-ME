@@ -42,6 +42,10 @@ describe("NIU AI Academic Builder", () => {
     expect(packageMigration).toContain("lesson_content_items");
     expect(packageMigration).toContain("assessment_questions");
     expect(packageMigration).toContain("generated_record_ids");
+    expect(packageMigration).toContain("videoScript");
+    expect(packageMigration).toContain("transcript");
+    expect(packageMigration).toContain("Missing: administrator must author a video script");
+    expect(packageMigration).toContain("Missing: administrator must define and approve a rubric");
     expect(router).toContain("generateCompletePackage");
     expect(router).toContain("governed draft-package generator");
   });
