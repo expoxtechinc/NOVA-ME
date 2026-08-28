@@ -16,12 +16,19 @@ function safeErrorMessage(error: unknown) {
 }
 
 export default async function handler(req: Request, res: Response) {
+  const reply = res as unknown as {
+    headersSent?: boolean;
+    status: (code: number) => { type: (contentType: string) => { json: (body: unknown) => void } };
+  };
+  if (req.url?.split("?")[0] === "/api/healthz") {
+    return reply.status(200).type("application/json").json({ success: true, service: "niu-api", runtime: "vercel", build: process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown" });
+  }
   try {
     appPromise ??= loadApp();
     const app = await appPromise;
     return app(req, res);
   } catch (error) {
-    if (res.headersSent) return;
-    return res.status(500).type("application/json").json({ success: false, error: safeErrorMessage(error) });
+    if (reply.headersSent) return;
+    return reply.status(500).type("application/json").json({ success: false, error: safeErrorMessage(error) });
   }
 }
