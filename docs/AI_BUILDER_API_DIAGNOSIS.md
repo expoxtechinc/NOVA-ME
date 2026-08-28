@@ -29,3 +29,9 @@ The independent Digital Marketing provider smoke test confirmed that the injecte
 After the repair, the exact Digital Marketing blueprint contract ran through OpenAI first, then the configured Gemini fallback, and returned a real structured result: provider `gemini`, model `gemini-3-flash-preview`, programme title `Intermediate Digital Marketing Certificate`, three courses, two research-plan items, and a missing-information array. No database records were created by this smoke test.
 
 The local Express parser-failure probe now returns HTTP 400 with `Content-Type: application/json` and body `{"success":false,"error":"NIU server request failed."}`. Full build, TypeScript validation, and the AI Builder regression suite pass. Production Vercel browser pages are reachable, but the current browser session is unauthenticated and the configured Vercel connector cannot access the reported deployment project logs.
+
+## Direct production API probe
+
+A direct POST to `https://nova-me-six.vercel.app/api/trpc/aiBuilder.createPlan?batch=1` with malformed JSON currently returns HTTP 500, `content-type: text/plain; charset=utf-8`, `x-vercel-error: FUNCTION_INVOCATION_FAILED`, and the body `A server error has occurred`. This proves the currently served `nova-me-six` function has not received the new JSON error boundary.
+
+The accessible Vercel account instead shows project `online-university`, linked to `expoxtechinc/ONLINE-UNIVERSITY`, with production domains under `online-university-*.vercel.app`; it has no `nova-me-six` or NOVA-ME project. The API repair is committed to `expoxtechinc/NOVA-ME` at `a643d38`, but the reported production domain is not linked to that repository in the available Vercel scope. The production deployment therefore requires the owner to link/deploy NOVA-ME from the correct Vercel project or update the domain mapping; this cannot be performed through the current account scope without risking a new or incorrect deployment.

@@ -226,3 +226,4 @@
 - [ ] Validate the production Vercel Digital Marketing flow through saved blueprint and research-review availability, or document the exact external blocker if production credentials/session are unavailable.
 - [ ] Complete the urgent AI Builder API repair without requiring computer use: configured-provider fallback, JSON-safe backend/client errors, and production-safe Digital Marketing validation.
 - [ ] Verify the new production deployment through the accessible Vercel URL; do not claim the administrator-only blueprint save/research-review step without an authenticated owner session.
+- [x] Document the reproducible production blocker: nova-me-six currently serves an old Vercel function that returns plain-text FUNCTION_INVOCATION_FAILED, while the accessible Vercel project is linked to a different ONLINE-UNIVERSITY repository; administrator production validation remains open.
