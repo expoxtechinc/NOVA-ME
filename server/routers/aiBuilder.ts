@@ -95,6 +95,12 @@ export const aiBuilderRouter = router({
     if (error || !data) throw new TRPCError({ code: "PRECONDITION_FAILED", message: error?.message ?? "Research review is blocked until the saved job is in Research Review status." });
     return data;
   }),
+  saveBlueprintEdits: publicProcedure.input(z.object({ jobId: z.string().uuid(), blueprint: z.record(z.string(), z.unknown()) })).mutation(async ({ ctx, input }) => {
+    const { supabase } = await getStaffSession(ctx.req);
+    const { data, error } = await supabase.from("ai_academic_builder_jobs").update({ blueprint: input.blueprint }).eq("id", input.jobId).in("status", ["research_review", "generation_review", "ready_for_review"]).select("id,status,blueprint").maybeSingle();
+    if (error || !data) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "Blueprint editing is available only while the AI Builder job remains in a private review state." });
+    return data;
+  }),
   generateReviewPlans: publicProcedure.input(z.object({ jobId: z.string().uuid(), evidence: z.array(z.object({ sourceUrl: z.string().url().refine(value => value.startsWith("https://"), "Evidence sources must use HTTPS URLs"), excerpt: z.string().trim().min(20).max(4000), claimAreas: z.array(z.string().trim().min(2).max(160)).min(1).max(12) })).min(1).max(40) })).mutation(async ({ ctx, input }) => {
     const { supabase, userId } = await getStaffSession(ctx.req);
     const { data: job, error: jobError } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,blueprint,research_sources,research_notes").eq("id", input.jobId).eq("status", "generation_review").maybeSingle();

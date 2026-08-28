@@ -176,7 +176,7 @@
 - [x] Add governed AI Builder research-review submission with HTTPS source provenance, minimum review notes, database-enforced transition, and admin UI controls.
 - [x] Implement the AI Builder draft-generation handoff into private Curriculum Import artifacts without creating or publishing academic records automatically.
 - [ ] Build explicit-source deep research, visual-content planning, and assessment blueprint engines with provenance and missing-information boundaries.
-- [ ] Add administrator edit, regenerate, validation, review, approval, and publication handoff controls for AI-generated sections.
+- [x] Add administrator edit, regenerate, validation, review, approval, and publication handoff controls for AI-generated sections.
 - [ ] Complete AI Builder full-suite validation, documentation, checkpoint, repository synchronization, and real-user evidence where required.
 
 ## AI Builder work history
