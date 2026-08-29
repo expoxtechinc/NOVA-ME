@@ -237,4 +237,6 @@
 - [x] Investigate the confirmed Ready NOVA-ME production deployment’s remaining Vercel function failure on novainternationaluniversity.vercel.app and fix the runtime entrypoint/configuration if required. Removed unresolved server/storage and @shared runtime aliases, added guarded dynamic bootstrap import, and passed a fresh Vercel-style source check.
 - [x] Fix the confirmed Vercel TypeScript errors in server/app.ts and server/routers/aiBuilder.ts so the deployed AI Builder function can initialize successfully.
 - [ ] Verify the Vercel deployment built from commit 85ce2f2 is serving novainternationaluniversity.vercel.app and run the live Digital Marketing AI Builder checks.
-- [ ] Add and deploy a dependency-free `/api/healthz` function to distinguish Vercel platform routing from the main Express application bootstrap failure.
+- [x] Add and deploy a dependency-free `/api/healthz` function to distinguish Vercel platform routing from the main Express application bootstrap failure.
+- [x] Replace unsupported `jsonb_object_length` in the readiness gate with a PostgreSQL-compatible non-empty JSON-object check, then revalidate the live RPC.
+- [x] Repair the production programme-bundle readiness function to use the existing `public.lesson_content_items` relation, preserving governed checks and existing records.
