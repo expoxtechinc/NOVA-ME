@@ -1,4 +1,4 @@
--- Transactional, draft-only AI Builder package materialization.
+-- Keep AI draft-package lesson creation inside the live lessons_kind_check contract.
 -- Creates linked private records only after an authorised staff call.
 create or replace function public.niu_create_ai_draft_package(p_job_id uuid, p_package jsonb)
 returns jsonb
@@ -73,14 +73,12 @@ begin
       insert into public.course_modules(course_id,title,description,position,status,learning_level,learning_objectives,estimated_minutes,support_guidance,governed_workflow)
       values (course_id,left(module_item->>'title',255),left(coalesce(module_item->>'description','Draft module; administrator verification required.'),10000),module_position,'draft',case lower(coalesce(module_item->>'difficulty','foundation')) when 'introductory' then 'foundation' when 'intermediate' then 'developing' else 'advanced' end,coalesce(module_item->'objectives','[]'::jsonb),greatest(0,coalesce((module_item->>'estimatedMinutes')::integer,0)),coalesce(module_item->>'supportGuidance','Administrator must add and verify learner support guidance.'),true)
       returning id into module_id;
-      insert into public.program_modules(program_id,module_id,position,is_required) values (program_id,module_id,module_position,true);
       created_modules := created_modules + 1;
       lesson_position := 0;
       for lesson_item in select value from jsonb_array_elements(coalesce(module_item->'lessons','[]'::jsonb)) with ordinality as t(value, ord) order by ord loop
         insert into public.lessons(module_id,kind,title,description,position,rich_text,assessment,is_required,content_json,learning_objectives,estimated_minutes,points,status,governed_workflow)
         values (module_id,coalesce(lesson_item->>'kind','article'),left(lesson_item->>'title',255),left(coalesce(lesson_item->>'description','Draft lesson; administrator verification required.'),10000),lesson_position,lesson_item->>'draftText',lesson_item->'assessment',true,jsonb_build_object('activities',coalesce(lesson_item->'activities','[]'::jsonb),'accessibility',coalesce(lesson_item->'accessibility','[]'::jsonb),'videoScript',coalesce(lesson_item->>'videoScript','Missing: administrator must author a video script if video is required.'),'transcript',coalesce(lesson_item->>'transcript','Missing: administrator must author or verify a transcript.'),'diagrams',coalesce(lesson_item->'diagrams','[]'::jsonb),'references',coalesce(lesson_item->'references','[]'::jsonb),'assignment',coalesce(lesson_item->'assignment','Missing: administrator must define an assignment if required.'),'rubric',coalesce(lesson_item->'rubric','Missing: administrator must define and approve a rubric if required.'),'verificationRequired',true),coalesce(lesson_item->'objectives','[]'::jsonb),greatest(0,coalesce((lesson_item->>'estimatedMinutes')::integer,0)),greatest(0,coalesce((lesson_item->>'points')::numeric,0)),'draft',true)
         returning id into lesson_id;
-        insert into public.program_lessons(program_id,module_id,lesson_id,position,is_required) values (program_id,module_id,lesson_id,lesson_position,true);
         created_lessons_json := created_lessons_json || jsonb_build_object('lessonId',lesson_id,'moduleId',module_id,'courseId',course_id,'title',lesson_item->>'title','position',lesson_position);
         created_lessons := created_lessons + 1;
         material_position := 0;

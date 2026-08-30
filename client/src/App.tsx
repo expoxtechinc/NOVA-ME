@@ -75,6 +75,7 @@ function Router() {
     <Route path="/admin" component={AdminDashboard} />
     <Route path="/operations" component={Operations} />
     <Route path="/authoring" component={Authoring} />
+    <Route path="/programme-builder" component={CourseStudio} />
     <Route path="/course-studio" component={CourseStudio} />
     <Route path="/supporting-documents" component={SupportingDocuments} />
     <Route path="/academic-tools" component={AcademicTools} />

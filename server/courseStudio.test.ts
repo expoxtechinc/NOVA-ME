@@ -18,8 +18,9 @@ describe("NIU Course Studio", () => {
     const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
     const dashboard = fs.readFileSync(path.join(root, "client", "src", "pages", "AdminDashboard.tsx"), "utf8");
     expect(app).toContain('const CourseStudio = lazy(() => import("./pages/CourseStudio"));');
+    expect(app).toContain('<Route path="/programme-builder" component={CourseStudio} />');
     expect(app).toContain('<Route path="/course-studio" component={CourseStudio} />');
-    expect(dashboard).toContain('["Course Studio — create programme", "/course-studio"]');
+    expect(dashboard).toContain('["Programme Builder — create programme", "/programme-builder"]');
   });
 
   it("keeps the Course Studio workspace staff-only and certificate-only", () => {

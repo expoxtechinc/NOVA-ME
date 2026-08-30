@@ -5,6 +5,7 @@ import { analyzeCurriculumDocument } from "../../shared/curriculumImport";
 import { createClient } from "@supabase/supabase-js";
 import { publicProcedure, router } from "../_core/trpc";
 import { runStructuredAI, runStructuredAIWithFallback } from "../aiOrchestrator";
+import { DEFAULT_LESSON_KIND } from "../../shared/lessonKinds";
 import { generateImage } from "../_core/imageGeneration";
 
 function aiProviderError(stage: string, error: unknown): TRPCError {
@@ -114,7 +115,7 @@ function compileCompleteDraftPackage(topic: string, blueprint: Blueprint, review
           const evidenceLabel = reviewPlans?.contentPlan?.find((item: any) => String(item.section).toLowerCase().includes(lesson.title.toLowerCase()))?.evidenceUrls ?? [];
         const visualPlan = reviewPlans?.visualPlan?.filter((item: any) => String(item.placement).toLowerCase().includes(lesson.title.toLowerCase()) || String(item.placement).toLowerCase().includes(module.title.toLowerCase())) ?? [];
         return {
-          kind: "reading",
+          kind: DEFAULT_LESSON_KIND,
           title: lesson.title,
           description: lesson.description,
           draftText: `DRAFT LEARNING MATERIAL — ${lesson.title}\\n\\nThis lesson is an administrator-review draft for ${topic}. Use only verified evidence before approval.\\n\\nLearning objectives\\n${lesson.objectives.map(item => `- ${item}`).join("\\n")}\\n\\nSource evidence to verify\\n${evidenceLabel.length ? evidenceLabel.join("\\n") : "Missing evidence: administrator must attach authoritative sources."}`,
