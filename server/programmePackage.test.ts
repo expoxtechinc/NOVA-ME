@@ -12,9 +12,14 @@ describe("NIU guided programme package", () => {
     expect(page).toContain("Recommended next action");
     expect(page).toContain("Each course can have as many level-aware modules");
     expect(page).toContain('href="/module-blueprint"');
+    expect(page).toContain("Recommended next action");
   });
-  it("registers the programme-package workspace as a protected academic administration route", () => {
+  it("registers the programme-package workspace as the unified Course Studio route", () => {
     const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
-    expect(app).toContain('path="/programme-package"');
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    expect(app).toContain('path="/programme-package" component={CourseStudio}');
+    expect(studio).toContain('rpc("niu_programme_bundle_readiness"');
+    expect(studio).toContain("Counts only records linked to the selected programme package.");
+    expect(studio).not.toContain('label: "Protected learning material review", ok: false');
   });
 });
