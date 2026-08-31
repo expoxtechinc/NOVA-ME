@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
+import { createApp } from "../server/app";
 
-type App = ReturnType<(typeof import("../server/app"))["createApp"]>;
+type App = ReturnType<typeof createApp>;
 let appPromise: Promise<App> | undefined;
 
 async function loadApp(): Promise<App> {
-  const { createApp } = await import("../server/app");
   return createApp();
 }
 
