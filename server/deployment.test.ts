@@ -34,6 +34,9 @@ describe("external deployment branding", () => {
     expect(signInPage).toContain("/auth/callback");
     expect(signInPage).toContain("signInWithOtp");
     expect(signInPage).toContain("shouldCreateUser: true");
+    expect(signInPage).toContain("emailRedirectTo: `${window.location.origin}/portal`");
+    expect(signInPage).toContain("redirectTo: `${window.location.origin}/auth/callback`");
+    expect(signInPage).not.toContain("localhost");
     expect(signInPage).toContain("Email account link");
 
     const callbackPage = fs.readFileSync(path.join(root, "client", "src", "pages", "AuthCallback.tsx"), "utf8");
