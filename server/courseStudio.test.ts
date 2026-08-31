@@ -46,6 +46,29 @@ describe("NIU Course Studio", () => {
     expect(studio).not.toContain('window.location');
   });
 
+  it("keeps Step 2 course persistence isolated from programme state and selects the attached course", () => {
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    expect(studio).toContain("type CourseFormState");
+    expect(studio).toContain("buildCourseInsertPayload(courseForm, userId)");
+    expect(studio).toContain('supabase.from("courses").insert(payload)');
+    expect(studio).toContain('supabase.from("program_courses").insert({ program_id: programmeId, course_id: created.id');
+    expect(studio).toContain('await loadStructure(programmeId); setCourseId(created.id)');
+    expect(studio).toContain('setCourseForm({ title: "", description: "", category: "Professional development"');
+    expect(studio).toContain('from("course_modules").insert({ course_id: courseId');
+    expect(studio).not.toContain('supabase.from("certificate_programs").update({ title: courseForm');
+    expect(studio).toContain("Programme information is read-only in Step 2");
+  });
+
+  it("restores only the affected PMF programme name without deleting history", () => {
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260831_restore_pmf_programme_name.sql"), "utf8");
+    expect(migration).toContain("update public.certificate_programs");
+    expect(migration).toContain("PMF-CAPM-101");
+    expect(migration).toContain("Project Management Foundations: CAPM Preparation");
+    expect(migration).not.toContain("delete from");
+    expect(migration).not.toContain("objectives =");
+    expect(migration).not.toContain("completion_requirements =");
+  });
+
   it("keeps automatic completion eligibility separate from administrator issuance", () => {
     const migration = fs.readFileSync(path.join(root, "docs/supabase/20260827_niu_admin_controlled_certificate_eligibility.sql"), "utf8");
     expect(migration).toContain("'administrator_approval_required', true");
