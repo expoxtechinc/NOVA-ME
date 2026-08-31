@@ -81,7 +81,7 @@ begin
      and a.attempt_limit is not null
      and a.attempt_limit > 0
      and jsonb_typeof(coalesce(a.required_completion_rules, '{}'::jsonb)) = 'object'
-     and jsonb_object_length(coalesce(a.required_completion_rules, '{}'::jsonb)) > 0
+     and exists (select 1 from jsonb_each(coalesce(a.required_completion_rules, '{}'::jsonb)) as rule(key, value))
      and exists (
        select 1
          from public.assessment_questions aq

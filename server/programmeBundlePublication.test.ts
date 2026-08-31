@@ -55,4 +55,15 @@ describe("NIU controlled programme bundle publication", () => {
     const builder = fs.readFileSync(path.join(root, "client", "src", "pages", "AssessmentBuilder.tsx"), "utf8");
     expect(builder).toContain('rpc("niu_transition_academic_record"');
   });
+
+  it("replaces the live assessment JSONB length check with jsonb_each", () => {
+    const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260907_fix_jsonb_readiness_validation.sql"), "utf8");
+    expect(migration).toContain("jsonb_typeof(rules) <> 'object'");
+    expect(migration).toContain("exists (select 1 from jsonb_each(rules)");
+    expect(migration).not.toContain("jsonb_object_length");
+    const sqlFiles = fs.readdirSync(path.join(root, "docs", "supabase")).filter((file) => file.endsWith(".sql"));
+    for (const file of sqlFiles) {
+      expect(fs.readFileSync(path.join(root, "docs", "supabase", file), "utf8"), file).not.toContain("jsonb_object_length");
+    }
+  });
 });

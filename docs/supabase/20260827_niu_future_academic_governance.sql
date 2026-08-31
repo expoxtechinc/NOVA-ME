@@ -105,7 +105,7 @@ begin
     if new.time_limit_minutes is null or new.time_limit_minutes <= 0 then raise exception 'Assessment publication requires a positive time limit in minutes'; end if;
     if new.attempt_limit is null or new.attempt_limit <= 0 then raise exception 'Assessment publication requires a positive attempt limit'; end if;
     rules := coalesce(new.required_completion_rules, '{}'::jsonb);
-    if jsonb_typeof(rules) <> 'object' or jsonb_object_length(rules) = 0 then raise exception 'Assessment publication requires saved completion rules'; end if;
+    if jsonb_typeof(rules) <> 'object' or not exists (select 1 from jsonb_each(rules) as rule(key, value)) then raise exception 'Assessment publication requires saved completion rules'; end if;
     select count(*), count(*) filter (where q.approval_status <> 'approved') into attached_count, unapproved_count from public.assessment_questions aq join public.questions q on q.id = aq.question_id where aq.assessment_id = new.id;
     if attached_count = 0 then raise exception 'Assessment publication requires at least one approved question'; end if;
     if unapproved_count > 0 then raise exception 'Assessment publication is blocked while attached questions are not approved'; end if;
@@ -224,4 +224,3 @@ revoke all on function public.niu_validate_future_governed_status() from public,
 revoke all on function public.niu_validate_future_assessment() from public, anon, authenticated;
 revoke all on function public.niu_validate_question_bank_question() from public, anon, authenticated;
 revoke all on function public.niu_require_approved_question_for_assessment() from public, anon, authenticated;
-
