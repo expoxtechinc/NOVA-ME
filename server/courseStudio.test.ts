@@ -255,4 +255,20 @@ describe("NIU Course Studio", () => {
     expect(media).toContain("protected lesson media is temporarily unavailable");
     expect(media).toContain("protected learning resource is temporarily unavailable");
   });
+
+  it("keeps the saved assessment selected and exposes its complete governed workspace", () => {
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    const builder = fs.readFileSync(path.join(root, "client", "src", "pages", "AssessmentBuilder.tsx"), "utf8");
+    expect(studio).toContain("assessment_questions(question_id)");
+    expect(studio).toContain("setAssessmentId(createdAssessment.id)");
+    expect(studio).toContain("Open Assessment Builder");
+    expect(studio).toContain("saveAssessmentRules");
+    expect(studio).toContain("Refresh validation");
+    expect(studio).toContain("Submit for Review");
+    expect(studio).toContain("approved assessments are locked");
+    expect(studio).toContain("niu_transition_academic_record");
+    expect(builder).toContain("new URLSearchParams");
+    expect(builder).toContain('rpc("niu_transition_academic_record"');
+    expect(builder).toContain('onConflict: "assessment_id,question_id"');
+  });
 });
