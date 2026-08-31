@@ -4,6 +4,7 @@ import path from "node:path";
 
 const root = path.resolve(__dirname, "..");
 const router = fs.readFileSync(path.join(root, "server", "routers", "aiBuilder.ts"), "utf8");
+const orchestrator = fs.readFileSync(path.join(root, "server", "aiOrchestrator.ts"), "utf8");
 const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder.sql"), "utf8");
 const governanceMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_governance.sql"), "utf8");
 const reviewMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_review.sql"), "utf8");
@@ -60,6 +61,11 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain('provider: "gemini"');
     expect(router).toContain("generationDepth");
     expect(router).toContain("validateBlueprint");
+    expect(router).toContain('providerHealth("gemini")');
+    expect(router).toContain("geminiConfigured");
+    expect(router).toContain("selectedModelAvailable");
+    expect(orchestrator).toContain("value.toUpperCase()");
+    expect(orchestrator).toContain("providerHealth");
     expect(router).toContain("runStructuredAIWithFallback");
     expect(router).not.toContain("invokeLLM");
     expect(router).toContain("schema: blueprintSchema");

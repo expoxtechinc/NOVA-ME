@@ -35,6 +35,10 @@ const toGeminiSchema = (schema: Record<string, unknown>): Record<string, unknown
   const converted: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(schema)) {
     if (key === "additionalProperties") continue;
+    if (key === "type" && typeof value === "string") {
+      converted[key] = value.toUpperCase();
+      continue;
+    }
     if (key === "properties" && value && typeof value === "object") {
       converted[key] = Object.fromEntries(Object.entries(value as Record<string, unknown>).map(([name, child]) => [name, child && typeof child === "object" ? toGeminiSchema(child as Record<string, unknown>) : child]));
     } else if (key === "items" && value && typeof value === "object") {
@@ -84,8 +88,9 @@ const chooseModel = async (provider: AIProvider, requested?: string) => {
   if (provider === "gemini" && configured && models.includes(configured)) return configured;
   const preferred = provider === "openai"
     ? models.find(model => /^gpt-/.test(model) && !model.includes("audio"))
-    : models.find(model => /gemini-3\\.6-flash/i.test(model))
-      ?? models.find(model => /gemini-3/i.test(model))
+    : models.find(model => /gemini-2\.5-flash/i.test(model))
+      ?? models.find(model => /gemini-2\.0-flash/i.test(model))
+      ?? models.find(model => /gemini-1\.5-flash/i.test(model))
       ?? models.find(model => /gemini/i.test(model));
   if (!preferred) throw new Error(`No compatible ${provider} structured-output model is available.`);
   return preferred;
@@ -139,4 +144,19 @@ export async function runStructuredAIWithFallback<T>(request: OrchestrationReque
 
 export function providerConfigurationStatus() {
   return { openaiConfigured: Boolean(ENV.openAiApiKey), geminiConfigured: Boolean(ENV.geminiApiKey), serverOnly: true };
+}
+
+export async function providerHealth(provider: AIProvider = "gemini") {
+  const configured = Boolean(providerKey(provider));
+  if (!configured) return { configured: false, reachable: false, modelAvailable: false, model: null };
+  try {
+    const models = await listProviderModels(provider);
+    const configuredModel = provider === "gemini" ? ENV.geminiModel : ENV.openAiModel;
+    const model = configuredModel || await chooseModel(provider);
+    return { configured: true, reachable: true, modelAvailable: models.includes(model), model };
+  } catch (error) {
+    const detail = error instanceof Error ? error.message.replace(/(api[_-]?key|authorization|bearer)\s*[:=]\s*\S+/gi, "$1=[REDACTED]").slice(0, 240) : "unknown provider health failure";
+    console.error(`[AI health:${provider}] ${detail}`);
+    return { configured: true, reachable: false, modelAvailable: false, model: null };
+  }
 }

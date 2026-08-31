@@ -4,7 +4,7 @@ import { storagePut } from "../storage";
 import { analyzeCurriculumDocument } from "../../shared/curriculumImport";
 import { createClient } from "@supabase/supabase-js";
 import { publicProcedure, router } from "../_core/trpc";
-import { runStructuredAI, runStructuredAIWithFallback } from "../aiOrchestrator";
+import { providerHealth, runStructuredAI, runStructuredAIWithFallback } from "../aiOrchestrator";
 import { DEFAULT_LESSON_KIND } from "../../shared/lessonKinds";
 import { generateImage } from "../_core/imageGeneration";
 
@@ -196,6 +196,11 @@ function compileCompleteDraftPackage(topic: string, blueprint: Blueprint, review
 }
 
 export const aiBuilderRouter = router({
+  health: publicProcedure.query(async ({ ctx }) => {
+    await getStaffSession(ctx.req);
+    const health = await providerHealth("gemini");
+    return { geminiConfigured: health.configured, providerReachable: health.reachable, selectedModelAvailable: health.modelAvailable };
+  }),
   listJobs: publicProcedure.query(async ({ ctx }) => {
     const { supabase } = await getStaffSession(ctx.req);
     const { data, error } = await supabase.from("ai_academic_builder_jobs").select("id,topic,status,settings,blueprint,research_plan,validation_errors,missing_information,generated_record_ids,created_at,updated_at").order("updated_at", { ascending: false }).limit(20);
@@ -231,7 +236,7 @@ export const aiBuilderRouter = router({
     try {
       const result = await runStructuredAIWithFallback<typeof plans>({
         provider: "gemini",
-        model: process.env.GEMINI_MODEL || undefined,
+
         system: "You are NIU's evidence-bound academic planning assistant. Produce only reviewable plans, never final teaching claims. Use only the supplied blueprint and evidence excerpts. Do not add facts not present in evidence. Every item must include source URLs or an explicit verification label. NIU offers certificate programmes only. Return JSON exactly matching the schema.",
         prompt: JSON.stringify({ topic: job.topic, blueprint: job.blueprint, researchSources: job.research_sources, researchNotes: job.research_notes, evidence: input.evidence }),
         schema: { type: "object", additionalProperties: false, properties: { contentPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { section: { type: "string" }, draftPurpose: { type: "string" }, evidenceUrls: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["section", "draftPurpose", "evidenceUrls", "verificationRequired"] } }, visualPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { placement: { type: "string" }, purpose: { type: "string" }, altText: { type: "string" }, accessibilityChecks: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["placement", "purpose", "altText", "accessibilityChecks", "verificationRequired"] } }, assessmentBlueprint: { type: "object", additionalProperties: false, properties: { passingScore: { type: "integer" }, attemptLimit: { type: "integer" }, questions: { type: "array", items: { type: "object", additionalProperties: false, properties: { promptPurpose: { type: "string" }, objective: { type: "string" }, difficulty: { type: "string", enum: ["introductory", "intermediate", "advanced"] }, points: { type: "integer" }, answerKeyStatus: { type: "string" }, verificationRequired: { type: "boolean" } }, required: ["promptPurpose", "objective", "difficulty", "points", "answerKeyStatus", "verificationRequired"] } } }, required: ["passingScore", "attemptLimit", "questions"] }, missingEvidence: { type: "array", items: { type: "string" } } }, required: ["contentPlan", "visualPlan", "assessmentBlueprint", "missingEvidence"] },
@@ -447,7 +452,7 @@ export const aiBuilderRouter = router({
     try {
       const result = await runStructuredAIWithFallback<Record<string, unknown>>({
         provider: "gemini",
-        model: process.env.GEMINI_MODEL || undefined,
+
         system: "You are NIU's curriculum architect and instructional designer. NIU offers certificate programmes only. Create an original, reviewable planning blueprint, never publishable records. Use only the topic and explicit settings. Do not invent references, research findings, accreditation, licensing, employment, or recognition claims. Match the requested generation depth: Starter creates architecture only; Standard adds lesson objectives, activities, reading guidance, summaries, and self-checks; Premium adds complete original Markdown notes, examples, case studies, assessments, questions, answer explanations, points, and completion rules. Mark missing information rather than guessing. Return JSON matching the schema exactly.",
         prompt: `Programme topic: ${input.topic}\nSettings: ${JSON.stringify(input.settings)}\nDesign a coherent progression from foundation to assessment. Keep every generated item draft-only and suitable for administrator review.`,
         schema: blueprintSchema,
