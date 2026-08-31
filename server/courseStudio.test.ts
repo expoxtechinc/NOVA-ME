@@ -69,6 +69,47 @@ describe("NIU Course Studio", () => {
     expect(migration).not.toContain("completion_requirements =");
   });
 
+  it("provides scoped approval with audit events and short-programme readiness gates", () => {
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260831_niu_programme_content_approval.sql"), "utf8");
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    expect(migration).toContain("niu_approve_academic_record");
+    expect(migration).toContain("target_type not in ('course', 'module', 'lesson')");
+    expect(migration).toContain("academic_record_approved");
+    expect(migration).toContain("insert into public.audit_events");
+    expect(migration).toContain("course_total = 1");
+    expect(migration).toContain("module_total = 1");
+    expect(migration).toContain("required_lesson_total = 1");
+    expect(migration).toContain("required_material_total = 1");
+    expect(migration).toContain("governed_assessment_total = 1");
+    expect(studio).toContain('supabase.rpc("niu_approve_academic_record"');
+    expect(studio).toContain("Approval changes only this record and records an audit event.");
+    expect(studio).toContain('readiness?.courses === 1');
+    expect(studio).toContain('readiness?.modules === 1');
+    expect(studio).toContain('readiness?.required_lessons === 1');
+    expect(studio).toContain('readiness?.governed_assessments === 1');
+  });
+
+  it("supports scoped academic approval and the five-minute certificate gate thresholds", () => {
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260831_niu_programme_content_approval.sql"), "utf8");
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    expect(migration).toContain("create or replace function public.niu_approve_academic_record");
+    expect(migration).toContain("target_type not in ('course', 'module', 'lesson')");
+    expect(migration).toContain("status = 'approved'");
+    expect(migration).toContain("insert into public.audit_events");
+    expect(migration).toContain("course_total = 1");
+    expect(migration).toContain("module_total = 1");
+    expect(migration).toContain("required_lesson_total = 1");
+    expect(migration).toContain("required_material_total = 1");
+    expect(migration).toContain("governed_assessment_total = 1");
+    expect(migration).toContain("certificate_template_key is not null");
+    expect(studio).toContain('supabase.rpc("niu_approve_academic_record"');
+    expect(studio).toContain("Approval changes only this record and records an audit event.");
+    expect(studio).toContain('readiness?.courses === 1');
+    expect(studio).toContain('readiness?.modules === 1');
+    expect(studio).toContain('readiness?.required_lessons === 1');
+    expect(studio).toContain('readiness?.governed_assessments === 1');
+  });
+
   it("keeps automatic completion eligibility separate from administrator issuance", () => {
     const migration = fs.readFileSync(path.join(root, "docs/supabase/20260827_niu_admin_controlled_certificate_eligibility.sql"), "utf8");
     expect(migration).toContain("'administrator_approval_required', true");
