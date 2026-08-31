@@ -110,6 +110,18 @@ describe("NIU Course Studio", () => {
     expect(studio).toContain('readiness?.governed_assessments === 1');
   });
 
+  it("casts course transitions to the live enum without changing related text-backed statuses", () => {
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260901_niu_review_workflow.sql"), "utf8");
+    expect(migration).toContain("public.course_status");
+    expect(migration).toContain("(target_status)::public.course_status");
+    expect(migration).toContain("courses.status is public.course_status");
+    expect(migration).toContain("course_modules set status = target_status::text");
+    expect(migration).toContain("lessons set status = target_status::text");
+    expect(migration).toContain("assessments set status = target_status::text");
+    expect(migration).toContain("certificate_templates set status = target_status::text");
+    expect(migration).not.toContain("alter type public.course_status");
+  });
+
   it("enforces Draft to Review to Approved governance across Programme Builder records", () => {
     const migration = fs.readFileSync(path.join(root, "docs/supabase/20260901_niu_review_workflow.sql"), "utf8");
     const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");

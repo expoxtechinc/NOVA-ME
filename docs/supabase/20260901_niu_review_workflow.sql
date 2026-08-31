@@ -1,4 +1,6 @@
 -- Governed Draft -> Review -> Approved workflow for Programme Builder records.
+-- Live schema inspection: courses.status is public.course_status; related status columns are text.
+-- The validated course transition is explicitly cast to public.course_status; no enum is altered.
 -- Every transition is scoped to one record and writes an audit ledger event.
 create or replace function public.niu_transition_academic_record(target_type text, target_id uuid, target_status text)
 returns jsonb
@@ -28,31 +30,31 @@ begin
     if before_record is null then raise exception 'Course not found'; end if;
     if target_status = 'approved' and current_status <> 'review' then raise exception 'Draft content must enter Review before approval'; end if;
     if current_status not in ('draft', 'review') then raise exception 'Only Draft or Review content can transition'; end if;
-    update public.courses set status = target_status, updated_at = now() where id = target_id returning to_jsonb(courses) into after_record;
+    update public.courses set status = (target_status)::public.course_status, updated_at = now() where id = target_id returning to_jsonb(courses) into after_record;
   elsif target_type = 'module' then
     select to_jsonb(m), m.status into before_record, current_status from public.course_modules m where m.id = target_id;
     if before_record is null then raise exception 'Module not found'; end if;
     if target_status = 'approved' and current_status <> 'review' then raise exception 'Draft content must enter Review before approval'; end if;
     if current_status not in ('draft', 'review') then raise exception 'Only Draft or Review content can transition'; end if;
-    update public.course_modules set status = target_status where id = target_id returning to_jsonb(course_modules) into after_record;
+    update public.course_modules set status = target_status::text where id = target_id returning to_jsonb(course_modules) into after_record;
   elsif target_type = 'lesson' then
     select to_jsonb(l), l.status into before_record, current_status from public.lessons l where l.id = target_id;
     if before_record is null then raise exception 'Lesson not found'; end if;
     if target_status = 'approved' and current_status <> 'review' then raise exception 'Draft content must enter Review before approval'; end if;
     if current_status not in ('draft', 'review') then raise exception 'Only Draft or Review content can transition'; end if;
-    update public.lessons set status = target_status where id = target_id returning to_jsonb(lessons) into after_record;
+    update public.lessons set status = target_status::text where id = target_id returning to_jsonb(lessons) into after_record;
   elsif target_type = 'assessment' then
     select to_jsonb(a), a.status into before_record, current_status from public.assessments a where a.id = target_id;
     if before_record is null then raise exception 'Assessment not found'; end if;
     if target_status = 'approved' and current_status <> 'review' then raise exception 'Draft content must enter Review before approval'; end if;
     if current_status not in ('draft', 'review') then raise exception 'Only Draft or Review content can transition'; end if;
-    update public.assessments set status = target_status, updated_at = now() where id = target_id returning to_jsonb(assessments) into after_record;
+    update public.assessments set status = target_status::text, updated_at = now() where id = target_id returning to_jsonb(assessments) into after_record;
   else
     select to_jsonb(t), t.status into before_record, current_status from public.certificate_templates t where t.id = target_id;
     if before_record is null then raise exception 'Certificate template not found'; end if;
     if target_status = 'approved' and current_status <> 'review' then raise exception 'Draft content must enter Review before approval'; end if;
     if current_status not in ('draft', 'review') then raise exception 'Only Draft or Review content can transition'; end if;
-    update public.certificate_templates set status = target_status, updated_at = now() where id = target_id returning to_jsonb(certificate_templates) into after_record;
+    update public.certificate_templates set status = target_status::text, updated_at = now() where id = target_id returning to_jsonb(certificate_templates) into after_record;
   end if;
 
   insert into public.audit_events (actor_id, action, subject_type, subject_id, metadata)
