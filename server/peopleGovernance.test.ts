@@ -16,6 +16,10 @@ describe("NIU existing-user governance", () => {
     expect(integrityFix).not.toContain("lesson_content_library_items");
     const page = fs.readFileSync(path.join(root, "client", "src", "pages", "PeopleGovernance.tsx"), "utf8");
     expect(page).toContain('rpc("niu_reassign_profile_role"');
+    expect(page).toContain('rpc("niu_update_profile_account_status"');
+    expect(page).toContain('value="suspended"');
+    expect(page).toContain('value="inactive"');
+    expect(page).toContain("A Super Administrator cannot suspend or deactivate their own active account.");
     expect(page).toContain('from("staff_course_assignments")');
     expect(page).toContain("core profile role");
   });
