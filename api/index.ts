@@ -1,5 +1,5 @@
 import type { Request, Response } from "express";
-import { createApp } from "../server/app.js";
+import { createApp } from "../server/app.ts";
 
 type App = ReturnType<typeof createApp>;
 let appPromise: Promise<App> | undefined;
