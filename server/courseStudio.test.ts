@@ -167,9 +167,20 @@ describe("NIU Course Studio", () => {
 
   it("prevents duplicate lessons in a module and supports editing an existing lesson", () => {
     const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
-    expect(studio).toContain('from("lessons").select("id,title,status")');
+    expect(studio).toContain('supabase.rpc("niu_find_duplicate_lesson"');
+    expect(studio).toContain("target_module_id: moduleId");
+    expect(studio).toContain("target_title: lessonForm.title.trim()");
+    expect(studio).toContain("excluded_lesson_id: lessonId || null");
+    expect(studio).toContain("Technical detail: ${duplicateError.message}");
+    expect(studio).not.toContain('from("lessons").select("id,title,status")');
     expect(studio).toContain("A lesson named");
     expect(studio).toContain("It is selected for editing instead of creating a duplicate");
+    const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260902_niu_find_duplicate_lesson.sql"), "utf8");
+    expect(migration).toContain("security definer");
+    expect(migration).toContain("lower(btrim(l.title)) = lower(btrim(target_title))");
+    expect(migration).toContain("and l.status <> 'archived'");
+    expect(migration).toContain("limit 1");
+    expect(migration).toContain("niu_is_academic_staff");
     expect(studio).toContain("const existingLesson = lessons.find(item => item.id === lessonId)");
     expect(studio).toContain('supabase.from("lessons").update(lessonPayload)');
     expect(studio).toContain("Approved lessons are locked");

@@ -310,9 +310,8 @@ export default function CourseStudio() {
     event.preventDefault(); clearFeedback();
     if (!moduleId || lessonForm.title.trim().length < 3) { setError("Choose a module and provide a lesson title."); return; }
     setSaving(true);
-    const duplicateQuery = supabase.from("lessons").select("id,title,status").eq("module_id", moduleId).ilike("title", lessonForm.title.trim()).neq("status", "archived");
-    const { data: duplicateRows, error: duplicateError } = lessonId ? await duplicateQuery.neq("id", lessonId).limit(1) : await duplicateQuery.limit(1);
-    if (duplicateError) { setError(`NIU could not check for duplicate lessons: ${duplicateError.message}`); setSaving(false); return; }
+    const { data: duplicateRows, error: duplicateError } = await supabase.rpc("niu_find_duplicate_lesson", { target_module_id: moduleId, target_title: lessonForm.title.trim(), excluded_lesson_id: lessonId || null });
+    if (duplicateError) { console.error("NIU duplicate lesson lookup failed", { moduleId, lessonId: lessonId || null, code: duplicateError.code, details: duplicateError.details }); setError(`NIU could not check for duplicate lessons. Nothing was created; please retry. Technical detail: ${duplicateError.message}`); setSaving(false); return; }
     const duplicate = duplicateRows?.[0];
     if (duplicate) { setLessonId(duplicate.id); setError(`A lesson named “${duplicate.title}” already exists in this module (${duplicate.status}). It is selected for editing instead of creating a duplicate.`); setSaving(false); return; }
     const existingLesson = lessons.find(item => item.id === lessonId);
