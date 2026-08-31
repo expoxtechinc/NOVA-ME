@@ -62,6 +62,7 @@ function Router() {
     <Route path="/programme-package" component={CourseStudio} />
     <Route path="/curriculum-import" component={CurriculumImport} />
     <Route path="/ai-academic-builder" component={AIAcademicBuilder} />
+    <Route path="/admin/academic-ai" component={AIAcademicBuilder} />
     <Route path="/programme-publication" component={ProgrammePublication} />
     <Route path="/module-blueprint" component={ModuleBlueprint} />
     <Route path="/people-governance" component={PeopleGovernance} />

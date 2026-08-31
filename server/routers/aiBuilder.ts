@@ -22,12 +22,21 @@ function aiProviderError(stage: string, error: unknown): TRPCError {
 }
 
 const settingsSchema = z.object({
+  programmeCode: z.string().trim().regex(/^[A-Za-z0-9-]{2,40}$/).optional(),
+  subject: z.string().trim().max(240).optional(),
+  category: z.string().trim().max(160).optional(),
   department: z.string().trim().max(160).optional(),
   difficulty: z.enum(["introductory", "intermediate", "advanced"]).optional(),
   learningHours: z.number().int().positive().max(2000).optional(),
   academicDepth: z.enum(["foundation", "applied", "advanced"]).optional(),
   targetLearner: z.string().trim().max(240).optional(),
   numberOfCourses: z.number().int().positive().max(24).optional(),
+  estimatedModulesPerCourse: z.number().int().positive().max(12).optional(),
+  estimatedLessonsPerModule: z.number().int().positive().max(20).optional(),
+  preferredAssessmentDifficulty: z.enum(["introductory", "intermediate", "advanced"]).optional(),
+  minimumPassingScore: z.number().int().min(1).max(100).optional(),
+  certificateTemplate: z.string().trim().max(160).optional(),
+  generationDepth: z.enum(["starter", "standard", "premium"]).default("standard"),
   researchDepth: z.enum(["standard", "deep"]).optional(),
   visualGeneration: z.boolean().default(false),
   assessmentGeneration: z.boolean().default(true),
@@ -65,7 +74,7 @@ export const blueprintSchema = {
     courses: {
       type: "array", items: { type: "object", additionalProperties: false,
         properties: {
-          title: { type: "string" }, description: { type: "string" }, difficulty: { type: "string", enum: ["introductory", "intermediate", "advanced"] }, position: { type: "integer" }, objectives: { type: "array", items: { type: "string" } }, modules: { type: "array", items: { type: "object", additionalProperties: false, properties: { title: { type: "string" }, description: { type: "string" }, difficulty: { type: "string", enum: ["introductory", "intermediate", "advanced"] }, position: { type: "integer" }, objectives: { type: "array", items: { type: "string" } }, lessons: { type: "array", items: { type: "object", additionalProperties: false, properties: { title: { type: "string" }, description: { type: "string" }, position: { type: "integer" }, objectives: { type: "array", items: { type: "string" } }, activityIdeas: { type: "array", items: { type: "string" } }, materialNeeds: { type: "array", items: { type: "string" } }, assessmentIdeas: { type: "array", items: { type: "string" } } }, required: ["title", "description", "position", "objectives", "activityIdeas", "materialNeeds", "assessmentIdeas"] } } }, required: ["title", "description", "difficulty", "position", "objectives", "lessons"] } } }, required: ["title", "description", "difficulty", "position", "objectives", "modules"] },
+          title: { type: "string" }, description: { type: "string" }, difficulty: { type: "string", enum: ["introductory", "intermediate", "advanced"] }, position: { type: "integer" }, objectives: { type: "array", items: { type: "string" } }, modules: { type: "array", items: { type: "object", additionalProperties: false, properties: { title: { type: "string" }, description: { type: "string" }, difficulty: { type: "string", enum: ["introductory", "intermediate", "advanced"] }, position: { type: "integer" }, objectives: { type: "array", items: { type: "string" } }, lessons: { type: "array", items: { type: "object", additionalProperties: false, properties: { title: { type: "string" }, description: { type: "string" }, position: { type: "integer" }, objectives: { type: "array", items: { type: "string" } }, activityIdeas: { type: "array", items: { type: "string" } }, materialNeeds: { type: "array", items: { type: "string" } }, assessmentIdeas: { type: "array", items: { type: "string" } }, summary: { type: "string" }, keyConcepts: { type: "array", items: { type: "string" } }, notes: { type: "string" }, selfCheckQuestions: { type: "array", items: { type: "string" } } }, required: ["title", "description", "position", "objectives", "activityIdeas", "materialNeeds", "assessmentIdeas"] } } }, required: ["title", "description", "difficulty", "position", "objectives", "lessons"] } } }, required: ["title", "description", "difficulty", "position", "objectives", "modules"] },
     },
     researchPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { claimArea: { type: "string" }, sourceTypes: { type: "array", items: { type: "string" } }, searchQuestions: { type: "array", items: { type: "string" } }, sourceRequiredBeforeWriting: { type: "boolean" } }, required: ["claimArea", "sourceTypes", "searchQuestions", "sourceRequiredBeforeWriting"] } },
     qualityGates: { type: "array", items: { type: "string" } },
@@ -77,7 +86,30 @@ export const blueprintSchema = {
 const sourceSchema = z.object({ title: z.string().trim().min(2).max(240), url: z.string().url().refine(value => value.startsWith("https://"), "Sources must use HTTPS URLs"), sourceType: z.string().trim().min(2).max(120) });
 const visualSpecSchema = { type: "object", additionalProperties: false, properties: { lessonTitle: { type: "string" }, shouldGenerate: { type: "boolean" }, visualType: { type: "string" }, concept: { type: "string" }, learningObjective: { type: "string" }, requiredStructures: { type: "array", items: { type: "string" } }, requiredLabels: { type: "array", items: { type: "string" } }, layout: { type: "string" }, orientation: { type: "string" }, educationalPurpose: { type: "string" }, altText: { type: "string" }, accuracyRequirements: { type: "array", items: { type: "string" } }, accessibilityRequirements: { type: "array", items: { type: "string" } }, reviewStatus: { type: "string", enum: ["draft", "needs_review"] } }, required: ["lessonTitle", "shouldGenerate", "visualType", "concept", "learningObjective", "requiredStructures", "requiredLabels", "layout", "orientation", "educationalPurpose", "altText", "accuracyRequirements", "accessibilityRequirements", "reviewStatus"] };
 
-type Blueprint = { programme: { title: string; description: string; difficulty: string; objectives: string[]; learningOutcomes: string[]; entryRequirements: string[]; completionRequirements: string[]; recommendedLearningHours: number }; courses: Array<{ title: string; description: string; difficulty: string; position: number; objectives: string[]; modules: Array<{ title: string; description: string; difficulty: string; position: number; objectives: string[]; lessons: Array<{ title: string; description: string; position: number; objectives: string[]; activityIdeas: string[]; materialNeeds: string[]; assessmentIdeas: string[] }> }> }> };
+type Blueprint = { programme: { title: string; description: string; difficulty: string; objectives: string[]; learningOutcomes: string[]; entryRequirements: string[]; completionRequirements: string[]; recommendedLearningHours: number }; courses: Array<{ title: string; description: string; difficulty: string; position: number; objectives: string[]; modules: Array<{ title: string; description: string; difficulty: string; position: number; objectives: string[]; lessons: Array<{ title: string; description: string; position: number; objectives: string[]; activityIdeas: string[]; materialNeeds: string[]; assessmentIdeas: string[]; summary?: string; keyConcepts?: string[]; notes?: string; selfCheckQuestions?: string[] }> }> }>; researchPlan?: Array<{ claimArea: string; sourceTypes: string[]; searchQuestions: string[]; sourceRequiredBeforeWriting: boolean }>; missingInformation?: string[];}
+
+function validateBlueprint(value: unknown, generationDepth: "starter" | "standard" | "premium" = "standard"): asserts value is Blueprint {
+  const blueprint = value as Partial<Blueprint> | null;
+  if (!blueprint?.programme?.title?.trim() || !blueprint.programme.description?.trim() || !Array.isArray(blueprint.programme.objectives) || !blueprint.programme.objectives.length || !Array.isArray(blueprint.programme.learningOutcomes) || !blueprint.programme.learningOutcomes.length || !Array.isArray(blueprint.courses) || !blueprint.courses.length) throw new Error("AI returned an incomplete programme blueprint.");
+  const courseTitles = new Set<string>();
+  for (const course of blueprint.courses) {
+    const courseKey = String(course.title ?? "").trim().toLocaleLowerCase();
+    if (!courseKey || courseTitles.has(courseKey) || !Array.isArray(course.modules) || !course.modules.length) throw new Error("AI returned duplicate or incomplete course structure.");
+    courseTitles.add(courseKey);
+    const moduleTitles = new Set<string>();
+    for (const module of course.modules) {
+      const moduleKey = String(module.title ?? "").trim().toLocaleLowerCase();
+      if (!moduleKey || moduleTitles.has(moduleKey) || !Array.isArray(module.objectives) || !module.objectives.length || !Array.isArray(module.lessons) || !module.lessons.length) throw new Error("AI returned duplicate or incomplete module structure.");
+      moduleTitles.add(moduleKey);
+      const lessonTitles = new Set<string>();
+      for (const lesson of module.lessons) {
+        const lessonKey = String(lesson.title ?? "").trim().toLocaleLowerCase();
+        if (!lessonKey || lessonTitles.has(lessonKey) || !Array.isArray(lesson.objectives) || !lesson.objectives.length || !Array.isArray(lesson.activityIdeas) || !Array.isArray(lesson.materialNeeds) || !Array.isArray(lesson.assessmentIdeas) || (generationDepth === "premium" && (!lesson.notes || lesson.notes.trim().length < 120))) throw new Error(generationDepth === "premium" ? "AI returned incomplete Premium lesson notes." : "AI returned duplicate or incomplete lesson structure.");
+        lessonTitles.add(lessonKey);
+      }
+    }
+  }
+}
 
 function blueprintToMarkdown(topic: string, blueprint: Blueprint, sources: Array<{ title: string; url: string; sourceType: string }>, notes: string) {
   const lines = [`# Department: ${topic.slice(0, 80)} Academic Development`, `# Programme: ${blueprint.programme.title}`, `Description: ${blueprint.programme.description}`, `Difficulty: ${blueprint.programme.difficulty}`, `Learning hours: ${blueprint.programme.recommendedLearningHours}`, `Objectives: ${blueprint.programme.objectives.join("; ")}`, `Learning outcomes: ${blueprint.programme.learningOutcomes.join("; ")}`, `Entry requirements: ${blueprint.programme.entryRequirements.join("; ")}`, `Completion requirements: ${blueprint.programme.completionRequirements.join("; ")}`, "", `Research review: ${notes}`, `Research sources: ${sources.map(source => `${source.title} (${source.sourceType}) — ${source.url}`).join("; ")}`, ""];
@@ -118,7 +150,7 @@ function compileCompleteDraftPackage(topic: string, blueprint: Blueprint, review
           kind: DEFAULT_LESSON_KIND,
           title: lesson.title,
           description: lesson.description,
-          draftText: `DRAFT LEARNING MATERIAL — ${lesson.title}\\n\\nThis lesson is an administrator-review draft for ${topic}. Use only verified evidence before approval.\\n\\nLearning objectives\\n${lesson.objectives.map(item => `- ${item}`).join("\\n")}\\n\\nSource evidence to verify\\n${evidenceLabel.length ? evidenceLabel.join("\\n") : "Missing evidence: administrator must attach authoritative sources."}`,
+          draftText: lesson.notes?.trim() || `DRAFT LEARNING MATERIAL — ${lesson.title}\\n\\nThis lesson is an administrator-review draft for ${topic}. Use only verified evidence before approval.\\n\\nLearning objectives\\n${lesson.objectives.map(item => `- ${item}`).join("\\n")}\\n\\nSource evidence to verify\\n${evidenceLabel.length ? evidenceLabel.join("\\n") : "Missing evidence: administrator must attach authoritative sources."}`,
           objectives: lesson.objectives,
           activities: lesson.activityIdeas,
           accessibility: ["Provide an accessible text alternative.", "Verify headings, contrast, captions/transcripts, and keyboard access."],
@@ -198,12 +230,12 @@ export const aiBuilderRouter = router({
     let plans: { contentPlan: unknown[]; visualPlan: unknown[]; assessmentBlueprint: Record<string, unknown>; missingEvidence: string[] };
     try {
       const result = await runStructuredAIWithFallback<typeof plans>({
-        provider: "openai",
-        model: process.env.OPENAI_MODEL || "gpt-5-mini",
+        provider: "gemini",
+        model: process.env.GEMINI_MODEL || undefined,
         system: "You are NIU's evidence-bound academic planning assistant. Produce only reviewable plans, never final teaching claims. Use only the supplied blueprint and evidence excerpts. Do not add facts not present in evidence. Every item must include source URLs or an explicit verification label. NIU offers certificate programmes only. Return JSON exactly matching the schema.",
         prompt: JSON.stringify({ topic: job.topic, blueprint: job.blueprint, researchSources: job.research_sources, researchNotes: job.research_notes, evidence: input.evidence }),
         schema: { type: "object", additionalProperties: false, properties: { contentPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { section: { type: "string" }, draftPurpose: { type: "string" }, evidenceUrls: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["section", "draftPurpose", "evidenceUrls", "verificationRequired"] } }, visualPlan: { type: "array", items: { type: "object", additionalProperties: false, properties: { placement: { type: "string" }, purpose: { type: "string" }, altText: { type: "string" }, accessibilityChecks: { type: "array", items: { type: "string" } }, verificationRequired: { type: "boolean" } }, required: ["placement", "purpose", "altText", "accessibilityChecks", "verificationRequired"] } }, assessmentBlueprint: { type: "object", additionalProperties: false, properties: { passingScore: { type: "integer" }, attemptLimit: { type: "integer" }, questions: { type: "array", items: { type: "object", additionalProperties: false, properties: { promptPurpose: { type: "string" }, objective: { type: "string" }, difficulty: { type: "string", enum: ["introductory", "intermediate", "advanced"] }, points: { type: "integer" }, answerKeyStatus: { type: "string" }, verificationRequired: { type: "boolean" } }, required: ["promptPurpose", "objective", "difficulty", "points", "answerKeyStatus", "verificationRequired"] } } }, required: ["passingScore", "attemptLimit", "questions"] }, missingEvidence: { type: "array", items: { type: "string" } } }, required: ["contentPlan", "visualPlan", "assessmentBlueprint", "missingEvidence"] },
-      }, "gemini");
+      }, "openai");
       plans = result.value;
       if (!plans || !Array.isArray(plans.contentPlan) || !Array.isArray(plans.visualPlan) || !plans.assessmentBlueprint || !Array.isArray(plans.missingEvidence)) throw new Error("AI returned invalid structured data.");
     } catch (error) {
@@ -414,14 +446,14 @@ export const aiBuilderRouter = router({
     if (jobError || !job) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "The AI Builder planning job could not be started." });
     try {
       const result = await runStructuredAIWithFallback<Record<string, unknown>>({
-        provider: "openai",
-        model: process.env.OPENAI_MODEL || "gpt-5-mini",
-        system: "You are NIU's curriculum architect. NIU offers certificate programmes only. Create a planning blueprint, not publishable academic records. Use only the topic and explicit settings. Do not invent references, research findings, accreditation, licensing, employment, or recognition claims. When evidence is needed, create a research plan and mark it as required before writing. Use only introductory, intermediate, or advanced difficulty. Return JSON matching the schema exactly.",
-        prompt: `Programme topic: ${input.topic}\nSettings: ${JSON.stringify(input.settings)}\nDesign a coherent progression from foundation to assessment. Choose course/module/lesson counts based on subject complexity. Mark missing information rather than guessing. Keep all generated content clearly a draft blueprint for administrator review.`,
+        provider: "gemini",
+        model: process.env.GEMINI_MODEL || undefined,
+        system: "You are NIU's curriculum architect and instructional designer. NIU offers certificate programmes only. Create an original, reviewable planning blueprint, never publishable records. Use only the topic and explicit settings. Do not invent references, research findings, accreditation, licensing, employment, or recognition claims. Match the requested generation depth: Starter creates architecture only; Standard adds lesson objectives, activities, reading guidance, summaries, and self-checks; Premium adds complete original Markdown notes, examples, case studies, assessments, questions, answer explanations, points, and completion rules. Mark missing information rather than guessing. Return JSON matching the schema exactly.",
+        prompt: `Programme topic: ${input.topic}\nSettings: ${JSON.stringify(input.settings)}\nDesign a coherent progression from foundation to assessment. Keep every generated item draft-only and suitable for administrator review.`,
         schema: blueprintSchema,
-      }, "gemini");
+      }, "openai");
       const blueprint = result.value;
-      if (!blueprint || typeof blueprint !== "object") throw new Error("AI returned invalid structured data.");
+      validateBlueprint(blueprint, input.settings.generationDepth);
       const { error: updateError } = await supabase.from("ai_academic_builder_jobs").update({ status: "research_review", blueprint, research_plan: blueprint.researchPlan ?? [], missing_information: blueprint.missingInformation ?? [], validation_errors: [], reviewed_at: null, reviewed_by: null }).eq("id", job.id) as { error: Error | null };
       if (updateError) throw updateError;
       return { jobId: job.id, status: "research_review" as const, blueprint };
