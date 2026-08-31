@@ -70,19 +70,19 @@ describe("NIU Course Studio", () => {
   });
 
   it("provides scoped approval with audit events and short-programme readiness gates", () => {
-    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260831_niu_programme_content_approval.sql"), "utf8");
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260901_niu_review_workflow.sql"), "utf8");
     const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
-    expect(migration).toContain("niu_approve_academic_record");
-    expect(migration).toContain("target_type not in ('course', 'module', 'lesson')");
-    expect(migration).toContain("academic_record_approved");
+    expect(migration).toContain("niu_transition_academic_record");
+    expect(migration).toContain("target_type not in ('course', 'module', 'lesson', 'assessment', 'certificate_template')");
+    expect(migration).toContain("academic_record_status_changed");
     expect(migration).toContain("insert into public.audit_events");
     expect(migration).toContain("course_total = 1");
     expect(migration).toContain("module_total = 1");
     expect(migration).toContain("required_lesson_total = 1");
     expect(migration).toContain("required_material_total = 1");
     expect(migration).toContain("governed_assessment_total = 1");
-    expect(studio).toContain('supabase.rpc("niu_approve_academic_record"');
-    expect(studio).toContain("Approval changes only this record and records an audit event.");
+    expect(studio).toContain('supabase.rpc("niu_transition_academic_record"');
+    expect(studio).toContain("Governed workflow: Draft → Review → Approved. Each transition is audited.");
     expect(studio).toContain('readiness?.courses === 1');
     expect(studio).toContain('readiness?.modules === 1');
     expect(studio).toContain('readiness?.required_lessons === 1');
@@ -90,10 +90,10 @@ describe("NIU Course Studio", () => {
   });
 
   it("supports scoped academic approval and the five-minute certificate gate thresholds", () => {
-    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260831_niu_programme_content_approval.sql"), "utf8");
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260901_niu_review_workflow.sql"), "utf8");
     const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
-    expect(migration).toContain("create or replace function public.niu_approve_academic_record");
-    expect(migration).toContain("target_type not in ('course', 'module', 'lesson')");
+    expect(migration).toContain("create or replace function public.niu_transition_academic_record");
+    expect(migration).toContain("target_type not in ('course', 'module', 'lesson', 'assessment', 'certificate_template')");
     expect(migration).toContain("status = 'approved'");
     expect(migration).toContain("insert into public.audit_events");
     expect(migration).toContain("course_total = 1");
@@ -101,13 +101,41 @@ describe("NIU Course Studio", () => {
     expect(migration).toContain("required_lesson_total = 1");
     expect(migration).toContain("required_material_total = 1");
     expect(migration).toContain("governed_assessment_total = 1");
-    expect(migration).toContain("certificate_template_key is not null");
-    expect(studio).toContain('supabase.rpc("niu_approve_academic_record"');
-    expect(studio).toContain("Approval changes only this record and records an audit event.");
+    expect(migration).toContain("template_total = 1");
+    expect(studio).toContain('supabase.rpc("niu_transition_academic_record"');
+    expect(studio).toContain("Governed workflow: Draft → Review → Approved. Each transition is audited.");
     expect(studio).toContain('readiness?.courses === 1');
     expect(studio).toContain('readiness?.modules === 1');
     expect(studio).toContain('readiness?.required_lessons === 1');
     expect(studio).toContain('readiness?.governed_assessments === 1');
+  });
+
+  it("enforces Draft to Review to Approved governance across Programme Builder records", () => {
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260901_niu_review_workflow.sql"), "utf8");
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    expect(migration).toContain("niu_transition_academic_record");
+    expect(migration).toContain("target_status not in ('review', 'approved')");
+    expect(migration).toContain("Draft content must enter Review before approval");
+    expect(migration).toContain("course");
+    expect(migration).toContain("module");
+    expect(migration).toContain("lesson");
+    expect(migration).toContain("assessment");
+    expect(migration).toContain("certificate_template");
+    expect(migration).toContain("insert into public.audit_events");
+    expect(studio).toContain("Submit for Review");
+    expect(studio).toContain("Approve ${label}");
+    expect(studio).toContain("Approved");
+    expect(studio).toContain('supabase.rpc("niu_transition_academic_record"');
+  });
+
+  it("prevents duplicate lessons in a module and supports editing an existing lesson", () => {
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    expect(studio).toContain('from("lessons").select("id,title,status")');
+    expect(studio).toContain("A lesson named");
+    expect(studio).toContain("It is selected for editing instead of creating a duplicate");
+    expect(studio).toContain("const existingLesson = lessons.find(item => item.id === lessonId)");
+    expect(studio).toContain('supabase.from("lessons").update(lessonPayload)');
+    expect(studio).toContain("Approved lessons are locked");
   });
 
   it("keeps automatic completion eligibility separate from administrator issuance", () => {
