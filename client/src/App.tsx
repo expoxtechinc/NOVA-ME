@@ -59,6 +59,7 @@ function Router() {
     <Route path="/" component={Home} />
     <Route path="/programs" component={Programs} />
     <Route path="/programs/:slug" component={ProgramDetails} />
+    <Route path="/admin/academic-production-studio" component={CourseStudio} />
     <Route path="/programme-package" component={CourseStudio} />
     <Route path="/curriculum-import" component={CurriculumImport} />
     <Route path="/ai-academic-builder" component={AIAcademicBuilder} />
