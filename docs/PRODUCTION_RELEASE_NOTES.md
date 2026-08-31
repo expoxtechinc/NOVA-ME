@@ -172,3 +172,11 @@ The import review screen shows upload/analyze/generate/review stages, source tex
 ### Curriculum Import policy repair — 27 August 2026
 
 The first Curriculum Import implementation exposed a policy mismatch: the interface stores the uploaded source and its deterministic analysis in one `generated` import-job row, while the initial insert policy permitted only `uploaded`. The policy was repaired additively to permit only the pre-approval states `uploaded`, `analyzing`, `generated`, and `validation_failed`, while retaining the authenticated academic-staff guard and `created_by = auth.uid()` check. Review, approval, and publication states cannot be created through the initial insert path. No import job or academic record was created by the repair.
+
+## Lesson Builder and Programme Builder hardening — 31 August 2026
+
+The live `public.lessons` constraint was inspected directly. The permitted `kind` values are `article`, `video`, `flashcards`, `quiz`, `test`, and `final_exam`; the Lesson Builder and Course Studio now expose only those database-valid values, while AI package generation defaults to `article` rather than an invalid `reading` value. Accessibility fields, captions, transcripts, required status, points, and governed draft status remain intact. No constraint was weakened and no existing lesson was modified.
+
+The preferred `/programme-builder` route now presents the unified certificate-only authoring workspace, while `/course-studio` remains as a compatibility route. New Course Studio modules and lessons, and future AI-generated draft packages, receive explicit `program_modules` and `program_lessons` scope links. Programme readiness and publication evaluate only those selected package relationships. The mobile workflow uses sequential step unlocking, private browser draft autosave, editable completed steps, and authorised publication handoff; saving does not publish.
+
+Validation for this release passed 39 test files and 96 tests, TypeScript, and the production build. The build retains only the existing non-blocking chunk-size advisory. The live NIU-IT-CDL scope verification returned one attached course, one scoped module, one scoped lesson, and one lesson with a permitted kind. No programme was published and no academic records were deleted or altered.
