@@ -243,3 +243,4 @@
 - [x] Align every future lesson creation path with the live `lessons_kind_check` values, preserve material attachments/accessibility fields, and add exact regression coverage.
 - [x] Build the preferred unified nine-step mobile Programme Builder with sequential unlocks, editable completed steps, inline course/module/lesson/content/assessment authoring, autosave, ordering, review, and governed publication handoff.
 - [x] Scope certificate-programme readiness only to records explicitly attached through the selected programme package, with dynamic requirements and no hardcoded global counts.
+- [x] Restore the unified Programme Builder’s live readiness RPC, selected-package explanation, and publication-lock behavior after reconciling the concurrent NOVA-ME route merge; full tests, TypeScript, and production build pass.
