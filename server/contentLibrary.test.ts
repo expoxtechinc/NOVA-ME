@@ -46,4 +46,22 @@ describe("NIU content library", () => {
     expect(page).not.toContain("â€”");
     expect(page).not.toContain("â€™");
   });
+
+  it("supports governed inline learning notes without making private files public", () => {
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    const learning = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseLearning.tsx"), "utf8");
+    const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260908_niu_inline_learning_notes.sql"), "utf8");
+    const visibilityMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260910_niu_publish_only_content_rls.sql"), "utf8");
+    expect(studio).toContain("Write inside NIU");
+    expect(studio).toContain("createInlineNote");
+    expect(studio).toContain('content_format: "markdown"');
+    expect(studio).toContain('status: "draft"');
+    expect(studio).toContain("Estimated reading time");
+    expect(learning).toContain("inline_content");
+    expect(learning).toContain("setInlineNote(item)");
+    expect(migration).toContain("add column if not exists inline_content text");
+    expect(migration).toContain("content_format in ('external', 'markdown', 'plain_text', 'html')");
+    expect(visibilityMigration).toContain("status in ('approved','published')");
+    expect(visibilityMigration).toContain("lesson_content_enrolled_read");
+  });
 });

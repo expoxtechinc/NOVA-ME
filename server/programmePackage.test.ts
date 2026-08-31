@@ -18,7 +18,7 @@ describe("NIU guided programme package", () => {
     const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
     const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
     expect(app).toContain('path="/programme-package" component={CourseStudio}');
-    expect(studio).toContain('rpc("niu_programme_bundle_readiness"');
+    expect(studio).toContain('rpc("niu_get_programme_readiness"');
     expect(studio).toContain("Counts only records linked to the selected programme package.");
     expect(studio).not.toContain('label: "Protected learning material review", ok: false');
   });

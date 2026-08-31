@@ -14,7 +14,7 @@ describe("NIU controlled programme bundle publication", () => {
     expect(migration).toContain("programme_bundle_published");
     expect(migration).toContain("revoke all");
     const publication = fs.readFileSync(path.join(root, "client", "src", "pages", "ProgrammePublication.tsx"), "utf8");
-    expect(publication).toContain('rpc("niu_programme_bundle_readiness"');
+    expect(publication).toContain('rpc("niu_get_programme_readiness"');
     expect(publication).toContain('rpc("niu_publish_programme_bundle"');
     expect(publication).toContain("Publish complete bundle");
   });
