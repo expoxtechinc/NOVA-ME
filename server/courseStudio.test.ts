@@ -155,6 +155,16 @@ describe("NIU Course Studio", () => {
     expect(studio).toContain("setCourseId(\"\")");
   });
 
+  it("resets only lesson fields after successful create or edit and preserves module context", () => {
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    expect(studio).toContain("const initialLessonForm = { title: \"\", description: \"\", kind: \"article\", minutes: \"30\", points: \"10\", objectives: \"\", required: true, transcript: \"\", captions: \"\" }");
+    expect(studio).toContain("setLessonId(\"\"); setLessonForm(initialLessonForm)");
+    expect(studio).not.toContain("setModuleId(\"\"); setLessonForm(initialLessonForm)");
+    expect(studio).toContain("The lesson form was cleared");
+    expect(studio).toContain("const scopeResult = existingLesson ? { error: null }");
+    expect(studio).toContain("setError(insertError?.message ?? \"The lesson could not be created.\")");
+  });
+
   it("prevents duplicate lessons in a module and supports editing an existing lesson", () => {
     const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
     expect(studio).toContain('from("lessons").select("id,title,status")');
