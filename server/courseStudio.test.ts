@@ -140,6 +140,21 @@ describe("NIU Course Studio", () => {
     expect(studio).toContain('supabase.rpc("niu_transition_academic_record"');
   });
 
+  it("hardens Programme Builder selectors, resource deduplication, and certificate-template creation", () => {
+    const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
+    expect(studio).toContain(".limit(1)");
+    expect(studio).toContain("setAssessments([])");
+    expect(studio).toContain("NIU could not inspect existing lesson resources");
+    expect(studio).toContain("already attached to this lesson");
+    expect(studio).toContain('from("certificate_templates").select("id,status")');
+    expect(studio).toContain('from("certificate_templates").insert');
+    expect(studio).toContain("certificate_template_key: templateKey");
+    expect(studio).toContain("A course named");
+    expect(studio).toContain("A module named");
+    expect(studio).toContain("Approved lessons are locked. Create or edit protected content before lesson approval.");
+    expect(studio).toContain("setCourseId(\"\")");
+  });
+
   it("prevents duplicate lessons in a module and supports editing an existing lesson", () => {
     const studio = fs.readFileSync(path.join(root, "client", "src", "pages", "CourseStudio.tsx"), "utf8");
     expect(studio).toContain('from("lessons").select("id,title,status")');
@@ -209,10 +224,14 @@ describe("NIU Course Studio", () => {
     expect(studio).toContain('status: "draft"');
     expect(studio).toContain('async function saveProgrammeRules');
     expect(studio).toContain('completion_requirements: { ...existing');
-    expect(studio).toContain('certificate_template_key: certificateForm.templateKey.trim()');
+    expect(studio).toContain('certificate_template_key: templateKey');
     expect(studio).toContain('step === "preview"');
     expect(studio).toContain('href: "/content-library"');
     expect(studio).toContain('href="/programme-publication"');
     expect(studio).toContain("Protected materials stay in private object storage.");
+    const media = fs.readFileSync(path.join(root, "server", "routers", "media.ts"), "utf8");
+    expect(media).toContain("Active enrollment is required to access this material.");
+    expect(media).toContain("protected lesson media is temporarily unavailable");
+    expect(media).toContain("protected learning resource is temporarily unavailable");
   });
 });

@@ -127,18 +127,21 @@ export default function CourseStudio() {
     setDepartments((departmentResult.data ?? []) as Department[]);
     setProgrammes(nextProgrammes);
     setProgrammeId(activeProgrammeId);
-    if (!activeProgrammeId) { setCourses([]); setModules([]); setLessons([]); setContentCount(0); setAssessmentCount(0); return; }
+    if (!activeProgrammeId) { setCourses([]); setModules([]); setLessons([]); setAssessments([]); setCourseId(""); setModuleId(""); setLessonId(""); setAssessmentId(""); setCertificateTemplateId(""); setContentCount(0); setAssessmentCount(0); return; }
     const { data: links, error: linkError } = await supabase.from("program_courses").select("course_id,courses(id,title,slug,description,status,level,duration_minutes)").eq("program_id", activeProgrammeId).order("position");
     if (linkError) throw new Error("NIU could not load the programme course sequence.");
     const nextCourses = ((links ?? []).map(item => Array.isArray(item.courses) ? item.courses[0] : item.courses).filter(Boolean)) as Course[];
     setCourses(nextCourses);
+    const activeCourseId = nextCourses.some(item => item.id === courseId) ? courseId : nextCourses[0]?.id ?? "";
+    setCourseId(activeCourseId);
     const ids = nextCourses.map(item => item.id);
-    if (!ids.length) { setModules([]); setLessons([]); setContentCount(0); setAssessmentCount(0); return; }
+    if (!ids.length) { setModules([]); setLessons([]); setAssessments([]); setCourseId(""); setModuleId(""); setLessonId(""); setAssessmentId(""); setContentCount(0); setAssessmentCount(0); return; }
     const { data: moduleData, error: moduleError } = await supabase.from("course_modules").select("id,course_id,title,description,position,status,learning_level,estimated_minutes,learning_objectives,support_guidance").in("course_id", ids).order("position");
     if (moduleError) throw new Error("NIU could not load the ordered module tree.");
     const nextModules = (moduleData ?? []) as Module[];
     setModules(nextModules);
-    if (!nextModules.some(item => item.id === moduleId)) setModuleId(nextModules[0]?.id ?? "");
+    const activeModuleId = nextModules.some(item => item.id === moduleId && item.course_id === activeCourseId) ? moduleId : nextModules.find(item => item.course_id === activeCourseId)?.id ?? nextModules[0]?.id ?? "";
+    setModuleId(activeModuleId);
     const { data: lessonData, error: lessonError } = await supabase.from("lessons").select("id,module_id,title,description,position,kind,status,is_required,estimated_minutes,points").in("module_id", nextModules.map(item => item.id)).order("position");
     if (lessonError) throw new Error("NIU could not load the lesson tree.");
     const nextLessons = (lessonData ?? []) as Lesson[];
@@ -153,7 +156,7 @@ export default function CourseStudio() {
     const nextAssessments = (assessmentData ?? []) as Assessment[];
     setAssessments(nextAssessments);
     setAssessmentCount(nextAssessments.length);
-    setAssessmentId(nextAssessments.find(item => item.course_id === (nextCourses.find(course => course.id === courseId)?.id ?? nextCourses[0]?.id))?.id ?? nextAssessments[0]?.id ?? "");
+    setAssessmentId(nextAssessments.find(item => item.course_id === activeCourseId)?.id ?? nextAssessments[0]?.id ?? "");
     const templateKey = nextProgrammes.find(item => item.id === activeProgrammeId)?.certificate_template_key;
     if (templateKey) {
       const { data: template } = await supabase.from("certificate_templates").select("id,status").eq("template_key", templateKey).maybeSingle();
@@ -192,6 +195,8 @@ export default function CourseStudio() {
   async function createCourse(event: React.FormEvent) {
     event.preventDefault(); clearFeedback();
     if (!userId || !programmeId || courseForm.title.trim().length < 3 || courseForm.description.trim().length < 30) { setError("Choose a programme and provide a course title plus a description of at least 30 characters."); return; }
+    const duplicateCourse = courses.find(item => item.title.trim().toLocaleLowerCase() === courseForm.title.trim().toLocaleLowerCase());
+    if (duplicateCourse) { setCourseId(duplicateCourse.id); setError(`A course named “${duplicateCourse.title}” is already attached to this programme. It is selected instead of creating a duplicate.`); return; }
     setSaving(true);
     const payload = buildCourseInsertPayload(courseForm, userId);
     const { data: created, error: courseError } = await supabase.from("courses").insert(payload).select("id").single();
@@ -206,6 +211,8 @@ export default function CourseStudio() {
   async function createModule(event: React.FormEvent) {
     event.preventDefault(); clearFeedback();
     if (!courseId || moduleForm.title.trim().length < 3) { setError("Choose a course and provide a module title."); return; }
+    const duplicateModule = modules.find(item => item.course_id === courseId && item.title.trim().toLocaleLowerCase() === moduleForm.title.trim().toLocaleLowerCase());
+    if (duplicateModule) { setModuleId(duplicateModule.id); setError(`A module named “${duplicateModule.title}” already exists in this course. It is selected instead of creating a duplicate.`); return; }
     setSaving(true);
     const { data: last } = await supabase.from("course_modules").select("position").eq("course_id", courseId).order("position", { ascending: false }).limit(1);
     const { data: created, error: insertError } = await supabase.from("course_modules").insert({ course_id: courseId, title: moduleForm.title.trim(), description: moduleForm.description.trim() || null, position: Number(last?.[0]?.position ?? -1) + 1, status: "draft", governed_workflow: true, learning_level: moduleForm.level, estimated_minutes: Number(moduleForm.minutes) || 0, learning_objectives: listItems(moduleForm.objectives), support_guidance: moduleForm.support.trim() || null }).select("id").single();
@@ -222,8 +229,19 @@ export default function CourseStudio() {
     event.preventDefault(); clearFeedback();
     const targetLessonId = lessonId || selectedLessons[0]?.id;
     if (!userId || !targetLessonId || !resourceFile || resourceTitle.trim().length < 3) { setError("Choose a lesson, provide a resource title, and select a file before uploading."); return; }
+    const targetLesson = lessons.find(item => item.id === targetLessonId);
+    if (targetLesson?.status === "approved" || targetLesson?.status === "published") { setError("Approved lessons are locked. Create or edit protected content before lesson approval."); return; }
     if (resourceFile.size > 10 * 1024 * 1024) { setError("Learning resources must be 10 MB or smaller."); return; }
     setSaving(true);
+    const { data: attachedRows, error: attachedError } = await supabase.from("lesson_content_items").select("content_item_id").eq("lesson_id", targetLessonId);
+    if (attachedError) { setError(`NIU could not inspect existing lesson resources: ${attachedError.message}`); setSaving(false); return; }
+    const attachedIds = (attachedRows ?? []).map(item => item.content_item_id);
+    if (attachedIds.length) {
+      const { data: existingResources, error: resourceCheckError } = await supabase.from("content_library_items").select("id,title").in("id", attachedIds);
+      if (resourceCheckError) { setError(`NIU could not check for duplicate resource titles: ${resourceCheckError.message}`); setSaving(false); return; }
+      const duplicateResource = (existingResources ?? []).find(item => item.title.trim().toLocaleLowerCase() === resourceTitle.trim().toLocaleLowerCase());
+      if (duplicateResource) { setError(`A resource titled “${duplicateResource.title}” is already attached to this lesson. Reuse the existing protected resource instead of creating a duplicate.`); setSaving(false); return; }
+    }
     const safeName = resourceFile.name.replace(/[^a-zA-Z0-9._-]/g, "-");
     const storagePath = `${userId}/${crypto.randomUUID()}-${safeName}`;
     const { error: uploadError } = await supabase.storage.from("niu-learning-materials").upload(storagePath, resourceFile, { contentType: resourceFile.type || "application/octet-stream", upsert: false });
@@ -240,8 +258,21 @@ export default function CourseStudio() {
     event.preventDefault(); clearFeedback();
     if (!programmeId) { setError("Choose a certificate programme before saving completion rules."); return; }
     setSaving(true);
+    const templateKey = certificateForm.templateKey.trim();
+    if (!templateKey) { setError("Enter a certificate template key before saving certificate settings."); setSaving(false); return; }
+    const { data: existingTemplate, error: templateLookupError } = await supabase.from("certificate_templates").select("id,status").eq("template_key", templateKey).maybeSingle();
+    if (templateLookupError) { setError(`NIU could not verify the certificate template: ${templateLookupError.message}`); setSaving(false); return; }
+    const templateConfiguration = { presidentName: certificateForm.presidentName, signatureIdentifier: certificateForm.signatureIdentifier };
+    if (existingTemplate?.status === "approved" || existingTemplate?.status === "published") { setError("Approved certificate templates are locked. Create a new template version for changes."); setSaving(false); return; }
+    if (!existingTemplate) {
+      const { error: templateInsertError } = await supabase.from("certificate_templates").insert({ template_key: templateKey, title: `${selectedProgramme?.name ?? "NIU Certificate"} template`, description: "Governed certificate template created from Programme Builder.", configuration: templateConfiguration, status: "draft", governed_workflow: true, created_by: userId });
+      if (templateInsertError) { setError(`Certificate template could not be created: ${templateInsertError.message}`); setSaving(false); return; }
+    } else {
+      const { error: templateUpdateError } = await supabase.from("certificate_templates").update({ configuration: templateConfiguration, updated_at: new Date().toISOString() }).eq("id", existingTemplate.id).in("status", ["draft", "review"]);
+      if (templateUpdateError) { setError(`Certificate template could not be updated: ${templateUpdateError.message}`); setSaving(false); return; }
+    }
     const existing = selectedProgramme?.completion_requirements && typeof selectedProgramme.completion_requirements === "object" ? selectedProgramme.completion_requirements : {};
-    const { error: updateError } = await supabase.from("certificate_programs").update({ required_score: Number(rulesForm.minimumScore) || 70, completion_requirements: { ...existing, required_activities: listItems(rulesForm.requiredActivities), final_examination_required: true, minimum_examination_score: Number(rulesForm.examinationScore) || 70 }, certificate_template_key: certificateForm.templateKey.trim() || null, image_path: programmeForm.image.trim() || null }).eq("id", programmeId);
+    const { error: updateError } = await supabase.from("certificate_programs").update({ required_score: Number(rulesForm.minimumScore) || 70, completion_requirements: { ...existing, required_activities: listItems(rulesForm.requiredActivities), final_examination_required: true, minimum_examination_score: Number(rulesForm.examinationScore) || 70 }, certificate_template_key: templateKey, image_path: programmeForm.image.trim() || null }).eq("id", programmeId);
     if (updateError) setError(updateError.message);
     else { setNotice("Completion and certificate settings saved to the draft programme. Eligibility remains calculated by NIU’s server-side workflow and publication is still gated."); await loadStructure(programmeId); }
     setSaving(false);
@@ -263,8 +294,9 @@ export default function CourseStudio() {
     if (!Number.isFinite(weight) || weight < 0 || weight > 100) { setError("Assessment weight must be between 0 and 100."); return; }
     setSaving(true);
     const duplicateQuery = supabase.from("assessments").select("id,title,status").eq("course_id", courseId).ilike("title", title).neq("status", "archived");
-    const { data: duplicate, error: duplicateError } = moduleId ? await duplicateQuery.eq("module_id", moduleId).maybeSingle() : await duplicateQuery.is("module_id", null).maybeSingle();
-    if (duplicateError) { setError("NIU could not check for duplicate assessments. Nothing was created; please retry."); setSaving(false); return; }
+    const { data: duplicateRows, error: duplicateError } = moduleId ? await duplicateQuery.eq("module_id", moduleId).limit(1) : await duplicateQuery.is("module_id", null).limit(1);
+    if (duplicateError) { setError(`NIU could not check for duplicate assessments: ${duplicateError.message}`); setSaving(false); return; }
+    const duplicate = duplicateRows?.[0];
     if (duplicate) { setError(`A non-archived assessment named “${duplicate.title}” already exists in this course/module (${duplicate.status}). Edit or reuse that record instead of creating a duplicate.`); setSaving(false); return; }
     const { data: createdAssessment, error: insertError } = await supabase.from("assessments").insert({ course_id: courseId, module_id: moduleId || null, title, assessment_type: assessmentForm.type, passing_score: passingScore, attempt_limit: attempts, time_limit_minutes: timeLimit, randomize_questions: true, randomize_answers: true, weight, required_completion_rules: { required: true, minimum_score: passingScore, attempt_limit: attempts, time_limit_minutes: timeLimit }, status: "draft", governed_workflow: true, created_by: userId }).select("id").single();
     if (insertError || !createdAssessment) setError(insertError?.message ?? "The assessment could not be created.");
@@ -277,8 +309,9 @@ export default function CourseStudio() {
     if (!moduleId || lessonForm.title.trim().length < 3) { setError("Choose a module and provide a lesson title."); return; }
     setSaving(true);
     const duplicateQuery = supabase.from("lessons").select("id,title,status").eq("module_id", moduleId).ilike("title", lessonForm.title.trim()).neq("status", "archived");
-    const { data: duplicate, error: duplicateError } = lessonId ? await duplicateQuery.neq("id", lessonId).maybeSingle() : await duplicateQuery.maybeSingle();
-    if (duplicateError) { setError("NIU could not check for duplicate lessons. Nothing was created; please retry."); setSaving(false); return; }
+    const { data: duplicateRows, error: duplicateError } = lessonId ? await duplicateQuery.neq("id", lessonId).limit(1) : await duplicateQuery.limit(1);
+    if (duplicateError) { setError(`NIU could not check for duplicate lessons: ${duplicateError.message}`); setSaving(false); return; }
+    const duplicate = duplicateRows?.[0];
     if (duplicate) { setLessonId(duplicate.id); setError(`A lesson named “${duplicate.title}” already exists in this module (${duplicate.status}). It is selected for editing instead of creating a duplicate.`); setSaving(false); return; }
     const existingLesson = lessons.find(item => item.id === lessonId);
     if (existingLesson?.status === "approved" || existingLesson?.status === "published") { setError("Approved lessons are locked. Create a new governed draft or use the existing lesson without changing it."); setSaving(false); return; }
@@ -287,8 +320,8 @@ export default function CourseStudio() {
     const { data: createdLesson, error: insertError } = existingLesson ? await supabase.from("lessons").update(lessonPayload).eq("id", existingLesson.id).select("id").single() : await supabase.from("lessons").insert(lessonPayload).select("id").single();
     if (insertError || !createdLesson) setError(insertError?.message ?? "The lesson could not be created.");
     else {
-      const { error: scopeError } = await supabase.from("program_lessons").insert({ program_id: programmeId, module_id: moduleId, lesson_id: createdLesson.id, position: Number(last?.[0]?.position ?? -1) + 1, is_required: lessonForm.required });
-      if (scopeError) setError(`Lesson saved, but programme scope could not be recorded: ${scopeError.message}`);
+      const scopeResult = existingLesson ? { error: null } : await supabase.from("program_lessons").insert({ program_id: programmeId, module_id: moduleId, lesson_id: createdLesson.id, position: Number(last?.[0]?.position ?? -1) + 1, is_required: lessonForm.required });
+      if (scopeResult.error) setError(`Lesson saved, but programme scope could not be recorded: ${scopeResult.error.message}`);
       else { setLessonId(createdLesson.id); setNotice(existingLesson ? "Lesson changes saved. Submit it for review when ready." : "Draft lesson saved in the selected module and connected to this programme package. Continue with protected content and assessments in this workspace."); await loadStructure(programmeId); setStep("content"); }
     }
     setSaving(false);
