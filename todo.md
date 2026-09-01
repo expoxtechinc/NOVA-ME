@@ -248,3 +248,4 @@
 - [x] Repair the Vercel API response boundary so native Vercel responses always receive JSON without Express-only method chaining.
 - [ ] Audit and connect the remaining academic production paths against real Supabase IDs, RLS, approval, audit, private storage, enrollment, certificate, transcript, and verification workflows without deleting records.
 - [ ] Complete the remaining security, accessibility, mobile, SEO, performance, deployment, and live-endpoint validation items from the master restructure requirements.
+- [ ] Fix the confirmed Vercel production bootstrap error `ERR_MODULE_NOT_FOUND: /var/task/server/app.ts` by making the API entrypoint bundler-compatible, then revalidate the live JSON contract and preserve all existing workflows.
