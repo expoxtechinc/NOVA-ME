@@ -15,20 +15,27 @@ function safeErrorMessage(error: unknown) {
   return "NIU server request failed.";
 }
 
-export default async function handler(req: Request, res: Response) {
-  const reply = res as unknown as {
-    headersSent?: boolean;
-    status: (code: number) => { type: (contentType: string) => { json: (body: unknown) => void } };
+export function sendJson(res: Response, statusCode: number, body: unknown) {
+  const reply = res as Response & {
+    statusCode: number;
+    setHeader?: (name: string, value: string) => void;
+    end?: (chunk?: string) => void;
   };
+  if (reply.headersSent) return;
+  reply.statusCode = statusCode;
+  reply.setHeader?.("content-type", "application/json; charset=utf-8");
+  reply.end?.(JSON.stringify(body));
+}
+
+export default async function handler(req: Request, res: Response) {
   if (req.url?.split("?")[0] === "/api/healthz") {
-    return reply.status(200).type("application/json").json({ success: true, service: "niu-api", runtime: "vercel", build: process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown" });
+    return sendJson(res, 200, { success: true, service: "niu-api", runtime: "vercel", build: process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown" });
   }
   try {
     appPromise ??= loadApp();
     const app = await appPromise;
     return app(req, res);
   } catch (error) {
-    if (reply.headersSent) return;
-    return reply.status(500).type("application/json").json({ success: false, error: safeErrorMessage(error) });
+    return sendJson(res, 500, { success: false, error: safeErrorMessage(error) });
   }
 }

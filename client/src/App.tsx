@@ -73,6 +73,7 @@ function Router() {
     <Route path="/auth/callback" component={AuthCallback} />
     <Route path="/portal" component={Portal} />
     <Route path="/admin" component={AdminDashboard} />
+    <Route path="/admin/academic-production-studio" component={CourseStudio} />
     <Route path="/operations" component={Operations} />
     <Route path="/authoring" component={Authoring} />
     <Route path="/programme-builder" component={CourseStudio} />

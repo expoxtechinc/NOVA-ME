@@ -244,3 +244,7 @@
 - [x] Build the preferred unified nine-step mobile Programme Builder with sequential unlocks, editable completed steps, inline course/module/lesson/content/assessment authoring, autosave, ordering, review, and governed publication handoff.
 - [x] Scope certificate-programme readiness only to records explicitly attached through the selected programme package, with dynamic requirements and no hardcoded global counts.
 - [x] Restore the unified Programme Builder’s live readiness RPC, selected-package explanation, and publication-lock behavior after reconciling the concurrent NOVA-ME route merge; full tests, TypeScript, and production build pass.
+- [x] Consolidate the preferred administrator academic workspace at `/admin/academic-production-studio` while preserving compatibility aliases and governed sequential navigation.
+- [x] Repair the Vercel API response boundary so native Vercel responses always receive JSON without Express-only method chaining.
+- [ ] Audit and connect the remaining academic production paths against real Supabase IDs, RLS, approval, audit, private storage, enrollment, certificate, transcript, and verification workflows without deleting records.
+- [ ] Complete the remaining security, accessibility, mobile, SEO, performance, deployment, and live-endpoint validation items from the master restructure requirements.
