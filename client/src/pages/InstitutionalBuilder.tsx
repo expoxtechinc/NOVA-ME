@@ -16,6 +16,26 @@ const modes: { id: Mode; label: string }[] = [
 const statuses = ["draft", "review", "approved", "archived"];
 const recommendedStarterProgramme = { name: "Certificate in Digital Skills, Entrepreneurship, and Remote Work", code: "DSERW", description: "A certificate-only online programme for learners who want to build inclusive digital work habits, evaluate opportunities, collaborate responsibly, and plan an early-stage remote or digital venture. It does not provide employment, professional licensure, accreditation, or degree recognition.", duration: "36", objectives: ["Build practical, accessible digital communication and collaboration habits.", "Use privacy, security, and information-evaluation principles in online work.", "Recognise opportunities and develop ideas that create social, cultural, or financial value.", "Plan and communicate a small digital or remote-work project responsibly."], outcomes: ["Use core digital tools and online information responsibly.", "Prepare an accessible remote-work collaboration plan.", "Develop an evidence-based opportunity statement and simple action plan.", "Reflect on ethics, inclusion, and data protection in a digital-work context."], requirements: ["Access to an email account and web browser.", "A device appropriate for online study.", "Commitment to complete independent learning activities."], completionRules: ["Complete every required module and protected learning activity.", "Meet the approved assessment and participation requirements.", "Submit a final applied project or portfolio when the programme team provides one."], template: "NIU-DIGITAL-STARTER-v1" };
 
+const storageBucket = "niu-learning-materials";
+const maxUploadBytes = 10 * 1024 * 1024;
+const learningNoteMimeTypes: Record<string, string> = {
+  ".pdf": "application/pdf",
+  ".doc": "application/msword",
+  ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ".txt": "text/plain",
+  ".md": "text/markdown",
+};
+function safeFilename(value: string) {
+  return value.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^_+/, "").slice(0, 180) || "learning-note";
+}
+function learningNoteContentType(file: File) {
+  const extension = `.${file.name.split(".").pop()?.toLowerCase() ?? ""}`;
+  return learningNoteMimeTypes[extension] ?? file.type.toLowerCase();
+}
+function learningNoteStoragePath(userId: string, fileName: string) {
+  return `${userId}/${crypto.randomUUID()}-${safeFilename(fileName)}`;
+}
+
 export default function InstitutionalBuilder() {
   const [role, setRole] = useState<Role | null>(null); const [schools, setSchools] = useState<Option[]>([]); const [departments, setDepartments] = useState<Option[]>([]); const [courses, setCourses] = useState<Option[]>([]); const [modules, setModules] = useState<Option[]>([]); const [lessons, setLessons] = useState<Option[]>([]); const [mode, setMode] = useState<Mode>("department"); const [name, setName] = useState(""); const [code, setCode] = useState(""); const [description, setDescription] = useState(""); const [targetId, setTargetId] = useState(""); const [duration, setDuration] = useState("0"); const [programmeObjectives, setProgrammeObjectives] = useState(""); const [programmeOutcomes, setProgrammeOutcomes] = useState(""); const [programmeRequirements, setProgrammeRequirements] = useState(""); const [programmeCompletionRules, setProgrammeCompletionRules] = useState(""); const [programmeDifficulty, setProgrammeDifficulty] = useState("beginner"); const [programmeTemplate, setProgrammeTemplate] = useState(""); const [programmeVisualReference, setProgrammeVisualReference] = useState(""); const [lessonKind, setLessonKind] = useState<LessonKind>("article"); const [objectives, setObjectives] = useState(""); const [points, setPoints] = useState("0"); const [captionText, setCaptionText] = useState(""); const [transcriptText, setTranscriptText] = useState(""); const [required, setRequired] = useState(true); const [status, setStatus] = useState("draft"); const [subjectType, setSubjectType] = useState("course"); const [selectedFile, setSelectedFile] = useState<File | null>(null); const [loading, setLoading] = useState(true); const [saving, setSaving] = useState(false); const [notice, setNotice] = useState<string | null>(null); const [error, setError] = useState<string | null>(null);
   const staff = role === "instructor" || role === "administrator" || role === "super_admin";
@@ -26,7 +46,45 @@ export default function InstitutionalBuilder() {
   function clear() { setName(""); setCode(""); setDescription(""); setDuration("0"); setProgrammeObjectives(""); setProgrammeOutcomes(""); setProgrammeRequirements(""); setProgrammeCompletionRules(""); setProgrammeDifficulty("beginner"); setProgrammeTemplate(""); setProgrammeVisualReference(""); setLessonKind("article"); setObjectives(""); setPoints("0"); setCaptionText(""); setTranscriptText(""); setRequired(true); setStatus("draft"); setSelectedFile(null); }
   function useRecommendedStarterProgramme() { const starter = recommendedStarterProgramme; setName(starter.name); setCode(starter.code); setDescription(starter.description); setDuration(starter.duration); setProgrammeObjectives(starter.objectives.join("\n")); setProgrammeOutcomes(starter.outcomes.join("\n")); setProgrammeRequirements(starter.requirements.join("\n")); setProgrammeCompletionRules(starter.completionRules.join("\n")); setProgrammeDifficulty("beginner"); setProgrammeTemplate(starter.template); setProgrammeVisualReference(""); setStatus("draft"); setError(null); setNotice("NIU's recommended starter framework has been placed into this draft form. Choose a department, review every field, then save only when it reflects your approved academic plan."); }
   async function submit(event: React.FormEvent) { event.preventDefault(); setError(null); setNotice(null);
-    if (mode === "upload") { if (!targetId || !selectedFile) { setError("Choose an existing lesson and a learning-note file."); return; } if (selectedFile.size > 10 * 1024 * 1024) { setError("Learning notes must be 10 MB or smaller."); return; } setSaving(true); const { data: session } = await supabase.auth.getSession(); const response = await fetch("/api/learning-notes/upload", { method: "POST", headers: { "Content-Type": selectedFile.type || "application/octet-stream", "x-supabase-authorization": `Bearer ${session.session?.access_token ?? ""}`, "x-lesson-id": targetId, "x-file-name": encodeURIComponent(selectedFile.name) }, body: selectedFile }); const result = await response.json().catch(() => ({ error: "NIU could not read the upload response." })); if (!response.ok) setError(result.error ?? "NIU could not upload this learning note."); else { setNotice("Learning note uploaded and attached to the protected lesson."); setSelectedFile(null); } setSaving(false); return; }
+    if (mode === "upload") {
+      if (!targetId || !selectedFile) { setError("Choose an existing lesson and a learning-note file."); return; }
+      const contentType = learningNoteContentType(selectedFile);
+      if (!learningNoteMimeTypes[`.${selectedFile.name.split(".").pop()?.toLowerCase() ?? ""}`] && !Object.values(learningNoteMimeTypes).includes(contentType)) { setError("Upload a PDF, Word document, text, or Markdown learning note."); return; }
+      if (selectedFile.size > maxUploadBytes) { setError("Learning notes must be 10 MB or smaller."); return; }
+      setSaving(true);
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const user = sessionData.session?.user;
+        if (!user) throw new Error("Sign in to NIU before uploading learning notes.");
+        const fileName = safeFilename(selectedFile.name);
+        const storagePath = learningNoteStoragePath(user.id, fileName);
+        const { error: storageError } = await supabase.storage.from(storageBucket).upload(storagePath, selectedFile, { contentType, upsert: false });
+        if (storageError) throw new Error(storageError.message);
+        const { data: contentItem, error: recordError } = await supabase.from("content_library_items").insert({
+          title: fileName.replace(/\.[^.]+$/, "") || "Protected learning note",
+          category: "document",
+          file_name: fileName,
+          content_type: contentType,
+          storage_path: storagePath,
+          description: "Private NIU learning note attached to a governed lesson.",
+          status: "draft",
+          governed_workflow: true,
+          created_by: user.id,
+        }).select("id").single();
+        if (recordError || !contentItem) throw new Error(recordError?.message ?? "NIU could not register this private learning note.");
+        const { data: current, error: positionError } = await supabase.from("lesson_content_items").select("position").eq("lesson_id", targetId).order("position", { ascending: false }).limit(1);
+        if (positionError) throw new Error(positionError.message);
+        const { error: attachmentError } = await supabase.from("lesson_content_items").insert({ lesson_id: targetId, content_item_id: contentItem.id, is_required: true, position: Number(current?.[0]?.position ?? -1) + 1 });
+        if (attachmentError) throw new Error(attachmentError.message);
+        setNotice("Learning note uploaded and attached to the protected lesson.");
+        setSelectedFile(null);
+      } catch (caught) {
+        setError(caught instanceof Error ? caught.message : "NIU could not upload this learning note. Please try again.");
+      } finally {
+        setSaving(false);
+      }
+      return;
+    }
     if (mode !== "review" && name.trim().length < 3) { setError("Provide a name or title with at least three characters."); return; } setSaving(true); let write: { error: { message: string } | null };
     if (mode === "department") { if (!targetId || !code.trim()) { setError("Choose a school and provide a department code."); setSaving(false); return; } write = await supabase.from("departments").insert({ school_id: targetId, name: name.trim(), code: code.trim().toUpperCase(), description: description.trim() || null, status }); }
     else if (mode === "program") { if (!targetId || !code.trim() || description.trim().length < 30) { setError("Choose a department, provide a code, and write at least 30 characters."); setSaving(false); return; } if (programmeVisualReference.trim() && !/^https:\/\//.test(programmeVisualReference.trim())) { setError("A programme visual or media reference must use a complete https:// address."); setSaving(false); return; } write = await supabase.from("certificate_programs").insert({ department_id: targetId, name: name.trim(), code: code.trim().toUpperCase(), description: description.trim(), objectives: programmeObjectives.split("\n").map(value => value.trim()).filter(Boolean), learning_outcomes: programmeOutcomes.split("\n").map(value => value.trim()).filter(Boolean), duration_hours: Number(duration) || 0, difficulty: programmeDifficulty, completion_requirements: { entry_requirements: programmeRequirements.split("\n").map(value => value.trim()).filter(Boolean), completion_rules: programmeCompletionRules.split("\n").map(value => value.trim()).filter(Boolean) }, certificate_template_key: programmeTemplate.trim() || null, image_path: programmeVisualReference.trim() || null, award_type: "certificate", status }); }

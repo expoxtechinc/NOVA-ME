@@ -15,17 +15,22 @@ describe("protected learning-note uploads", () => {
     const upload = fs.readFileSync(path.join(root, "server", "learningNotesUpload.ts"), "utf8");
     expect(upload).toContain('token?.startsWith("Bearer ")');
     expect(upload).toContain('"super_admin"');
+    expect(upload).toContain('const storageBucket = "niu-learning-materials"');
     expect(upload).toContain("allowedContentTypes");
     expect(upload).toContain("maxBytes");
-    expect(upload).toContain("storagePut");
-    expect(upload).toContain("update({ media_path: key })");
-    expect(upload).not.toContain('update({ kind: "document", media_path: key })');
+    expect(upload).toContain('supabase.storage.from(storageBucket).upload');
+    expect(upload).toContain('from("content_library_items").insert');
+    expect(upload).toContain('from("lesson_content_items").insert');
+    expect(upload).not.toContain("storagePut");
+    expect(upload).not.toContain("update({ media_path: key })");
   });
 
   it("exposes an academic-staff upload form for supported learning-note file types", () => {
     const builder = fs.readFileSync(path.join(root, "client", "src", "pages", "InstitutionalBuilder.tsx"), "utf8");
     expect(builder).toContain('type="file"');
     expect(builder).toContain("Upload protected learning note");
-    expect(builder).toContain("/api/learning-notes/upload");
+    expect(builder).toContain('storageBucket = "niu-learning-materials"');
+    expect(builder).toContain("supabase.storage.from(storageBucket).upload");
+    expect(builder).not.toContain("/api/learning-notes/upload");
   });
 });
