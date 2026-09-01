@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import handler, { sendJson } from "../api/index";
+import handler, { sendJson } from "../api/index.source";
 
 describe("Vercel API entrypoint", () => {
   it("serializes health responses through a native Vercel response", async () => {

@@ -14,10 +14,11 @@ describe("external deployment branding", () => {
 
   it("includes the Vercel entry point and static output configuration", () => {
     const config = fs.readFileSync(path.join(root, "vercel.json"), "utf8");
-    expect(config).toContain('"api/index.ts"');
+    expect(config).toContain('"api/index.js"');
     expect(config).toContain('"outputDirectory": "dist/public"');
     expect(config).toContain('"destination": "/index.html"');
-    expect(fs.existsSync(path.join(root, "api", "index.ts"))).toBe(true);
+    expect(fs.existsSync(path.join(root, "api", "index.js"))).toBe(true);
+    expect(fs.existsSync(path.join(root, "api", "index.source.ts"))).toBe(true);
   });
 
   it("keeps the public Supabase client initialized when Vercel Vite variables are absent", () => {

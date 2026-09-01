@@ -1,5 +1,5 @@
 import http from "node:http";
-import handler from "../api/index.ts";
+import handler from "../api/index.source.ts";
 
 function adaptResponse(res) {
   res.status = code => { res.statusCode = code; return res; };
