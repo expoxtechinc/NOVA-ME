@@ -1,10 +1,10 @@
 import type { Request, Response } from "express";
+import { createApp } from "../server/app.ts";
 
-type App = ReturnType<(typeof import("../server/app"))["createApp"]>;
+type App = ReturnType<typeof createApp>;
 let appPromise: Promise<App> | undefined;
 
 async function loadApp(): Promise<App> {
-  const { createApp } = await import("../server/app");
   return createApp();
 }
 
@@ -29,7 +29,12 @@ export function sendJson(res: Response, statusCode: number, body: unknown) {
 
 export default async function handler(req: Request, res: Response) {
   if (req.url?.split("?")[0] === "/api/healthz") {
-    return sendJson(res, 200, { success: true, service: "niu-api", runtime: "vercel", build: process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown" });
+    return sendJson(res, 200, {
+      success: true,
+      service: "niu-api",
+      runtime: "vercel",
+      build: process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown",
+    });
   }
   try {
     appPromise ??= loadApp();

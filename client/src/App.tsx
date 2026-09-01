@@ -59,9 +59,11 @@ function Router() {
     <Route path="/" component={Home} />
     <Route path="/programs" component={Programs} />
     <Route path="/programs/:slug" component={ProgramDetails} />
+    <Route path="/admin/academic-production-studio" component={CourseStudio} />
     <Route path="/programme-package" component={CourseStudio} />
     <Route path="/curriculum-import" component={CurriculumImport} />
     <Route path="/ai-academic-builder" component={AIAcademicBuilder} />
+    <Route path="/admin/academic-ai" component={AIAcademicBuilder} />
     <Route path="/programme-publication" component={ProgrammePublication} />
     <Route path="/module-blueprint" component={ModuleBlueprint} />
     <Route path="/people-governance" component={PeopleGovernance} />
@@ -104,7 +106,7 @@ function Router() {
     <Route path="/learning" component={Learning} />
     <Route path="/learn/:courseId" component={CourseLearning} />
     <Route path="/dashboard/:dashboard" component={RoleDashboard} />
-    {["/about", "/founder", "/mission", "/values", "/schools", "/admissions", "/resources", "/calendar", "/help", "/faqs", "/policies", "/contact"].map((path) => <Route key={path} path={path} component={InfoPage} />)}
+    {["/about", "/founder", "/mission", "/values", "/schools", "/admissions", "/resources", "/calendar", "/help", "/faqs", "/policies", "/contact", "/online-learning", "/how-niu-certificates-are-verified"].map((path) => <Route key={path} path={path} component={InfoPage} />)}
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>;

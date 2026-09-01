@@ -28,4 +28,18 @@ describe("NIU governed Question Bank", () => {
     expect(page).not.toContain("seed");
     expect(page).not.toContain("demo");
   });
+
+  it("fixes composite assessment-question audit identity without weakening attachment controls", () => {
+    const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260906_fix_assessment_questions_audit_trigger.sql"), "utf8");
+    expect(migration).toContain("tg_table_name = 'assessment_questions'");
+    expect(migration).toContain("old.assessment_id");
+    expect(migration).toContain("old.question_id");
+    expect(migration).toContain("new.assessment_id");
+    expect(migration).toContain("new.question_id");
+    const assessmentBranch = migration.split("elsif tg_op = 'DELETE' then")[0];
+    expect(assessmentBranch).not.toMatch(/\b(?:new|old)\.id\b/);
+    expect(migration).toContain("event_subject_id := old.id::text");
+    expect(migration).toContain("event_subject_id := new.id::text");
+    expect(migration).toContain("revoke all on function public.niu_capture_audit_event()");
+  });
 });

@@ -4,6 +4,7 @@ import path from "node:path";
 
 const root = path.resolve(__dirname, "..");
 const router = fs.readFileSync(path.join(root, "server", "routers", "aiBuilder.ts"), "utf8");
+const orchestrator = fs.readFileSync(path.join(root, "server", "aiOrchestrator.ts"), "utf8");
 const migration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder.sql"), "utf8");
 const governanceMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_governance.sql"), "utf8");
 const reviewMigration = fs.readFileSync(path.join(root, "docs", "supabase", "20260827_niu_ai_academic_builder_review.sql"), "utf8");
@@ -57,7 +58,14 @@ describe("NIU AI Academic Builder", () => {
     expect(router).toContain("introductory",);
     expect(router).toContain("intermediate");
     expect(router).toContain("advanced");
-    expect(router).toContain('provider: "openai"');
+    expect(router).toContain('provider: "gemini"');
+    expect(router).toContain("generationDepth");
+    expect(router).toContain("validateBlueprint");
+    expect(router).toContain('providerHealth("gemini")');
+    expect(router).toContain("geminiConfigured");
+    expect(router).toContain("selectedModelAvailable");
+    expect(orchestrator).toContain("value.toUpperCase()");
+    expect(orchestrator).toContain("providerHealth");
     expect(router).toContain("runStructuredAIWithFallback");
     expect(router).not.toContain("invokeLLM");
     expect(router).toContain("schema: blueprintSchema");
@@ -123,12 +131,15 @@ describe("NIU AI Academic Builder", () => {
   it("keeps the workspace review-first and reachable from the guided package", () => {
     expect(app).toContain('const AIAcademicBuilder = lazy(() => import("./pages/AIAcademicBuilder"));');
     expect(app).toContain('<Route path="/ai-academic-builder" component={AIAcademicBuilder} />');
+    expect(app).toContain('<Route path="/admin/academic-ai" component={AIAcademicBuilder} />');
     expect(packagePage).toContain('href="/ai-academic-builder"');
     expect(dashboard).toContain('["NIU AI Academic Builder", "/ai-academic-builder"]');
     expect(page).toContain("Generate Complete Programme Plan");
     expect(page).toContain("No course, lesson, question, assessment, material, or certificate record is generated at this stage");
     expect(page).toContain("Review the research plan");
     expect(page).toContain("Generate Complete Academic Package");
+    expect(page).toContain("Starter — architecture and titles");
+    expect(page).toContain("Premium — complete notes, assessments, and rules");
     expect(page).toContain("never approves or publishes them");
   });
 });
