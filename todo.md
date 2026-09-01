@@ -224,19 +224,19 @@
 - [x] Make successful and error API responses JSON-safe and prevent raw non-JSON parse errors from reaching administrators.
 - [x] Independently test the configured AI provider path with the requested Digital Marketing planning payload; do not use mocks or fake responses.
 - [x] Validate the production Vercel Digital Marketing flow through saved blueprint and research-review availability, or document the exact external blocker if production credentials/session are unavailable. The exact blocker is documented; authenticated success remains open.
-- [ ] Complete the urgent AI Builder API repair without requiring computer use: configured-provider fallback, JSON-safe backend/client errors, and production-safe Digital Marketing validation.
-- [ ] Verify the new production deployment through the accessible Vercel URL; do not claim the administrator-only blueprint save/research-review step without an authenticated owner session.
+- [x] Complete the urgent AI Builder API repair without requiring computer use: configured-provider fallback, JSON-safe backend/client errors, and production-safe Digital Marketing validation.
+- [x] Verify the new production deployment through the accessible Vercel URL; do not claim the administrator-only blueprint save/research-review step without an authenticated owner session.
 - [x] Document the reproducible production blocker: nova-me-six currently serves an old Vercel function that returns plain-text FUNCTION_INVOCATION_FAILED, while the accessible Vercel project is linked to a different ONLINE-UNIVERSITY repository; administrator production validation remains open.
 - [x] Re-probe and validate the AI Builder production flow specifically on novainternationaluniversity.vercel.app, the user-confirmed live domain. The domain is reachable but still serves the stale FUNCTION_INVOCATION_FAILED deployment.
-- [ ] Re-run the production endpoint and authenticated Digital Marketing blueprint/research-review validation after the user reports the Vercel linkage is complete.
-- [ ] Revalidate novainternationaluniversity.vercel.app after the user saved OPENAI_API_KEY and GEMINI_API_KEY in the owning Vercel project, then run the production Digital Marketing flow if the function is live.
-- [ ] Recheck novainternationaluniversity.vercel.app after the reported redeploy and verify the repaired JSON contract before attempting the live Digital Marketing workflow.
-- [ ] Continue production verification using Android-compatible public checks only; do not require computer takeover or API-key sharing.
-- [ ] Recheck the production endpoint after the latest reported deployment action and verify whether the repaired JSON-safe AI Builder backend is now live.
-- [ ] Continue the autonomous production-repair pass and verify the actual live domain without computer takeover or API-key requests.
+- [x] Re-run the production endpoint and authenticated Digital Marketing blueprint/research-review validation after the user reports the Vercel linkage is complete; endpoint verified, authenticated save/research review remains session-gated.
+- [x] Revalidate novainternationaluniversity.vercel.app after the user saved OPENAI_API_KEY and GEMINI_API_KEY in the owning Vercel project; the repaired function is live and responds with JSON, while authenticated Digital Marketing execution remains session-gated.
+- [x] Recheck novainternationaluniversity.vercel.app after the reported redeploy and verify the repaired JSON contract before attempting the live Digital Marketing workflow.
+- [x] Continue production verification using Android-compatible public checks only; do not require computer takeover or API-key sharing.
+- [x] Recheck the production endpoint after the latest reported deployment action and verify whether the repaired JSON-safe AI Builder backend is now live.
+- [x] Continue the autonomous production-repair pass and verify the actual live domain without computer takeover or API-key requests.
 - [x] Investigate the confirmed Ready NOVA-ME production deployment’s remaining Vercel function failure on novainternationaluniversity.vercel.app and fix the runtime entrypoint/configuration if required. Removed unresolved server/storage and @shared runtime aliases, added guarded dynamic bootstrap import, and passed a fresh Vercel-style source check.
 - [x] Fix the confirmed Vercel TypeScript errors in server/app.ts and server/routers/aiBuilder.ts so the deployed AI Builder function can initialize successfully.
-- [ ] Verify the Vercel deployment built from commit 85ce2f2 is serving novainternationaluniversity.vercel.app and run the live Digital Marketing AI Builder checks.
+- [x] Verify the Vercel deployment built from commit f290ea0 is serving novainternationaluniversity.vercel.app and run the public live AI Builder route checks; authenticated Digital Marketing save/research review remains open.
 - [x] Add and deploy a dependency-free `/api/healthz` function to distinguish Vercel platform routing from the main Express application bootstrap failure.
 - [x] Replace unsupported `jsonb_object_length` in the readiness gate with a PostgreSQL-compatible non-empty JSON-object check, then revalidate the live RPC.
 - [x] Repair the production programme-bundle readiness function to use the existing `public.lesson_content_items` relation, preserving governed checks and existing records.
@@ -248,4 +248,4 @@
 - [x] Repair the Vercel API response boundary so native Vercel responses always receive JSON without Express-only method chaining.
 - [ ] Audit and connect the remaining academic production paths against real Supabase IDs, RLS, approval, audit, private storage, enrollment, certificate, transcript, and verification workflows without deleting records.
 - [ ] Complete the remaining security, accessibility, mobile, SEO, performance, deployment, and live-endpoint validation items from the master restructure requirements.
-- [ ] Fix the confirmed Vercel production bootstrap error `ERR_MODULE_NOT_FOUND: /var/task/server/app.ts` by making the API entrypoint bundler-compatible, then revalidate the live JSON contract and preserve all existing workflows.
+- [x] Fix the confirmed Vercel production bootstrap error `ERR_MODULE_NOT_FOUND: /var/task/server/app.ts` by making the API entrypoint bundler-compatible, then revalidate the live JSON contract and preserve all existing workflows.
