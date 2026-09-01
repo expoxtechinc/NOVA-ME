@@ -64,7 +64,7 @@ function Router() {
     <Route path="/curriculum-import" component={CurriculumImport} />
     <Route path="/ai-academic-builder" component={AIAcademicBuilder} />
     <Route path="/admin/academic-ai" component={AIAcademicBuilder} />
-    <Route path="/programme-publication" component={ProgrammePublication} />
+    <Route path="/programme-publication" component={CourseStudio} />
     <Route path="/module-blueprint" component={ModuleBlueprint} />
     <Route path="/people-governance" component={PeopleGovernance} />
     <Route path="/policy-administration" component={PolicyAdministration} />
@@ -75,7 +75,6 @@ function Router() {
     <Route path="/auth/callback" component={AuthCallback} />
     <Route path="/portal" component={Portal} />
     <Route path="/admin" component={AdminDashboard} />
-    <Route path="/admin/academic-production-studio" component={CourseStudio} />
     <Route path="/operations" component={Operations} />
     <Route path="/authoring" component={Authoring} />
     <Route path="/programme-builder" component={CourseStudio} />
@@ -84,12 +83,12 @@ function Router() {
     <Route path="/academic-tools" component={AcademicTools} />
     <Route path="/academic-configuration" component={AcademicConfiguration} />
     <Route path="/assignment-policies" component={AssignmentPolicies} />
-    <Route path="/assessment-builder" component={AssessmentBuilder} />
+    <Route path="/assessment-builder" component={CourseStudio} />
     <Route path="/access-control" component={AccessControl} />
     <Route path="/grading" component={Grading} />
     <Route path="/institution-settings" component={InstitutionSettings} />
     <Route path="/institutional-publication" component={InstitutionalPublication} />
-    <Route path="/institutional-builder" component={InstitutionalBuilder} />
+    <Route path="/institutional-builder" component={CourseStudio} />
     <Route path="/starter-programme-setup" component={StarterProgrammeSetup} />
     <Route path="/first-certificate-release" component={FirstCertificateRelease} />
     <Route path="/content-preview" component={ContentPreview} />

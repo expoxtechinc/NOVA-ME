@@ -42,8 +42,12 @@ describe("NIU Course Studio", () => {
     expect(studio).toContain('from("program_courses").insert');
     expect(studio).toContain('from("course_modules").insert');
     expect(studio).toContain('from("lessons").insert');
-    expect(studio).toContain('setStep("curriculum")');
-    expect(studio).toContain('setStep("lesson")');
+    expect(studio).toContain('setStep("courses")');
+    expect(studio).toContain('setStep("lessons")');
+    expect(studio).toContain('type Step = "programme"');
+    expect(studio).toContain('"transcript"');
+    expect(studio).not.toContain('setStep("curriculum")');
+    expect(studio).not.toContain('setStep("lesson")');
     expect(studio).not.toContain('window.location');
   });
 
@@ -84,10 +88,10 @@ describe("NIU Course Studio", () => {
     expect(migration).toContain("governed_assessment_total = 1");
     expect(studio).toContain('supabase.rpc("niu_transition_academic_record"');
     expect(studio).toContain("Governed workflow: Draft → Review → Approved. Each transition is audited.");
-    expect(studio).toContain('readiness?.courses === 1');
-    expect(studio).toContain('readiness?.modules === 1');
-    expect(studio).toContain('readiness?.required_lessons === 1');
-    expect(studio).toContain('readiness?.governed_assessments === 1');
+    expect(studio).toContain('readiness && readiness.courses > 0');
+    expect(studio).toContain('readiness && readiness.modules > 0');
+    expect(studio).toContain('readiness && readiness.required_lessons > 0');
+    expect(studio).toContain('readiness && readiness.governed_assessments > 0');
   });
 
   it("supports scoped academic approval and the five-minute certificate gate thresholds", () => {
@@ -105,10 +109,10 @@ describe("NIU Course Studio", () => {
     expect(migration).toContain("template_total = 1");
     expect(studio).toContain('supabase.rpc("niu_transition_academic_record"');
     expect(studio).toContain("Governed workflow: Draft → Review → Approved. Each transition is audited.");
-    expect(studio).toContain('readiness?.courses === 1');
-    expect(studio).toContain('readiness?.modules === 1');
-    expect(studio).toContain('readiness?.required_lessons === 1');
-    expect(studio).toContain('readiness?.governed_assessments === 1');
+    expect(studio).toContain('readiness && readiness.courses > 0');
+    expect(studio).toContain('readiness && readiness.modules > 0');
+    expect(studio).toContain('readiness && readiness.required_lessons > 0');
+    expect(studio).toContain('readiness && readiness.governed_assessments > 0');
   });
 
   it("casts course transitions to the live enum without changing related text-backed statuses", () => {
@@ -240,7 +244,7 @@ describe("NIU Course Studio", () => {
     expect(studio).toContain('from("content_library_items").insert');
     expect(studio).toContain('from("lesson_content_items").insert');
     expect(studio).toContain('setNotice("Private learning resource uploaded and attached to the selected lesson. Learners will receive it only through enrolled-course access.")');
-    expect(studio).toContain('step === "assessment"');
+    expect(studio).toContain('step === "assessments"');
     expect(studio).toContain('from("assessments").insert');
     expect(studio).toContain('assessment_type: assessmentForm.type');
     expect(studio).toContain('status: "draft"');
@@ -249,7 +253,7 @@ describe("NIU Course Studio", () => {
     expect(studio).toContain('certificate_template_key: templateKey');
     expect(studio).toContain('step === "preview"');
     expect(studio).toContain('href: "/content-library"');
-    expect(studio).toContain('href="/programme-publication"');
+    expect(studio).toContain('step === "release"');
     expect(studio).toContain("Protected materials stay in private object storage.");
     const media = fs.readFileSync(path.join(root, "server", "routers", "media.ts"), "utf8");
     expect(media).toContain("Active enrollment is required to access this material.");
@@ -262,7 +266,9 @@ describe("NIU Course Studio", () => {
     const builder = fs.readFileSync(path.join(root, "client", "src", "pages", "AssessmentBuilder.tsx"), "utf8");
     expect(studio).toContain("assessment_questions(question_id)");
     expect(studio).toContain("setAssessmentId(createdAssessment.id)");
-    expect(studio).toContain("Open Assessment Builder");
+    expect(studio).toContain("Embedded question authoring");
+    expect(studio).toContain("transitionQuestion");
+    expect(studio).toContain("Approve question");
     expect(studio).toContain("saveAssessmentRules");
     expect(studio).toContain("Refresh validation");
     expect(studio).toContain("Submit for Review");
@@ -271,5 +277,20 @@ describe("NIU Course Studio", () => {
     expect(builder).toContain("new URLSearchParams");
     expect(builder).toContain('rpc("niu_transition_academic_record"');
     expect(builder).toContain('onConflict: "assessment_id,question_id"');
+  });
+
+  it("defines the unified multi-record readiness and governed release contract", () => {
+    const migration = fs.readFileSync(path.join(root, "docs/supabase/20260911_niu_unified_studio_readiness.sql"), "utf8");
+    const app = fs.readFileSync(path.join(root, "client", "src", "App.tsx"), "utf8");
+    expect(migration).toContain("target_type not in ('programme','course','module','lesson','content_item','assessment','certificate_template','question')");
+    expect(migration).toContain("course_total > 0 and course_total = approved_course_total");
+    expect(migration).toContain("module_total > 0 and module_total = approved_module_total");
+    expect(migration).toContain("required_lesson_total > 0 and required_lesson_total = approved_required_lesson_total");
+    expect(migration).toContain("update public.content_library_items set status = 'published'");
+    expect(migration).toContain("programme_ready");
+    expect(migration).toContain("insert into public.audit_events");
+    expect(app).toContain('<Route path="/programme-publication" component={CourseStudio} />');
+    expect(app).toContain('<Route path="/assessment-builder" component={CourseStudio} />');
+    expect(app).toContain('<Route path="/institutional-builder" component={CourseStudio} />');
   });
 });
