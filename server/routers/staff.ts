@@ -2,14 +2,11 @@
 // Vercel’s isolated serverless type pass resolves conflicting Express and
 // Supabase ambient declarations. Runtime behaviour is covered by NIU tests.
 import { TRPCError } from "@trpc/server";
-import { createClient } from "@supabase/supabase-js";
+import { createNiuSupabaseClient } from "../niuSupabase";
 import { publicProcedure, router } from "../_core/trpc";
 
 function sessionClient(token: string) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "NIU identity service is not configured." });
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
+  return createNiuSupabaseClient(token);
 }
 
 export const staffRouter = router({

@@ -2,10 +2,10 @@
 // Vercel’s isolated serverless type pass resolves conflicting Express and
 // Supabase ambient declarations. Runtime behaviour is covered by NIU tests.
 import type { RequestHandler } from "express";
-import { createClient } from "@supabase/supabase-js";
+import { createNiuSupabaseClient } from "./niuSupabase";
 import { z } from "zod";
-import { storagePut } from "./storage";
 
+const storageBucket = "niu-learning-materials";
 const maxBytes = 10 * 1024 * 1024;
 const categorySchema = z.enum(["document", "presentation", "image", "audio", "video", "research", "study_guide"]);
 const fileTypes: Record<z.infer<typeof categorySchema>, string[]> = {
@@ -19,12 +19,15 @@ const fileTypes: Record<z.infer<typeof categorySchema>, string[]> = {
 };
 
 function headerValue(value: string | string[] | undefined) { return Array.isArray(value) ? value[0] : value; }
-function safeText(value: string, max: number) { return decodeURIComponent(value).replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max); }
+function safeText(value: string, max: number) {
+  let decoded = value;
+  try { decoded = decodeURIComponent(value); } catch { /* Sanitise the original value below. */ }
+  return decoded.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
+}
 function safeFilename(value: string) { return safeText(value, 180).replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^_+/, "") || "learning-resource"; }
+function storagePath(userId: string, filename: string) { return `${userId}/${crypto.randomUUID()}-${filename}`; }
 function sessionClient(token: string) {
-  const url = process.env.VITE_SUPABASE_URL; const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new Error("NIU identity service is not configured.");
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
+  return createNiuSupabaseClient(token);
 }
 async function requireStaff(token: string) {
   const supabase = sessionClient(token);
@@ -52,8 +55,10 @@ export const uploadContentLibraryItem: RequestHandler = async (req, res) => {
     if (req.body.length > maxBytes) return res.status(413).json({ error: "Learning resources must be 10 MB or smaller." });
     const { supabase, userId } = await requireStaff(token);
     const filename = safeFilename(filenameHeader);
-    const { key } = await storagePut(`niu-content-library/${userId}/${filename}`, req.body, contentType);
-    const { data, error } = await supabase.from("content_library_items").insert({ title, category: category.data, file_name: filename, content_type: contentType, storage_path: key, description: descriptionHeader ? safeText(descriptionHeader, 1000) || null : null, created_by: userId }).select("id, title, category, file_name, created_at").single();
+    const storageKey = storagePath(userId, filename);
+    const { error: storageError } = await supabase.storage.from(storageBucket).upload(storageKey, req.body, { contentType, upsert: false });
+    if (storageError) throw new Error(storageError.message);
+    const { data, error } = await supabase.from("content_library_items").insert({ title, category: category.data, file_name: filename, content_type: contentType, storage_path: storageKey, description: descriptionHeader ? safeText(descriptionHeader, 1000) || null : null, created_by: userId }).select("id, title, category, file_name, created_at").single();
     if (error) return res.status(403).json({ error: "The resource was stored but its NIU library record could not be saved." });
     return res.status(201).json({ item: data });
   } catch (error) {

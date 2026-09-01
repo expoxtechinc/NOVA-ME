@@ -2,7 +2,7 @@
 // Vercel’s isolated serverless type pass resolves conflicting Express and
 // Supabase ambient declarations. Runtime behaviour is covered by NIU tests.
 import type { RequestHandler } from "express";
-import { createClient } from "@supabase/supabase-js";
+import { createNiuSupabaseClient } from "./niuSupabase";
 import { z } from "zod";
 
 const storageBucket = "niu-learning-materials";
@@ -43,13 +43,7 @@ function contentTypeFor(filename: string, header: string) {
 }
 
 function sessionClient(token: string) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new Error("NIU identity service is not configured.");
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: token } },
-  });
+  return createNiuSupabaseClient(token);
 }
 
 export const uploadLearningNote: RequestHandler = async (req, res) => {

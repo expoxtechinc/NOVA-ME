@@ -2,7 +2,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { storagePut } from "../storage";
 import { analyzeCurriculumDocument } from "../../shared/curriculumImport";
-import { createClient } from "@supabase/supabase-js";
+import { createNiuSupabaseClient } from "../niuSupabase";
 import { publicProcedure, router } from "../_core/trpc";
 import { providerHealth, runStructuredAI, runStructuredAIWithFallback } from "../aiOrchestrator";
 import { DEFAULT_LESSON_KIND } from "../../shared/lessonKinds";
@@ -43,17 +43,14 @@ const settingsSchema = z.object({
   referenceRequirements: z.string().trim().max(1200).optional(),
 });
 
-type StaffSession = { supabase: ReturnType<typeof createClient<any>>; userId: string };
+type StaffSession = { supabase: ReturnType<typeof createNiuSupabaseClient>; userId: string };
 
 async function getStaffSession(req: { headers?: Record<string, string | string[] | undefined> }): Promise<StaffSession> {
   const headers = req.headers ?? {};
   const raw = headers["x-supabase-authorization"];
   const token = Array.isArray(raw) ? raw[0] : raw;
   if (!token?.startsWith("Bearer ")) throw new TRPCError({ code: "UNAUTHORIZED", message: "Sign in to NIU." });
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "NIU identity service is not configured." });
-  const supabase = createClient<any>(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
+  const supabase = createNiuSupabaseClient(token);
   const { data: identity } = await (supabase.auth as any).getUser();
   if (!identity.user) throw new TRPCError({ code: "UNAUTHORIZED", message: "NIU session is not valid." });
   const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", identity.user.id).maybeSingle();

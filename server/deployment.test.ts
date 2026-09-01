@@ -28,6 +28,14 @@ describe("external deployment branding", () => {
     expect(config).toContain("export const supabaseConfigured = true");
   });
 
+  it("uses the same fallback-aware Supabase configuration on the server", async () => {
+    const config = fs.readFileSync(path.join(root, "server", "niuSupabase.ts"), "utf8");
+    expect(config).toContain("fallbackNiuSupabaseUrl");
+    expect(config).toContain("fallbackNiuSupabasePublishableKey");
+    expect(config).toContain("process.env.VITE_SUPABASE_URL || fallbackNiuSupabaseUrl");
+    expect(config).toContain("process.env.VITE_SUPABASE_PUBLISHABLE_KEY || fallbackNiuSupabasePublishableKey");
+  });
+
   it("offers a Supabase email-link fallback for deployed access when Google OAuth needs external configuration", () => {
     const signInPage = fs.readFileSync(path.join(root, "client", "src", "pages", "SignIn.tsx"), "utf8");
     const authGate = fs.readFileSync(path.join(root, "docs", "supabase", "20260826_niu_auth_allowlist_gate.sql"), "utf8");

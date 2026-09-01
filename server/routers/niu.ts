@@ -2,13 +2,15 @@
 // Vercel’s isolated serverless type pass resolves conflicting Express ambient
 // declarations. The deployed runtime contract is validated separately.
 import { TRPCError } from "@trpc/server";
-import { createClient } from "@supabase/supabase-js";
+import { createNiuSupabaseClient } from "../niuSupabase";
 import { z } from "zod";
 import { isNiuCredentialNumber, normalizeCredentialNumber } from "../niuValidation";
 import { publicProcedure, router } from "../_core/trpc";
 
 const requestWindows = new Map<string, { count: number; resetAt: number }>();
-function publicSupabaseClient() { const url = process.env.VITE_SUPABASE_URL; const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY; if (!url || !key) throw new TRPCError({ code: "PRECONDITION_FAILED", message: "The NIU public database connection is not configured." }); return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } }); }
+function publicSupabaseClient() {
+  return createNiuSupabaseClient();
+}
 function enforceVerificationRateLimit(clientAddress: string) { const now = Date.now(); const existing = requestWindows.get(clientAddress); if (!existing || existing.resetAt <= now) { requestWindows.set(clientAddress, { count: 1, resetAt: now + 60_000 }); return; } if (existing.count >= 10) throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "Please wait a moment before making another verification request." }); existing.count += 1; }
 const catalogInput = z.object({ search: z.string().trim().max(80).optional().default("") });
 

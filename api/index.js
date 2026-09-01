@@ -501,8 +501,25 @@ function registerStorageProxy(app) {
   });
 }
 
-// server/learningNotesUpload.ts
+// server/niuSupabase.ts
 import { createClient } from "@supabase/supabase-js";
+var fallbackNiuSupabaseUrl = "https://oevgnonkqpvfvjsmovpw.supabase.co";
+var fallbackNiuSupabasePublishableKey = "sb_publishable_VWi5wUQVYpe5kQ3Csd2bOg_UgsaOGHe";
+function niuSupabaseConfig() {
+  return {
+    url: process.env.VITE_SUPABASE_URL || fallbackNiuSupabaseUrl,
+    key: process.env.VITE_SUPABASE_PUBLISHABLE_KEY || fallbackNiuSupabasePublishableKey
+  };
+}
+function createNiuSupabaseClient(token) {
+  const { url, key } = niuSupabaseConfig();
+  return createClient(url, key, {
+    auth: { persistSession: false, autoRefreshToken: false },
+    ...token ? { global: { headers: { Authorization: token } } } : {}
+  });
+}
+
+// server/learningNotesUpload.ts
 import { z } from "zod";
 var storageBucket = "niu-learning-materials";
 var maxBytes = 10 * 1024 * 1024;
@@ -536,13 +553,7 @@ function contentTypeFor(filename2, header) {
   return extensionContentTypes[extension] ?? header;
 }
 function sessionClient(token) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new Error("NIU identity service is not configured.");
-  return createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: { headers: { Authorization: token } }
-  });
+  return createNiuSupabaseClient(token);
 }
 var uploadLearningNote = async (req, res) => {
   try {
@@ -565,15 +576,15 @@ var uploadLearningNote = async (req, res) => {
     if (profileError || !profile || !["instructor", "administrator", "super_admin"].includes(profile.role)) return res.status(403).json({ error: "Academic staff authority is required to upload learning notes." });
     const { data: lesson, error: lessonError } = await supabase.from("lessons").select("id").eq("id", lessonId).maybeSingle();
     if (lessonError || !lesson) return res.status(403).json({ error: "You are not authorised to attach notes to this lesson." });
-    const storagePath = `${identity.user.id}/${crypto.randomUUID()}-${filename2}`;
-    const { error: storageError } = await supabase.storage.from(storageBucket).upload(storagePath, req.body, { contentType, upsert: false });
+    const storagePath2 = `${identity.user.id}/${crypto.randomUUID()}-${filename2}`;
+    const { error: storageError } = await supabase.storage.from(storageBucket).upload(storagePath2, req.body, { contentType, upsert: false });
     if (storageError) throw new Error(storageError.message);
     const { data: contentItem, error: recordError } = await supabase.from("content_library_items").insert({
       title: filename2.replace(/\.[^.]+$/, "") || "Protected learning note",
       category: "document",
       file_name: filename2,
       content_type: contentType,
-      storage_path: storagePath,
+      storage_path: storagePath2,
       description: "Private NIU learning note attached to a governed lesson.",
       status: "draft",
       governed_workflow: true,
@@ -589,7 +600,7 @@ var uploadLearningNote = async (req, res) => {
       position: Number(current?.[0]?.position ?? -1) + 1
     });
     if (attachmentError) throw new Error(attachmentError.message);
-    return res.status(201).json({ message: "Learning note uploaded and attached to the protected lesson.", contentItemId: contentItem.id, lessonId, storagePath });
+    return res.status(201).json({ message: "Learning note uploaded and attached to the protected lesson.", contentItemId: contentItem.id, lessonId, storagePath: storagePath2 });
   } catch (error) {
     console.error("NIU learning-note upload failed", error);
     return res.status(500).json({ error: error instanceof Error && error.message ? error.message : "NIU could not upload this learning note. Please try again." });
@@ -597,71 +608,8 @@ var uploadLearningNote = async (req, res) => {
 };
 
 // server/contentLibrary.ts
-import { createClient as createClient2 } from "@supabase/supabase-js";
 import { z as z2 } from "zod";
-
-// server/storage.ts
-function getForgeConfig() {
-  const forgeUrl = ENV.forgeApiUrl;
-  const forgeKey = ENV.forgeApiKey;
-  if (!forgeUrl || !forgeKey) {
-    throw new Error(
-      "Storage config missing: set BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY"
-    );
-  }
-  return { forgeUrl: forgeUrl.replace(/\/+$/, ""), forgeKey };
-}
-function normalizeKey(relKey) {
-  return relKey.replace(/^\/+/, "");
-}
-function appendHashSuffix(relKey) {
-  const hash = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
-  const lastDot = relKey.lastIndexOf(".");
-  if (lastDot === -1) return `${relKey}_${hash}`;
-  return `${relKey.slice(0, lastDot)}_${hash}${relKey.slice(lastDot)}`;
-}
-async function storagePut(relKey, data, contentType = "application/octet-stream") {
-  const { forgeUrl, forgeKey } = getForgeConfig();
-  const key = appendHashSuffix(normalizeKey(relKey));
-  const presignUrl = new URL("v1/storage/presign/put", forgeUrl + "/");
-  presignUrl.searchParams.set("path", key);
-  const presignResp = await fetch(presignUrl, {
-    headers: { Authorization: `Bearer ${forgeKey}` }
-  });
-  if (!presignResp.ok) {
-    const msg = await presignResp.text().catch(() => presignResp.statusText);
-    throw new Error(`Storage presign failed (${presignResp.status}): ${msg}`);
-  }
-  const { url: s3Url } = await presignResp.json();
-  if (!s3Url) throw new Error("Forge returned empty presign URL");
-  const blob = typeof data === "string" ? new Blob([data], { type: contentType }) : new Blob([data], { type: contentType });
-  const uploadResp = await fetch(s3Url, {
-    method: "PUT",
-    headers: { "Content-Type": contentType },
-    body: blob
-  });
-  if (!uploadResp.ok) {
-    throw new Error(`Storage upload to S3 failed (${uploadResp.status})`);
-  }
-  return { key, url: `/manus-storage/${key}` };
-}
-async function storageGetSignedUrl(relKey) {
-  const { forgeUrl, forgeKey } = getForgeConfig();
-  const key = normalizeKey(relKey);
-  const getUrl = new URL("v1/storage/presign/get", forgeUrl + "/");
-  getUrl.searchParams.set("path", key);
-  const resp = await fetch(getUrl, {
-    headers: { Authorization: `Bearer ${forgeKey}` }
-  });
-  if (!resp.ok) {
-    const msg = await resp.text().catch(() => resp.statusText);
-    throw new Error(`Storage signed URL failed (${resp.status}): ${msg}`);
-  }
-  const { url } = await resp.json();
-  return url;
-}
-
-// server/contentLibrary.ts
+var storageBucket2 = "niu-learning-materials";
 var maxBytes2 = 10 * 1024 * 1024;
 var categorySchema = z2.enum(["document", "presentation", "image", "audio", "video", "research", "study_guide"]);
 var fileTypes = {
@@ -677,16 +625,21 @@ function headerValue2(value) {
   return Array.isArray(value) ? value[0] : value;
 }
 function safeText(value, max) {
-  return decodeURIComponent(value).replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
+  let decoded = value;
+  try {
+    decoded = decodeURIComponent(value);
+  } catch {
+  }
+  return decoded.replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
 }
 function safeFilename2(value) {
   return safeText(value, 180).replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^_+/, "") || "learning-resource";
 }
+function storagePath(userId, filename2) {
+  return `${userId}/${crypto.randomUUID()}-${filename2}`;
+}
 function sessionClient2(token) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new Error("NIU identity service is not configured.");
-  return createClient2(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
+  return createNiuSupabaseClient(token);
 }
 async function requireStaff(token) {
   const supabase = sessionClient2(token);
@@ -713,8 +666,10 @@ var uploadContentLibraryItem = async (req, res) => {
     if (req.body.length > maxBytes2) return res.status(413).json({ error: "Learning resources must be 10 MB or smaller." });
     const { supabase, userId } = await requireStaff(token);
     const filename2 = safeFilename2(filenameHeader);
-    const { key } = await storagePut(`niu-content-library/${userId}/${filename2}`, req.body, contentType);
-    const { data, error } = await supabase.from("content_library_items").insert({ title: title2, category: category.data, file_name: filename2, content_type: contentType, storage_path: key, description: descriptionHeader ? safeText(descriptionHeader, 1e3) || null : null, created_by: userId }).select("id, title, category, file_name, created_at").single();
+    const storageKey = storagePath(userId, filename2);
+    const { error: storageError } = await supabase.storage.from(storageBucket2).upload(storageKey, req.body, { contentType, upsert: false });
+    if (storageError) throw new Error(storageError.message);
+    const { data, error } = await supabase.from("content_library_items").insert({ title: title2, category: category.data, file_name: filename2, content_type: contentType, storage_path: storageKey, description: descriptionHeader ? safeText(descriptionHeader, 1e3) || null : null, created_by: userId }).select("id, title, category, file_name, created_at").single();
     if (error) return res.status(403).json({ error: "The resource was stored but its NIU library record could not be saved." });
     return res.status(201).json({ item: data });
   } catch (error) {
@@ -740,7 +695,7 @@ var attachContentLibraryItem = async (req, res) => {
 };
 
 // server/starterStudyGuide.ts
-import { createClient as createClient3 } from "@supabase/supabase-js";
+var storageBucket3 = "niu-learning-materials";
 var title = "Digital Foundations: Access, Information, and Responsible Study";
 var filename = "niu-digital-foundations-study-guide.md";
 var studyGuide = `# Digital Foundations: Access, Information, and Responsible Study
@@ -795,10 +750,7 @@ At the end of this module, briefly record what changed in your study practice. W
 This is original NIU draft teaching material written for this course structure. It does not reproduce third-party course content. Academic review is required before any authorised programme publication.
 `;
 function sessionClient3(token) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new Error("NIU identity service is not configured.");
-  return createClient3(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
+  return createNiuSupabaseClient(token);
 }
 function headerValue3(value) {
   return Array.isArray(value) ? value[0] : value;
@@ -821,8 +773,10 @@ var initializeDigitalStudyGuide = async (req, res) => {
     const { data: existingItem } = await supabase.from("content_library_items").select("id").eq("title", title).eq("file_name", filename).maybeSingle();
     let contentItemId = existingItem?.id;
     if (!contentItemId) {
-      const { key } = await storagePut(`niu-content-library/${identity.user.id}/${filename}`, Buffer.from(studyGuide, "utf8"), "text/markdown");
-      const { data: created, error: insertError } = await supabase.from("content_library_items").insert({ title, category: "study_guide", file_name: filename, content_type: "text/markdown", storage_path: key, description: "Original NIU draft study guide for the first Digital Foundations module. It remains private until an authorised programme release.", created_by: identity.user.id }).select("id").single();
+      const storagePath2 = `${identity.user.id}/${crypto.randomUUID()}-${filename}`;
+      const { error: storageError } = await supabase.storage.from(storageBucket3).upload(storagePath2, Buffer.from(studyGuide, "utf8"), { contentType: "text/markdown", upsert: false });
+      if (storageError) return res.status(403).json({ error: "NIU could not store the protected study guide privately." });
+      const { data: created, error: insertError } = await supabase.from("content_library_items").insert({ title, category: "study_guide", file_name: filename, content_type: "text/markdown", storage_path: storagePath2, description: "Original NIU draft study guide for the first Digital Foundations module. It remains private until an authorised programme release.", created_by: identity.user.id }).select("id").single();
       if (insertError || !created) return res.status(403).json({ error: "NIU could not register the protected study guide." });
       contentItemId = created.id;
     }
@@ -986,13 +940,9 @@ var systemRouter = router({
 
 // server/routers/courses.ts
 import { TRPCError as TRPCError3 } from "@trpc/server";
-import { createClient as createClient4 } from "@supabase/supabase-js";
 import { z as z4 } from "zod";
 function publicSupabaseClient() {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new TRPCError3({ code: "PRECONDITION_FAILED", message: "The NIU public database connection is not configured." });
-  return createClient4(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return createNiuSupabaseClient();
 }
 var courseRouter = router({
   list: publicProcedure.input(z4.object({ search: z4.string().trim().max(80).optional().default("") })).query(async ({ input }) => {
@@ -1013,7 +963,6 @@ var courseRouter = router({
 
 // server/routers/niu.ts
 import { TRPCError as TRPCError4 } from "@trpc/server";
-import { createClient as createClient5 } from "@supabase/supabase-js";
 import { z as z5 } from "zod";
 
 // server/niuValidation.ts
@@ -1028,10 +977,7 @@ function isNiuCredentialNumber(value) {
 // server/routers/niu.ts
 var requestWindows = /* @__PURE__ */ new Map();
 function publicSupabaseClient2() {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new TRPCError4({ code: "PRECONDITION_FAILED", message: "The NIU public database connection is not configured." });
-  return createClient5(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
+  return createNiuSupabaseClient();
 }
 function enforceVerificationRateLimit(clientAddress) {
   const now = Date.now();
@@ -1077,13 +1023,72 @@ var credentialRouter = router({
 
 // server/routers/media.ts
 import { TRPCError as TRPCError5 } from "@trpc/server";
-import { createClient as createClient6 } from "@supabase/supabase-js";
 import { z as z6 } from "zod";
+
+// server/storage.ts
+function getForgeConfig() {
+  const forgeUrl = ENV.forgeApiUrl;
+  const forgeKey = ENV.forgeApiKey;
+  if (!forgeUrl || !forgeKey) {
+    throw new Error(
+      "Storage config missing: set BUILT_IN_FORGE_API_URL and BUILT_IN_FORGE_API_KEY"
+    );
+  }
+  return { forgeUrl: forgeUrl.replace(/\/+$/, ""), forgeKey };
+}
+function normalizeKey(relKey) {
+  return relKey.replace(/^\/+/, "");
+}
+function appendHashSuffix(relKey) {
+  const hash = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+  const lastDot = relKey.lastIndexOf(".");
+  if (lastDot === -1) return `${relKey}_${hash}`;
+  return `${relKey.slice(0, lastDot)}_${hash}${relKey.slice(lastDot)}`;
+}
+async function storagePut(relKey, data, contentType = "application/octet-stream") {
+  const { forgeUrl, forgeKey } = getForgeConfig();
+  const key = appendHashSuffix(normalizeKey(relKey));
+  const presignUrl = new URL("v1/storage/presign/put", forgeUrl + "/");
+  presignUrl.searchParams.set("path", key);
+  const presignResp = await fetch(presignUrl, {
+    headers: { Authorization: `Bearer ${forgeKey}` }
+  });
+  if (!presignResp.ok) {
+    const msg = await presignResp.text().catch(() => presignResp.statusText);
+    throw new Error(`Storage presign failed (${presignResp.status}): ${msg}`);
+  }
+  const { url: s3Url } = await presignResp.json();
+  if (!s3Url) throw new Error("Forge returned empty presign URL");
+  const blob = typeof data === "string" ? new Blob([data], { type: contentType }) : new Blob([data], { type: contentType });
+  const uploadResp = await fetch(s3Url, {
+    method: "PUT",
+    headers: { "Content-Type": contentType },
+    body: blob
+  });
+  if (!uploadResp.ok) {
+    throw new Error(`Storage upload to S3 failed (${uploadResp.status})`);
+  }
+  return { key, url: `/manus-storage/${key}` };
+}
+async function storageGetSignedUrl(relKey) {
+  const { forgeUrl, forgeKey } = getForgeConfig();
+  const key = normalizeKey(relKey);
+  const getUrl = new URL("v1/storage/presign/get", forgeUrl + "/");
+  getUrl.searchParams.set("path", key);
+  const resp = await fetch(getUrl, {
+    headers: { Authorization: `Bearer ${forgeKey}` }
+  });
+  if (!resp.ok) {
+    const msg = await resp.text().catch(() => resp.statusText);
+    throw new Error(`Storage signed URL failed (${resp.status}): ${msg}`);
+  }
+  const { url } = await resp.json();
+  return url;
+}
+
+// server/routers/media.ts
 function enrolledSupabaseClient(token) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new TRPCError5({ code: "PRECONDITION_FAILED", message: "The NIU media service is not configured." });
-  return createClient6(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
+  return createNiuSupabaseClient(token);
 }
 var mediaRouter = router({
   getLessonUrl: publicProcedure.input(z6.object({ lessonId: z6.string().uuid() })).query(async ({ input, ctx }) => {
@@ -1121,12 +1126,8 @@ var mediaRouter = router({
 
 // server/routers/staff.ts
 import { TRPCError as TRPCError6 } from "@trpc/server";
-import { createClient as createClient7 } from "@supabase/supabase-js";
 function sessionClient4(token) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new TRPCError6({ code: "PRECONDITION_FAILED", message: "NIU identity service is not configured." });
-  return createClient7(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
+  return createNiuSupabaseClient(token);
 }
 var staffRouter = router({
   authorization: publicProcedure.query(async ({ ctx }) => {
@@ -1288,9 +1289,6 @@ function analyzeCurriculumDocument(source, fileName) {
   if (!analysis.certificateSettings) analysis.missingInformation.push("Certificate template/settings are missing.");
   return analysis;
 }
-
-// server/routers/aiBuilder.ts
-import { createClient as createClient8 } from "@supabase/supabase-js";
 
 // server/aiOrchestrator.ts
 var providerKey = (provider) => provider === "openai" ? ENV.openAiApiKey : ENV.geminiApiKey;
@@ -1520,10 +1518,7 @@ async function getStaffSession(req) {
   const raw = headers["x-supabase-authorization"];
   const token = Array.isArray(raw) ? raw[0] : raw;
   if (!token?.startsWith("Bearer ")) throw new TRPCError7({ code: "UNAUTHORIZED", message: "Sign in to NIU." });
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new TRPCError7({ code: "PRECONDITION_FAILED", message: "NIU identity service is not configured." });
-  const supabase = createClient8(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
+  const supabase = createNiuSupabaseClient(token);
   const { data: identity } = await supabase.auth.getUser();
   if (!identity.user) throw new TRPCError7({ code: "UNAUTHORIZED", message: "NIU session is not valid." });
   const { data: profile, error } = await supabase.from("profiles").select("role").eq("id", identity.user.id).maybeSingle();

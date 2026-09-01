@@ -2,9 +2,9 @@
 // Vercel’s isolated serverless type pass resolves conflicting Express and
 // Supabase ambient declarations. Runtime behaviour is covered by NIU tests.
 import type { RequestHandler } from "express";
-import { createClient } from "@supabase/supabase-js";
-import { storagePut } from "./storage";
+import { createNiuSupabaseClient } from "./niuSupabase";
 
+const storageBucket = "niu-learning-materials";
 const title = "Digital Foundations: Access, Information, and Responsible Study";
 const filename = "niu-digital-foundations-study-guide.md";
 const studyGuide = `# Digital Foundations: Access, Information, and Responsible Study
@@ -60,10 +60,7 @@ This is original NIU draft teaching material written for this course structure. 
 `;
 
 function sessionClient(token: string) {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_PUBLISHABLE_KEY;
-  if (!url || !key) throw new Error("NIU identity service is not configured.");
-  return createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false }, global: { headers: { Authorization: token } } });
+  return createNiuSupabaseClient(token);
 }
 
 function headerValue(value: string | string[] | undefined) { return Array.isArray(value) ? value[0] : value; }
@@ -88,8 +85,10 @@ export const initializeDigitalStudyGuide: RequestHandler = async (req, res) => {
     const { data: existingItem } = await supabase.from("content_library_items").select("id").eq("title", title).eq("file_name", filename).maybeSingle();
     let contentItemId = existingItem?.id;
     if (!contentItemId) {
-      const { key } = await storagePut(`niu-content-library/${identity.user.id}/${filename}`, Buffer.from(studyGuide, "utf8"), "text/markdown");
-      const { data: created, error: insertError } = await supabase.from("content_library_items").insert({ title, category: "study_guide", file_name: filename, content_type: "text/markdown", storage_path: key, description: "Original NIU draft study guide for the first Digital Foundations module. It remains private until an authorised programme release.", created_by: identity.user.id }).select("id").single();
+      const storagePath = `${identity.user.id}/${crypto.randomUUID()}-${filename}`;
+      const { error: storageError } = await supabase.storage.from(storageBucket).upload(storagePath, Buffer.from(studyGuide, "utf8"), { contentType: "text/markdown", upsert: false });
+      if (storageError) return res.status(403).json({ error: "NIU could not store the protected study guide privately." });
+      const { data: created, error: insertError } = await supabase.from("content_library_items").insert({ title, category: "study_guide", file_name: filename, content_type: "text/markdown", storage_path: storagePath, description: "Original NIU draft study guide for the first Digital Foundations module. It remains private until an authorised programme release.", created_by: identity.user.id }).select("id").single();
       if (insertError || !created) return res.status(403).json({ error: "NIU could not register the protected study guide." });
       contentItemId = created.id;
     }
