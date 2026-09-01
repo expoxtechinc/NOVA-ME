@@ -105,7 +105,7 @@ function Router() {
     <Route path="/learning" component={Learning} />
     <Route path="/learn/:courseId" component={CourseLearning} />
     <Route path="/dashboard/:dashboard" component={RoleDashboard} />
-    {["/about", "/founder", "/mission", "/values", "/schools", "/admissions", "/resources", "/calendar", "/help", "/faqs", "/policies", "/contact"].map((path) => <Route key={path} path={path} component={InfoPage} />)}
+    {["/about", "/founder", "/mission", "/values", "/schools", "/admissions", "/resources", "/calendar", "/help", "/faqs", "/policies", "/contact", "/online-learning", "/how-niu-certificates-are-verified"].map((path) => <Route key={path} path={path} component={InfoPage} />)}
     <Route path="/404" component={NotFound} />
     <Route component={NotFound} />
   </Switch>;

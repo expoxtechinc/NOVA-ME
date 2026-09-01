@@ -114,3 +114,18 @@ The correct next development increment is **not** a cosmetic rewrite of one comp
 [4]: https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable "Supabase database linter: public SECURITY DEFINER functions executable by anon"
 [5]: https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys "Supabase database linter: unindexed foreign keys"
 [6]: https://github.com/expoxtechinc/NOVA-ME/blob/main/docs/ADMIN_REQUIREMENTS_MATRIX.md "NOVA-ME administrative requirements matrix"
+
+
+## Implementation update — 31 August 2026
+
+The rebuild is now implemented in the canonical `/admin/academic-production-studio` route. The administrator dashboard leads with this single academic-authoring entry point while public and learner routes remain unchanged. The studio now presents the eleven-step workflow: Programme, Courses, Modules, Lessons, Learning Content, Assessments, Points, Certificate, Preview, Validate, and Publish.
+
+The former Markdown-only lesson-note field was replaced with `StructuredLessonEditor`, which provides academic sections, formatting controls, reorderable blocks, word count, estimated reading time, autosave status, and safe sanitization. A live Supabase migration named `niu_structured_lesson_notes` was applied successfully to permit the additive `structured_json` content format while retaining the existing `external`, `markdown`, `plain_text`, and `html` formats.
+
+Assessment authoring is embedded in the studio. Staff can create private question banks and draft questions, while only approved reusable questions are offered for assessment attachment. The existing server-side AI orchestration is also available from the Programme step as a bounded, draft-only blueprint assistant. It requires staff authorization and explicitly states that no academic records, questions, materials, approval, or publication are created by planning alone.
+
+The final Publish step is administrator-only and invokes the protected `niu_publish_programme_bundle` RPC only after the live readiness gate passes and the administrator confirms the action. No learner credential is issued automatically. The implementation was committed to `main` in commits `8e2461c` and corrective commit `dea438f`; both were pushed to `expoxtechinc/NOVA-ME`.
+
+The local type check and production build pass. The final automated suite passes 113 of 115 tests across 39 of 41 test files. The remaining two failures are environment prerequisites rather than application regressions: the test environment does not expose `GEMINI_API_KEY`, and the Supabase configuration test does not receive the expected publishable-key endpoint configuration. The linked Vercel project received commit `dea438f` and created production deployment `dpl_S772v1yWweUoTnPrEii2fFSrAdvG`; at the time of inspection it remained queued, while the prior production deployment was healthy.
+
+The main remaining operational follow-up is to confirm the queued Vercel deployment reaches `READY` and to provide the missing CI/runtime environment variables for the two environment-only tests. The repository also retains a Vite chunk-size warning for the main application bundle; this is non-blocking and suitable for a later code-splitting pass.
