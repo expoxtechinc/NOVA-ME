@@ -129,3 +129,27 @@ The final Publish step is administrator-only and invokes the protected `niu_publ
 The local type check and production build pass. The final automated suite passes 113 of 115 tests across 39 of 41 test files. The remaining two failures are environment prerequisites rather than application regressions: the test environment does not expose `GEMINI_API_KEY`, and the Supabase configuration test does not receive the expected publishable-key endpoint configuration. The linked Vercel project received commit `dea438f` and created production deployment `dpl_S772v1yWweUoTnPrEii2fFSrAdvG`; at the time of inspection it remained queued, while the prior production deployment was healthy.
 
 The main remaining operational follow-up is to confirm the queued Vercel deployment reaches `READY` and to provide the missing CI/runtime environment variables for the two environment-only tests. The repository also retains a Vite chunk-size warning for the main application bundle; this is non-blocking and suitable for a later code-splitting pass.
+
+
+## SEO, discovery, and trust audit — 1 September 2026
+
+The latest SEO specification was implemented in commit `942bbb91d189931c2d3c758a00d8aa4a7b9df119`. The repository now includes a valid XML sitemap with 18 public URLs, a tightened robots policy that excludes administrative, authenticated, learner-record, and internal API routes, the requested Google verification filename, route-aware canonical metadata, unique public titles and descriptions, Open Graph and Twitter tags, visible breadcrumbs, and conservative JSON-LD for EducationalOrganization, WebSite, WebPage, and BreadcrumbList. Two original public information pages were added: `/online-learning` and `/how-niu-certificates-are-verified`.
+
+Local validation passed: TypeScript checking, production build, XML parsing, robots assertions, and verification-file content assertions. The production Vercel deployment for this commit reached `READY` as `dpl_7L5TTF4C5wiXnaugVvD7vQVqoyzE`, with aliases `nova-me-expoxtechincs-projects.vercel.app`, `nova-me-six.vercel.app`, and `nova-me-git-main-expoxtechincs-projects.vercel.app`.
+
+The live crawl confirmed HTTP 200 responses for `/`, `/robots.txt`, `/sitemap.xml`, `/google719635f5627ba863.html`, `/about`, `/programs`, `/courses`, `/verify`, `/online-learning`, and `/how-niu-certificates-are-verified`. The sitemap is valid XML, contains 18 URLs, and the verification file returns the expected conventional body `google-site-verification: google719635f5627ba863.html`. The live response also confirmed HTTPS, HSTS, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, and the expected crawler policy.
+
+### Production blocker
+
+The live responses currently include `X-Robots-Tag: noindex` on the supplied `https://novainternationaluniversity.vercel.app/` URL and on the Vercel project aliases. The linked Vercel project reports `live: false` and lists only the `nova-me` Vercel aliases as project domains; the supplied `novainternationaluniversity.vercel.app` hostname is not listed in the linked project’s domain inventory. Vercel documents that deployment-only or non-production URLs receive automatic noindex behavior to prevent duplicate indexing. Consequently, the implementation is **not yet production SEO-ready**, even though the application-level SEO assets are present and validated.
+
+The remaining deployment action is to assign an actual public production domain to the Vercel project, make that domain the canonical host, and then re-run the production crawl. The current sitemap and canonical metadata intentionally continue to use the supplied NIU hostname, but this must be confirmed as the authoritative production domain before Search Console or Bing submission. Search Console, Bing Webmaster Tools, Yandex, Core Web Vitals, and real mobile-device outcomes cannot be honestly marked verified from this environment without ownership access and an indexable production hostname.
+
+### References
+
+[1]: https://developers.google.com/search/docs/crawling-indexing/robots/intro "Google Search Central: Introduction to robots.txt"
+[2]: https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag "Google Search Central: Robots meta tag and X-Robots-Tag specifications"
+[3]: https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data "Google Search Central: Introduction to structured data markup"
+[4]: https://schema.org/BreadcrumbList "Schema.org: BreadcrumbList"
+[5]: https://vercel.com/kb/guide/are-vercel-preview-deployment-indexed-by-search-engines "Vercel: Why Preview Deployments are not indexed by search engines"
+[6]: https://vercel.com/kb/guide/avoiding-duplicate-content-with-vercel-app-urls "Vercel: Avoiding duplicate content with vercel.app URLs"
